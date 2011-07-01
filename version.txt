@@ -3,4 +3,9 @@ base/port.h
 base/base_api.h
 base/basictypes.h
 base/string_piece.h
-base/string_piece.cpp 91103
+base/string_piece.cpp 
+base/compiler_specific.h  
+base/base_switches.h
+base/base_switches.cc 
+base/atmicops.h
+base/atmicops_internals_x86_msvc.h 91103
