@@ -1,0 +1,9 @@
+*.svn*
+*.pyc
+.gclient_entries
+*.vcproj
+*.sln
+*.ncb
+*.suo
+*/debug/
+*.user
