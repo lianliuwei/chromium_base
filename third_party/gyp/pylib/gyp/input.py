@@ -471,12 +471,21 @@ def IsStrCanonicalInt(string):
   return True
 
 
-early_variable_re = re.compile('(?P<replace>(?P<type><((!?@?)|\|)?)'
-                               '\((?P<is_array>\s*\[?)'
-                               '(?P<content>.*?)(\]?)\))')
-late_variable_re = re.compile('(?P<replace>(?P<type>>((!?@?)|\|)?)'
-                              '\((?P<is_array>\s*\[?)'
-                              '(?P<content>.*?)(\]?)\))')
+# This matches things like "<(asdf)", "<!(cmd)", "<!@(cmd)", "<|(list)",
+# "<!interpreter(arguments)", "<([list])", and even "<([)" and "<(<())".
+# In the last case, the inner "<()" is captured in match['content'].
+early_variable_re = re.compile(
+    '(?P<replace>(?P<type><(?:(?:!?@?)|\|)?)'
+    '(?P<command_string>[-a-zA-Z0-9_.]+)?'
+    '\((?P<is_array>\s*\[?)'
+    '(?P<content>.*?)(\]?)\))')
+
+# This matches the same as early_variable_re, but with '>' instead of '<'.
+late_variable_re = re.compile(
+    '(?P<replace>(?P<type>>(?:(?:!?@?)|\|)?)'
+    '(?P<command_string>[-a-zA-Z0-9_.]+)?'
+    '\((?P<is_array>\s*\[?)'
+    '(?P<content>.*?)(\]?)\))')
 
 # Global cache of results from running commands so they don't have to be run
 # more then once.
@@ -525,10 +534,12 @@ def ExpandVariables(input, is_late, variables, build_file):
       # is the character code for the replacement type (< > <! >! <| >| <@
       # >@ <!@ >!@), match['is_array'] contains a '[' for command
       # arrays, and match['content'] is the name of the variable (< >)
-      # or command to run (<! >!).
+      # or command to run (<! >!). match['command_string'] is an optional
+      # command string. Currently, only 'pymod_do_main' is supported.
 
       # run_command is true if a ! variant is used.
       run_command = '!' in match['type']
+      command_string = match['command_string']
 
       # file_list is true if a | variant is used.
       file_list = '|' in match['type']
@@ -634,23 +645,44 @@ def ExpandVariables(input, is_late, variables, build_file):
                           "Executing command '%s' in directory '%s'" %
                           (contents,build_file_dir))
 
-          # Fix up command with platform specific workarounds.
-          contents = FixupPlatformCommand(contents)
-          p = subprocess.Popen(contents, shell=use_shell,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE,
-                               stdin=subprocess.PIPE,
-                               cwd=build_file_dir)
+          replacement = ''
 
-          (p_stdout, p_stderr) = p.communicate('')
+          if command_string == 'pymod_do_main':
+            # <!pymod_do_main(modulename param eters) loads |modulename| as a
+            # python module and then calls that module's DoMain() function,
+            # passing ["param", "eters"] as a single list argument. For modules
+            # that don't load quickly, this can be faster than
+            # <!(python modulename param eters). Do this in |build_file_dir|.
+            oldwd = os.getcwd()  # Python doesn't like os.open('.'): no fchdir.
+            os.chdir(build_file_dir)
 
-          if p.wait() != 0 or p_stderr:
-            sys.stderr.write(p_stderr)
-            # Simulate check_call behavior, since check_call only exists
-            # in python 2.5 and later.
-            raise Exception("Call to '%s' returned exit status %d." %
-                            (contents, p.returncode))
-          replacement = p_stdout.rstrip()
+            parsed_contents = shlex.split(contents)
+            py_module = __import__(parsed_contents[0])
+            replacement = str(py_module.DoMain(parsed_contents[1:])).rstrip()
+
+            os.chdir(oldwd)
+            assert replacement != None
+          elif command_string:
+            raise Exception("Unknown command string '%s' in '%s'." %
+                            (command_string, contents))
+          else:
+            # Fix up command with platform specific workarounds.
+            contents = FixupPlatformCommand(contents)
+            p = subprocess.Popen(contents, shell=use_shell,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 stdin=subprocess.PIPE,
+                                 cwd=build_file_dir)
+
+            p_stdout, p_stderr = p.communicate('')
+
+            if p.wait() != 0 or p_stderr:
+              sys.stderr.write(p_stderr)
+              # Simulate check_call behavior, since check_call only exists
+              # in python 2.5 and later.
+              raise Exception("Call to '%s' returned exit status %d." %
+                              (contents, p.returncode))
+            replacement = p_stdout.rstrip()
 
           cached_command_results[cache_key] = replacement
         else:
@@ -1042,10 +1074,14 @@ def QualifyDependencies(targets):
   similar dict.
   """
 
+  all_dependency_sections = [dep + op
+                             for dep in dependency_sections
+                             for op in ('', '!', '/')]
+
   for target, target_dict in targets.iteritems():
     target_build_file = gyp.common.BuildFile(target)
     toolset = target_dict['toolset']
-    for dependency_key in dependency_sections:
+    for dependency_key in all_dependency_sections:
       dependencies = target_dict.get(dependency_key, [])
       for index in xrange(0, len(dependencies)):
         dep_file, dep_target, dep_toolset = gyp.common.ResolveTarget(
@@ -1456,7 +1492,8 @@ def DoDependentSettings(key, flat_list, targets, dependency_nodes):
                  build_file, dependency_build_file)
 
 
-def AdjustStaticLibraryDependencies(flat_list, targets, dependency_nodes):
+def AdjustStaticLibraryDependencies(flat_list, targets, dependency_nodes,
+                                    sort_dependencies):
   # Recompute target "dependencies" properties.  For each static library
   # target, remove "dependencies" entries referring to other static libraries,
   # unless the dependency has the "hard_dependency" attribute set.  For each
@@ -1509,6 +1546,14 @@ def AdjustStaticLibraryDependencies(flat_list, targets, dependency_nodes):
           target_dict['dependencies'] = []
         if not dependency in target_dict['dependencies']:
           target_dict['dependencies'].append(dependency)
+      # Sort the dependencies list in the order from dependents to dependencies.
+      # e.g. If A and B depend on C and C depends on D, sort them in A, B, C, D.
+      # Note: flat_list is already sorted in the order from dependencies to
+      # dependents.
+      if sort_dependencies and 'dependencies' in target_dict:
+        target_dict['dependencies'] = [dep for dep in reversed(flat_list)
+                                       if dep in target_dict['dependencies']]
+
 
 # Initialize this here to speed up MakePathRelative.
 exception_re = re.compile(r'''["']?[-/$<>]''')
@@ -1818,7 +1863,7 @@ def ProcessListFiltersInDict(name, the_dict):
   Regular expression (regex) filters are contained in dict keys named with a
   trailing "/", such as "sources/" to operate on the "sources" list.  Regex
   filters in a dict take the form:
-    'sources/': [ ['exclude', '_(linux|mac|win)\\.cc$'] ],
+    'sources/': [ ['exclude', '_(linux|mac|win)\\.cc$'],
                   ['include', '_mac\\.cc$'] ],
   The first filter says to exclude all files ending in _linux.cc, _mac.cc, and
   _win.cc.  The second filter then includes all files ending in _mac.cc that
@@ -2185,6 +2230,20 @@ def Load(build_files, variables, includes, depth, generator_input_info, check,
   # Expand dependencies specified as build_file:*.
   ExpandWildcardDependencies(targets, data)
 
+  # Apply exclude (!) and regex (/) list filters only for dependency_sections.
+  for target_name, target_dict in targets.iteritems():
+    tmp_dict = {}
+    for key_base in dependency_sections:
+      for op in ('', '!', '/'):
+        key = key_base + op
+        if key in target_dict:
+          tmp_dict[key] = target_dict[key]
+          del target_dict[key]
+    ProcessListFiltersInDict(target_name, tmp_dict)
+    # Write the results back to |target_dict|.
+    for key in tmp_dict:
+      target_dict[key] = tmp_dict[key]
+
   if circular_check:
     # Make sure that any targets in a.gyp don't contain dependencies in other
     # .gyp files that further depend on a.gyp.
@@ -2194,7 +2253,6 @@ def Load(build_files, variables, includes, depth, generator_input_info, check,
 
   # Check that no two targets in the same directory have the same name.
   VerifyNoCollidingTargets(flat_list)
-  
 
   # Handle dependent settings of various types.
   for settings_type in ['all_dependent_settings',
@@ -2211,7 +2269,10 @@ def Load(build_files, variables, includes, depth, generator_input_info, check,
   # Make sure static libraries don't declare dependencies on other static
   # libraries, but that linkables depend on all unlinked static libraries
   # that they need so that their link steps will be correct.
-  AdjustStaticLibraryDependencies(flat_list, targets, dependency_nodes)
+  gii = generator_input_info
+  if gii['generator_wants_static_library_dependencies_adjusted']:
+    AdjustStaticLibraryDependencies(flat_list, targets, dependency_nodes,
+                                    gii['generator_wants_sorted_dependencies'])
 
   # Apply "post"/"late"/"target" variable expansions and condition evaluations.
   for target in flat_list:

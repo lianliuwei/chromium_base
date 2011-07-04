@@ -1,0 +1,12 @@
+*.pyc
+/python
+/python.bat
+/python_bin
+/svn
+/svn.bat
+/svn_bin
+/svnversion.bat
+/tests/_rietveld
+/tests/subversion_config/README.txt
+/tests/subversion_config/auth
+/tests/subversion_config/servers

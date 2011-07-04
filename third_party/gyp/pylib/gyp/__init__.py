@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Copyright (c) 2009 Google Inc. All rights reserved.
+# Copyright (c) 2011 Google Inc. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -61,6 +61,11 @@ def Load(build_files, format, default_variables={},
   if getattr(generator, 'CalculateVariables', None):
     generator.CalculateVariables(default_variables, params)
 
+  # Give the generator the opportunity to set generator_input_info based on
+  # the params it will receive in the output phase.
+  if getattr(generator, 'CalculateGeneratorInputInfo', None):
+    generator.CalculateGeneratorInputInfo(params)
+
   # Fetch the generator specific info that gets fed to input, we use getattr
   # so we can default things and the generators only have to provide what
   # they need.
@@ -77,6 +82,11 @@ def Load(build_files, format, default_variables={},
         getattr(generator, 'generator_extra_sources_for_rules', []),
     'generator_supports_multiple_toolsets':
         getattr(generator, 'generator_supports_multiple_toolsets', False),
+    'generator_wants_static_library_dependencies_adjusted':
+        getattr(generator,
+                'generator_wants_static_library_dependencies_adjusted', True),
+    'generator_wants_sorted_dependencies':
+        getattr(generator, 'generator_wants_sorted_dependencies', False),
   }
 
   # Process the input specific to this generator.
@@ -316,6 +326,7 @@ def main(args):
                            'freebsd7': 'make',
                            'freebsd8': 'make',
                            'linux2':   'make',
+                           'linux3':   'make',
                            'openbsd4': 'make',
                            'sunos5':   'make',}[sys.platform] ]
 

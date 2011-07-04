@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# Copyright (c) 2011 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# This script will try to sync the bootstrap directories and then defer control.
+
+if [ "$USER" == "root" ];
+then
+  echo Running depot tools as root is sad.
+  exit
+fi
+
+base_dir=$(dirname "$0")
+if [ -L "$base_dir" ]
+then
+    base_dir=`cd "$base_dir" && pwd -P`
+fi
+
+# Test if this script is running under a MSys install.  If it is, we will
+# hardcode the paths to SVN and Git where possible.
+OUTPUT="$(uname | grep 'MINGW')"
+MINGW=$?
+
+SVN="svn"
+if [ -d "$base_dir/svn_bin" -a $MINGW = 0 ]; then
+  SVN="$base_dir/svn_bin/svn.exe"
+fi
+
+GIT="git"
+if [ -d "$base_dir/git_bin" -a $MINGW = 0 ]; then
+  GIT="$base_dir/git_bin/bin/git.exe"
+fi
+
+# Test git and git --version.
+function test_git {
+  local GITV="$("$GIT" --version)" || {
+    echo "git isn't installed, please install it"
+    exit 1
+  }
+
+  GITV="${GITV##* }"          # Only examine last word (i.e. version number)
+  local GITD=( ${GITV//./ } ) # Split version number into decimals
+  if ((GITD[0] < 1 || (GITD[0] == 1 && GITD[1] < 6) )); then
+    echo "git version is ${GITV}, please update to a version later than 1.6"
+    exit 1
+  fi
+}
+
+# Test git svn and git svn --version.
+function test_git_svn {
+  local GITV="$("$GIT" svn --version)" || {
+    echo "git-svn isn't installed, please install it"
+    exit 1
+  }
+
+  GITV="${GITV#* version }"   # git svn --version has extra output to remove.
+  GITV="${GITV% (svn*}"
+  local GITD=( ${GITV//./ } ) # Split version number into decimals
+  if ((GITD[0] < 1 || (GITD[0] == 1 && GITD[1] < 6) )); then
+    echo "git version is ${GITV}, please update to a version later than 1.6"
+    exit 1
+  fi
+}
+
+# Get the current SVN revision.
+get_svn_revision() {
+  LANGUAGE=C "$SVN" info "$base_dir" | \
+      awk -F': ' '{ if ($1 == "Last Changed Rev") { print $2 }}'
+}
+
+# Update git checkouts.
+if [ "X$DEPOT_TOOLS_UPDATE" != "X0" -a -e "$base_dir/.git" ]
+then
+  cd $base_dir
+  test_git_svn
+  # work around a git-svn --quiet bug
+  OUTPUT=`"$GIT" svn rebase -q -q`
+  if [[ ! "$OUTPUT" == *Current.branch* ]]; then
+    echo $OUTPUT 1>&2
+  fi
+  cd - > /dev/null
+fi
+
+# We're on POSIX. We can now safely look for svn checkout.
+if [ "X$DEPOT_TOOLS_UPDATE" != "X0" -a -e "$base_dir/.svn" ]
+then
+  # Update the bootstrap directory to stay up-to-date with the latest
+  # depot_tools.
+  BEFORE_REVISION=$(get_svn_revision)
+  "$SVN" -q up "$base_dir"
+  AFTER_REVISION=$(get_svn_revision)
+  if [[ "$BEFORE_REVISION" != "$AFTER_REVISION" ]]; then
+    echo "Depot Tools has been updated to revision $AFTER_REVISION." 1>&2
+  fi
+fi
