@@ -8,6 +8,12 @@ base/compiler_specific.h
 base/base_switches.h
 base/base_switches.cc 
 base/atmicops.h
-base/atmicops_internals_x86_msvc.h 91103
+base/atmicops_internals_x86_msvc.h 
+base/threading/platform_thread.h 
+base/threading/platform_thread_win.cc
+base/win/windows_version.h
+base/win/windows_version.cc
+base/threading/thread_restrictions.h
+base/threading/thread_restrictions.cc@91103
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490

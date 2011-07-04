@@ -5,5 +5,7 @@
 *.sln
 *.ncb
 *.suo
-*/debug/
+*/Debug/
+*/Release/
+*/Purify/
 *.user
