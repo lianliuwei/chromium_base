@@ -14,6 +14,13 @@ base/threading/platform_thread_win.cc
 base/win/windows_version.h
 base/win/windows_version.cc
 base/threading/thread_restrictions.h
-base/threading/thread_restrictions.cc@91103
+base/threading/thread_restrictions.cc
+base/file_path.h
+base/file_path.cc
+base/string_util.h
+base/string_util.cc
+base/string_util_win.h
+base/string_printf.h
+base/string_printf.cc@91103
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490
