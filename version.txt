@@ -48,6 +48,7 @@ base/third_party/dmg_fp/dmg_fp/dtoa_wrapper.cc
 base/third_party/dmg_fp/dmg_fp/g_fmt.cc
 base/third_party/dmg_fp/dmg_fp/gcc_64_bit.patch
 base/third_party/dmg_fp/dmg_fp/gcc_warnings.patch
-base/third_party/dmg_fp/dmg_fp/mac_wextra.patch@91103
+base/third_party/dmg_fp/dmg_fp/mac_wextra.patch
+base/hash_tables.h@91103
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490
