@@ -29,6 +29,11 @@ base/utf_string_conversions_utf.cc
 base/third_party/icu/LICENSE
 base/third_party/icu/README.chromium
 base/third_party/icu/icu_utf.h
-base/third_party/icu/icu_utf.cc@91103
+base/third_party/icu/icu_utf.cc
+base/eintr_wrapper.h
+base/logging.h
+base/logging.cc
+base/vlog.h
+base/vlog.cc@91103
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490
