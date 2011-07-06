@@ -36,6 +36,8 @@ base/logging.cc
 base/vlog.h
 base/vlog.cc
 base/string_split.h
-base/string_split.cc@91103
+base/string_split.cc
+base/command_line.h
+base/command_line.cc@91103
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490
