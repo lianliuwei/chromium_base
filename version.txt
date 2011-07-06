@@ -38,6 +38,16 @@ base/vlog.cc
 base/string_split.h
 base/string_split.cc
 base/command_line.h
-base/command_line.cc@91103
+base/command_line.cc
+base/string_number_conversions.h
+base/string_number_conversions.cc
+base/third_party/dmg_fp/dmg_fp/README.chromium
+base/third_party/dmg_fp/dmg_fp/dmg_fp.h
+base/third_party/dmg_fp/dmg_fp/dtoa.cc
+base/third_party/dmg_fp/dmg_fp/dtoa_wrapper.cc
+base/third_party/dmg_fp/dmg_fp/g_fmt.cc
+base/third_party/dmg_fp/dmg_fp/gcc_64_bit.patch
+base/third_party/dmg_fp/dmg_fp/gcc_warnings.patch
+base/third_party/dmg_fp/dmg_fp/mac_wextra.patch@91103
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490
