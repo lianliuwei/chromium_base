@@ -53,6 +53,9 @@ base/hash_tables.h
 base/synchronization/lock.h
 base/synchronization/lock.cc
 base/synchronization/lock_impl.h
-base/synchronization/lock_impl_win.cc@91103
+base/synchronization/lock_impl_win.cc
+base/debug/debugger.h
+base/debug/debugger.cc
+base/debug/debugger_win.cc@91103
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490
