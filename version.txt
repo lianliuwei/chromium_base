@@ -77,7 +77,7 @@ base/third_party/dynamic_annotations/dynamic_annotations.c
 base/debug/stack_trace.h
 base/debug/stack_trace.cc
 base/debug/stack_trace_win.cc
-base/thread_local.h
-base/thread_local_win.cc@91103
+base/threading/thread_local.h
+base/threading/thread_local_win.cc@91103
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490

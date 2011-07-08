@@ -71,7 +71,9 @@
 		'memory/singleton.h',
 		'debug/stack_trace.h',
 		'debug/stack_trace.cc',
-		'debug/stack_trace_win.cc',
+		'debug/stack_trace_win.cc'
+		'threading/thread_local.h',
+		'threading/thread_local_win.cc',
       ],
       'include_dirs': [
           '..',
@@ -82,6 +84,22 @@
       ],
       'dependencies': [
         'third_party/dynamic_annotations/dynamic_annotations.gyp:dynamic_annotations',
+      ],
+      'conditions': [
+		[ 'OS == "win"', {
+		# 'include_dirs': [
+        #    '<(DEPTH)/third_party/wtl/include',
+        # ],
+          'sources!': [
+            'event_recorder_stubs.cc',
+            'file_descriptor_shuffle.cc',
+            'message_pump_libevent.cc',
+            # Not using sha1_win.cc because it may have caused a
+            # regression to page cycler moz.
+       #    'sha1_win.cc',
+            'string16.cc',
+            ],
+          },],
       ],
     },
   ],

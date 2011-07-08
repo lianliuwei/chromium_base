@@ -10,7 +10,7 @@
 
 #include "base/base_api.h"
 #include "base/basictypes.h"
-#include "base/gtest_prod_util.h"
+//#include "base/gtest_prod_util.h"
 #include "base/logging.h"
 #include "base/string16.h"
 
@@ -238,10 +238,10 @@ class BASE_API Pickle {
   size_t capacity_;
   size_t variable_buffer_offset_;  // IF non-zero, then offset to a buffer.
 
-  FRIEND_TEST_ALL_PREFIXES(PickleTest, Resize);
-  FRIEND_TEST_ALL_PREFIXES(PickleTest, FindNext);
-  FRIEND_TEST_ALL_PREFIXES(PickleTest, FindNextWithIncompleteHeader);
-  FRIEND_TEST_ALL_PREFIXES(PickleTest, IteratorHasRoom);
+//   FRIEND_TEST_ALL_PREFIXES(PickleTest, Resize);
+//   FRIEND_TEST_ALL_PREFIXES(PickleTest, FindNext);
+//   FRIEND_TEST_ALL_PREFIXES(PickleTest, FindNextWithIncompleteHeader);
+//   FRIEND_TEST_ALL_PREFIXES(PickleTest, IteratorHasRoom);
 };
 
 #endif  // BASE_PICKLE_H__
