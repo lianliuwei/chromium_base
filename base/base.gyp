@@ -71,6 +71,7 @@
 		'memory/singleton.h',
 		'debug/stack_trace.h',
 		'debug/stack_trace.cc',
+		'debug/stack_trace_win.cc',
 		'debug/stack_trace_win.cc'
 		'threading/thread_local.h',
 		'threading/thread_local_win.cc',
@@ -85,6 +86,11 @@
       'dependencies': [
         'third_party/dynamic_annotations/dynamic_annotations.gyp:dynamic_annotations',
       ],
+      'direct_dependent_settings': {
+        'include_dirs': [
+          '..',
+        ],
+      },
       'conditions': [
 		[ 'OS == "win"', {
 		# 'include_dirs': [

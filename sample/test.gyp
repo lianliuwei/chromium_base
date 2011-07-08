@@ -2,10 +2,10 @@
 {
   'targets' : [
     {
-      'target_name': 'gyp_test',
+      'target_name': 'singleton',
       'type': 'executable',
       'sources': [
-        'main.cpp',
+        'singleton/main.cc',
       ],
       'dependencies': [
         '../base/base.gyp:*',
