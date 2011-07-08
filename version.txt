@@ -20,8 +20,8 @@ base/file_path.cc
 base/string_util.h
 base/string_util.cc
 base/string_util_win.h
-base/string_printf.h
-base/string_printf.cc
+base/stringprintf.h
+base/stringprintf.cc
 base/utf_string_conversions.h
 base/utf_string_conversions.cc
 base/utf_string_conversion_utils.h
