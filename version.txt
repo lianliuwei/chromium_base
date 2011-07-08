@@ -61,6 +61,8 @@ base/gtest_prod_util.h
 base/pickle.h
 base/pickle.cc
 base/at_exit.h
-base/at_exit.cc@91103
+base/at_exit.cc
+base/sys_string_conversions.h
+base/sys_string_conversions_win.cc@91103
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490
