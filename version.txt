@@ -67,6 +67,7 @@ base/sys_string_conversions_win.cc
 base/string16.h
 base/string16.cc
 base/lazy_instance.h
-base/lazy_instance.cc@91103
+base/lazy_instance.cc
+base/memory/singleton.h@91103
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490
