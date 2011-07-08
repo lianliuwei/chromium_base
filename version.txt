@@ -24,8 +24,8 @@ base/string_printf.h
 base/string_printf.cc
 base/utf_string_conversions.h
 base/utf_string_conversions.cc
-base/utf_string_conversions_utf.h
-base/utf_string_conversions_utf.cc
+base/utf_string_conversion_utils.h
+base/utf_string_conversion_utils.cc
 base/third_party/icu/LICENSE
 base/third_party/icu/README.chromium
 base/third_party/icu/icu_utf.h
@@ -41,14 +41,14 @@ base/command_line.h
 base/command_line.cc
 base/string_number_conversions.h
 base/string_number_conversions.cc
-base/third_party/dmg_fp/dmg_fp/README.chromium
-base/third_party/dmg_fp/dmg_fp/dmg_fp.h
-base/third_party/dmg_fp/dmg_fp/dtoa.cc
-base/third_party/dmg_fp/dmg_fp/dtoa_wrapper.cc
-base/third_party/dmg_fp/dmg_fp/g_fmt.cc
-base/third_party/dmg_fp/dmg_fp/gcc_64_bit.patch
-base/third_party/dmg_fp/dmg_fp/gcc_warnings.patch
-base/third_party/dmg_fp/dmg_fp/mac_wextra.patch
+base/third_party/dmg_fp/README.chromium
+base/third_party/dmg_fp/dmg_fp.h
+base/third_party/dmg_fp/dtoa.cc
+base/third_party/dmg_fp/dtoa_wrapper.cc
+base/third_party/dmg_fp/g_fmt.cc
+base/third_party/dmg_fp/gcc_64_bit.patch
+base/third_party/dmg_fp/gcc_warnings.patch
+base/third_party/dmg_fp/mac_wextra.patch
 base/hash_tables.h
 base/synchronization/lock.h
 base/synchronization/lock.cc
@@ -63,6 +63,8 @@ base/pickle.cc
 base/at_exit.h
 base/at_exit.cc
 base/sys_string_conversions.h
-base/sys_string_conversions_win.cc@91103
+base/sys_string_conversions_win.cc
+base/string16.h
+base/string16.cc@91103
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490
