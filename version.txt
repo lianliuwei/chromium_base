@@ -68,6 +68,11 @@ base/string16.h
 base/string16.cc
 base/lazy_instance.h
 base/lazy_instance.cc
-base/memory/singleton.h@91103
+base/memory/singleton.h
+base/third_party/dynamic_annotations/LICENSE
+base/third_party/dynamic_annotations/README.chromium
+base/third_party/dynamic_annotations/dynamic_annotations.gyp
+base/third_party/dynamic_annotations/dynamic_annotations.h
+base/third_party/dynamic_annotations/dynamic_annotations.c@91103
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490
