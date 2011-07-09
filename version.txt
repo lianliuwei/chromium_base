@@ -78,6 +78,6 @@ base/debug/stack_trace.h
 base/debug/stack_trace.cc
 base/debug/stack_trace_win.cc
 base/threading/thread_local.h
-base/threading/thread_local_win.cc@91103
+base/threading/thread_local_win.cc@22dbe78e7e9b8baae2d6cec66347ba03ae1dafed
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490

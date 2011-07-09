@@ -4,6 +4,7 @@
 
 #include "base/string_number_conversions.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <wctype.h>
@@ -403,11 +404,13 @@ bool StringToInt(std::string::const_iterator begin,
                                                                  output);
 }
 
+#if !defined(STD_STRING_ITERATOR_IS_CHAR_POINTER)
 bool StringToInt(const char* begin, const char* end, int* output) {
   return IteratorRangeToNumber<CharBufferToIntTraits>::Invoke(begin,
                                                               end,
                                                               output);
 }
+#endif
 
 bool StringToInt(const string16& input, int* output) {
   return IteratorRangeToNumber<WideIteratorRangeToIntTraits>::Invoke(
@@ -422,11 +425,13 @@ bool StringToInt(string16::const_iterator begin,
                                                                      output);
 }
 
+#if !defined(BASE_STRING16_ITERATOR_IS_CHAR16_POINTER)
 bool StringToInt(const char16* begin, const char16* end, int* output) {
   return IteratorRangeToNumber<WideCharBufferToIntTraits>::Invoke(begin,
                                                                   end,
                                                                   output);
 }
+#endif
 
 bool StringToInt64(const std::string& input, int64* output) {
   return IteratorRangeToNumber<IteratorRangeToInt64Traits>::Invoke(
@@ -441,11 +446,13 @@ bool StringToInt64(std::string::const_iterator begin,
                                                                  output);
 }
 
+#if !defined(STD_STRING_ITERATOR_IS_CHAR_POINTER)
 bool StringToInt64(const char* begin, const char* end, int64* output) {
   return IteratorRangeToNumber<CharBufferToInt64Traits>::Invoke(begin,
                                                               end,
                                                               output);
 }
+#endif
 
 bool StringToInt64(const string16& input, int64* output) {
   return IteratorRangeToNumber<WideIteratorRangeToInt64Traits>::Invoke(
@@ -460,11 +467,13 @@ bool StringToInt64(string16::const_iterator begin,
                                                                      output);
 }
 
+#if !defined(BASE_STRING16_ITERATOR_IS_CHAR16_POINTER)
 bool StringToInt64(const char16* begin, const char16* end, int64* output) {
   return IteratorRangeToNumber<WideCharBufferToInt64Traits>::Invoke(begin,
                                                                   end,
                                                                   output);
 }
+#endif
 
 bool StringToDouble(const std::string& input, double* output) {
   errno = 0;  // Thread-safe?  It is on at least Mac, Linux, and Windows.
@@ -521,11 +530,13 @@ bool HexStringToInt(std::string::const_iterator begin,
                                                                     output);
 }
 
+#if !defined(STD_STRING_ITERATOR_IS_CHAR_POINTER)
 bool HexStringToInt(const char* begin, const char* end, int* output) {
   return IteratorRangeToNumber<HexCharBufferToIntTraits>::Invoke(begin,
                                                                     end,
                                                                     output);
 }
+#endif
 
 bool HexStringToBytes(const std::string& input, std::vector<uint8>* output) {
   return HexStringToBytesT(input, output);
