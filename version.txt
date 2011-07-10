@@ -7,8 +7,8 @@ base/string_piece.cc
 base/compiler_specific.h  
 base/base_switches.h
 base/base_switches.cc 
-base/atmicops.h
-base/atmicops_internals_x86_msvc.h 
+base/atomicops.h
+base/atomicops_internals_x86_msvc.h 
 base/threading/platform_thread.h 
 base/threading/platform_thread_win.cc
 base/win/windows_version.h

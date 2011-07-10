@@ -2,6 +2,8 @@
 *.pyc
 .gclient_entries
 *.vcproj
+*.vcxproj
+*.vcxproj.filters
 *.sln
 *.ncb
 *.suo

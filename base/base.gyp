@@ -13,8 +13,8 @@
 		'compiler_specific.h',
 		'base_switches.h',
 		'base_switches.cc',
-		'atmicops.h',
-		'atmicops_internals_x86_msvc.h',
+		'atomicops.h',
+		'atomicops_internals_x86_msvc.h',
 		'threading/platform_thread.h',
 		'threading/platform_thread_win.cc',
 		'win/windows_version.h',
@@ -72,7 +72,6 @@
 		'debug/stack_trace.h',
 		'debug/stack_trace.cc',
 		'debug/stack_trace_win.cc',
-		'debug/stack_trace_win.cc'
 		'threading/thread_local.h',
 		'threading/thread_local_win.cc',
       ],
