@@ -78,6 +78,16 @@ base/debug/stack_trace.h
 base/debug/stack_trace.cc
 base/debug/stack_trace_win.cc
 base/threading/thread_local.h
-base/threading/thread_local_win.cc@64c25351920a41fa02cc1ca53b0c2d1829dfa657
+base/threading/thread_local_win.cc
+base/atomic_ref_count.h
+base/memory/ref_counted.h
+base/memory/ref_counted.cc
+base/memory/weak_ptr.h
+base/memory/weak_ptr.cc
+base/threading/thread_checker.h
+base/threading/thread_checker_impl.h
+base/threading/thread_checker_impl.cc
+base/threading/thread_collision_warner.h
+base/threading/thread_collision_warner.cc@64c25351920a41fa02cc1ca53b0c2d1829dfa657
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490
