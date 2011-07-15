@@ -11,5 +11,16 @@
         '../base/base.gyp:*',
       ],
     },
+    {
+      'target_name': 'observer_list',
+      'type': 'executable',
+      'sources': [
+        'observer_list/main.cc',
+      ],
+      'dependencies': [
+        '../base/base.gyp:*',
+      ],
+    },
   ],
+
 }

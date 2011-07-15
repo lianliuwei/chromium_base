@@ -84,6 +84,7 @@
 		'threading/thread_checker_impl.cc',
 		'threading/thread_collision_warner.h',
 		'threading/thread_collision_warner.cc',
+		'oserver_list.h',
       ],
       'include_dirs': [
           '..',
