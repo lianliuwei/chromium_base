@@ -1,13 +1,21 @@
-*.svn*
+#svn file
+.svn/
 *.pyc
 .gclient_entries
+#generate folder
+Debug/
+Release/
+Purify/
+#visual studio files
 *.vcproj
 *.vcxproj
 *.vcxproj.filters
 *.sln
 *.ncb
 *.suo
-*/Debug/
-*/Release/
-*/Purify/
 *.user
+*.ipch
+*.obj
+*.lib
+*.pdb
+*.sdf
