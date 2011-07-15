@@ -85,6 +85,8 @@
 		'threading/thread_collision_warner.h',
 		'threading/thread_collision_warner.cc',
 		'oserver_list.h',
+		'memory/scoped_handle.h',
+		'memory/scoped_ptr.h',
       ],
       'include_dirs': [
           '..',

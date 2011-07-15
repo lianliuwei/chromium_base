@@ -21,6 +21,16 @@
         '../base/base.gyp:*',
       ],
     },
+    {
+      'target_name': 'scoped_ptr',
+      'type': 'executable',
+      'sources': [
+        'scoped_ptr/main.cc',
+      ],
+      'dependencies': [
+        '../base/base.gyp:*',
+      ],
+    },
   ],
 
 }

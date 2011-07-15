@@ -89,6 +89,8 @@ base/threading/thread_checker_impl.h
 base/threading/thread_checker_impl.cc
 base/threading/thread_collision_warner.h
 base/threading/thread_collision_warner.cc
-base/oserver_list.h@64c25351920a41fa02cc1ca53b0c2d1829dfa657
+base/oserver_list.h@64c2535192
+base/memory/scoped_handle.h
+base/memory/scoped_ptr.h0a41fa02cc1ca53b0c2d1829dfa657
 
 build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490
