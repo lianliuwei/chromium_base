@@ -44,12 +44,12 @@
       'conditions': [
         ['component=="shared_library"', {
           # See http://msdn.microsoft.com/en-us/library/aa652367.aspx
-          'win_release_RuntimeLibrary%': '2', # 2 = /MT (nondebug DLL)
-          'win_debug_RuntimeLibrary%': '3',   # 3 = /MTd (debug DLL)
+          'win_release_RuntimeLibrary%': '2', # 2 = /MD (nondebug DLL)
+          'win_debug_RuntimeLibrary%': '3',   # 3 = /MDd (debug DLL)
         }, {
           # See http://msdn.microsoft.com/en-us/library/aa652367.aspx
-          'win_release_RuntimeLibrary%': '0', # 0 = /MT (nondebug static)
-          'win_debug_RuntimeLibrary%': '1',   # 1 = /MTd (debug static)
+          'win_release_RuntimeLibrary%': '2', 
+          'win_debug_RuntimeLibrary%': '3', 
         }],
         ['component=="shared_library"', {
           'win_use_allocator_shim%': 0,
