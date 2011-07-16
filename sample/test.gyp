@@ -31,6 +31,16 @@
         '../base/base.gyp:*',
       ],
     },
+    {
+      'target_name': 'log',
+      'type': 'executable',
+      'sources': [
+        'log/main.cc',
+      ],
+      'dependencies': [
+        '../base/base.gyp:*',
+      ],
+    },
   ],
 
 }
