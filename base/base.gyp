@@ -46,7 +46,7 @@
 		'string_number_conversions.h',
 		'string_number_conversions.cc',
 		'third_party/dmg_fp/dmg_fp.h',
-		'third_party/dmg_fp/dtoa.cc',
+		#'third_party/dmg_fp/dtoa.cc', #wrapper include this
 		'third_party/dmg_fp/dtoa_wrapper.cc',
 		'third_party/dmg_fp/g_fmt.cc',
 		'hash_tables.h',
@@ -84,7 +84,7 @@
 		'threading/thread_checker_impl.cc',
 		'threading/thread_collision_warner.h',
 		'threading/thread_collision_warner.cc',
-		'oserver_list.h',
+		'observer_list.h',
 		'memory/scoped_handle.h',
 		'memory/scoped_ptr.h',
       ],
@@ -94,7 +94,20 @@
       # These warnings are needed for the files in third_party\dmg_fp.
       'msvs_disabled_warnings': [
         4244, 4554, 4018, 4102,
-      ],
+      #],
+	  #'msvs_disabled_warnings': [
+		  4351, 4396, 4503, 4819,
+          # TODO(maruel): These warnings are level 4. They will be slowly
+          # removed as code is fixed.
+          4100, 4121, 4125, 4127, 4130, 4131, 4189, 4201, 4238, 4244, 4245,
+          4310, 4355, 4428, 4481, 4505, 4510, 4512, 4530, 4610, 4611, 4701,
+          4702, 4706,
+       #],
+	 #'msvs_disabled_warnings': [
+          4251,  # class 'std::xx' needs to have dll-interface.
+     #],
+	      4275, # not dll-interface
+	  ],
       'dependencies': [
         'third_party/dynamic_annotations/dynamic_annotations.gyp:dynamic_annotations',
       ],
@@ -114,7 +127,7 @@
             'message_pump_libevent.cc',
             # Not using sha1_win.cc because it may have caused a
             # regression to page cycler moz.
-       #    'sha1_win.cc',
+			#'sha1_win.cc',
             'string16.cc',
             ],
           },],
