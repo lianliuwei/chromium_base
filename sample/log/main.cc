@@ -3,6 +3,8 @@
 #include "base/logging.h"
 #include "base/command_line.h"
 
+//still leak some memory because the global obj VlogInfo in logging. not method
+//to release
 int main(int argc, char** argv)
 {
     using namespace logging;
@@ -30,7 +32,11 @@ int main(int argc, char** argv)
     LOG(WARNING) << "warning log";
     LOG(ERROR) << "error log";
     LOG(ERROR_REPORT) << "error_report log";
-    LOG(FATAL) << "FATAL log";
-
+    //LOG(FATAL) << "FATAL log";
+    
+    //close to release global obj
+    CloseLogFile();
+    CommandLine::Reset();
+    
     return 0;
 }
