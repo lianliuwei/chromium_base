@@ -41,6 +41,16 @@
         '../base/base.gyp:*',
       ],
     },
+    {
+      'target_name': 'arraySize',
+      'type': 'executable',
+      'sources': [
+        'arraySize/main.cc',
+      ],
+      'dependencies': [
+        '../base/base.gyp:*',
+      ],
+    },
   ],
 
 }
