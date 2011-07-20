@@ -51,6 +51,16 @@
         '../base/base.gyp:*',
       ],
     },
+	{
+      'target_name': 'callback',
+      'type': 'executable',
+      'sources': [
+        'callback/main.cc',
+      ],
+      'dependencies': [
+        '../base/base.gyp:*',
+      ],
+    },
   ],
 
 }

@@ -19,5 +19,6 @@ Purify/
 *.lib
 *.pdb
 *.sdf
+*.opensdf
 #generate log file
 *.log
