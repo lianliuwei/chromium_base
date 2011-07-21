@@ -91,7 +91,7 @@ base/threading/thread_collision_warner.h
 base/threading/thread_collision_warner.cc
 base/observer_list.h
 base/memory/scoped_handle.h
-base/memory/scoped_ptr.h@64c25351920a41fa02cc1ca53b0c2d1829dfa657
+base/memory/scoped_ptr.h
 base/bind.h
 base/bind_helpers.h
 base/bind_internal.h
@@ -99,6 +99,6 @@ base/bind_internal_win.h
 base/callback.h
 base/callback_internal.h
 base/callback_internal.cc
-base/template_util.h@7232f3589eca9cbd355902ce45c9037bdc1cfc96
+base/template_util.h@9407b009f3e61c8a6b82d26b278f6a821d7667a1
 
-build/common.gypi gyp_test@01922df683529dc823f264187e8a1a95aaaed490
+build/common.gypi modify from gyp_test@01922df683529dc823f264187e8a1a95aaaed490
