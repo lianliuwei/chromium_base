@@ -61,6 +61,16 @@
         '../base/base.gyp:*',
       ],
     },
+	{
+      'target_name': 'time',
+      'type': 'executable',
+      'sources': [
+        'time/main.cc',
+      ],
+      'dependencies': [
+        '../base/base.gyp:*',
+      ],
+    },
   ],
 
 }

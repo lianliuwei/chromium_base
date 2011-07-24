@@ -99,6 +99,18 @@ base/bind_internal_win.h
 base/callback.h
 base/callback_internal.h
 base/callback_internal.cc
-base/template_util.h@9407b009f3e61c8a6b82d26b278f6a821d7667a1
+base/template_util.h
+base/time.h
+base/time.cc
+base/time_win.cc
+base/third_party/nspr/prtypes.h
+base/third_party/nspr/prtime.h
+base/third_party/nspr/prtime.cc
+base/third_party/nspr/prcpucfg.h
+base/third_party/nspr/prcpucfg_win.h
+base/third_party/nspr/README.chromium
+base/third_party/nspr/LICENSE
+base/cpu.h
+base/cpu.cc@9407b009f3e61c8a6b82d26b278f6a821d7667a1
 
 build/common.gypi modify from gyp_test@01922df683529dc823f264187e8a1a95aaaed490
