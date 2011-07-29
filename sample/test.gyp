@@ -71,6 +71,16 @@
         '../base/base.gyp:*',
       ],
     },
+    {
+      'target_name': 'message_loop',
+      'type': 'executable',
+      'sources': [
+        'message_loop/main.cc',
+      ],
+      'dependencies': [
+        '../base/base.gyp:*',
+      ],
+    },
   ],
 
 }

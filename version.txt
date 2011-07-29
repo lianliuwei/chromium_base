@@ -111,6 +111,45 @@ base/third_party/nspr/prcpucfg_win.h
 base/third_party/nspr/README.chromium
 base/third_party/nspr/LICENSE
 base/cpu.h
-base/cpu.cc@9407b009f3e61c8a6b82d26b278f6a821d7667a1
+base/cpu.cc 
+from chromium/src@9407b009f3e61c8a6b82d26b278f6a821d7667a1
+base/callback_old.h
+base/message_loop.h
+base/message_loop.cc
+base/message_loop_proxy.h
+base/message_loop_proxy.cc
+base/message_loop_proxy_impl.h
+base/message_loop_proxy_impl.cc
+base/message_pump.h
+base/message_pump.cc
+base/message_pump_win.h
+base/message_pump_win.cc
+base/task.h
+base/task.cc
+base/tracked.h
+base/tracked.cc
+base/tracked_objects.h
+base/tracked_objects.cc
+base/synchronization/waitable_event.h
+base/synchronization/waitable_event_win.cc
+base/memory/raw_scoped_refptr_mismatch_checker.h
+base/threading/thread.h
+base/threading/thread.cc
+base/threading/thread_local_storage.h
+base/threading/thread_local_storage_win.cc
+base/tuple.h
+base/win/socped_handle.h
+base/win/wrapped_window_proc.h
+base/win/wrapped_window_proc.cc
+base/format_macros.h
+base/message_pump_default.h
+base/message_pump_default.cc modify
+base/metrics/histogram.h motify
+base/metrics/histogram.cc
+base/debug/leak_annotations.h
+base/debug/alias.h
+base/debug/alias.cc
+from chromium/src@8db2b66fba23d5d1abaf17456027d42954540b76
 
-build/common.gypi modify from gyp_test@01922df683529dc823f264187e8a1a95aaaed490
+build/common.gypi modify
+from gyp_test@01922df683529dc823f264187e8a1a95aaaed490
