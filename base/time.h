@@ -286,7 +286,7 @@ class BASE_API Time {
   // subsequent deactivate call.
   // All callers to activate the high resolution timer must eventually call
   // this function to deactivate the high resolution timer.
-   static bool ActivateHighResolutionTimer(bool activate);
+  static bool ActivateHighResolutionTimer(bool activate);
 
   // Returns true if the high resolution timer is both enabled and activated.
   // This is provided for testing only, and is not tracked in a thread-safe
