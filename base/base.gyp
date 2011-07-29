@@ -130,7 +130,7 @@
 		'threading/thread.cc',
 		'threading/thread_local_storage.h',
 		'threading/thread_local_storage_win.cc',
-		'win/socped_handle.h',
+		'win/scoped_handle.h',
 		'win/wrapped_window_proc.h',
 		'win/wrapped_window_proc.cc',
 		'tuple.h',
