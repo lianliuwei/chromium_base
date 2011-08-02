@@ -91,6 +91,16 @@
         '../base/base.gyp:*',
       ],
     },
+    {
+      'target_name': 'thread',
+      'type': 'executable',
+      'sources': [
+        'thread/main.cc',
+      ],
+      'dependencies': [
+        '../base/base.gyp:*',
+      ],
+    },
   ],
 
 }
