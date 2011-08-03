@@ -94,6 +94,8 @@
       ['component=="static_library"', {
         'defines': [
           '_HAS_EXCEPTIONS=0',
+          #using with /MD and /MDd
+          '_STATIC_CPPLIB',
         ],
       }],
       ['secure_atl', {
@@ -106,7 +108,13 @@
     'msvs_system_include_dirs': [
       '$(VSInstallDir)/VC/atlmfc/include',
     ],
-    
+    'msvs_disabled_warnings': [4351, 4396, 4503, 4819,
+      # TODO(maruel): These warnings are level 4. They will be slowly
+      # removed as code is fixed.
+      4100, 4121, 4125, 4127, 4130, 4131, 4189, 4201, 4238, 4244, 4245,
+      4310, 4355, 4428, 4481, 4505, 4510, 4512, 4530, 4610, 4611, 4701,
+      4702, 4706,
+    ],
     'msvs_settings': {
       'VCCLCompilerTool': {
         'MinimalRebuild': 'false',
