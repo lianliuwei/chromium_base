@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Copyright (c) 2011 The Chromium Authors. All rights reserved.
+# Copyright (c) 2011 Google Inc. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -8,6 +8,7 @@
 
 
 import os
+import shutil
 import subprocess
 import sys
 
@@ -46,12 +47,19 @@ def GypTestFormat(title, format, msvs_version=None):
 
 
 def GypBuild():
+  # Dump out/ directory.
+  print '@@@BUILD_STEP cleanup@@@'
+  print 'Removing out/ ...'
+  shutil.rmtree('out', ignore_errors=True)
+  print 'Done.'
+
   retcode = 0
   if sys.platform.startswith('linux'):
     retcode += GypTestFormat('scons', format='scons')
     retcode += GypTestFormat('make', format='make')
   elif sys.platform == 'darwin':
     retcode += GypTestFormat('xcode', format='xcode')
+    retcode += GypTestFormat('make', format='make')
   elif sys.platform == 'win32':
     retcode += GypTestFormat('msvs-2008', format='msvs', msvs_version='2008')
     if os.environ['BUILDBOT_BUILDERNAME'] == 'gyp-win64':

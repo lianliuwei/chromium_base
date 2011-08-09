@@ -1,9 +1,10 @@
 #!/usr/bin/python
 
-# Copyright (c) 2011 The Chromium Authors. All rights reserved.
+# Copyright (c) 2011 Google Inc. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import copy
 import ntpath
 import os
 import posixpath
@@ -74,6 +75,7 @@ generator_additional_path_sections = [
 generator_additional_non_configuration_keys = [
     'msvs_cygwin_dirs',
     'msvs_cygwin_shell',
+    'msvs_shard',
 ]
 
 
@@ -1525,8 +1527,11 @@ def _GetPathOfProject(qualified_target, spec, options, msvs_version):
   if options.generator_output:
     project_dir_path = os.path.dirname(os.path.abspath(proj_path))
     proj_path = os.path.join(options.generator_output, proj_path)
-    fix_prefix = gyp.common.RelativePath(project_dir_path,
-                                         os.path.dirname(proj_path))
+    if options.msvs_abspath_output:
+      fix_prefix = project_dir_path
+    else:
+      fix_prefix = gyp.common.RelativePath(project_dir_path,
+                                           os.path.dirname(proj_path))
   return proj_path, fix_prefix
 
 
@@ -1597,6 +1602,14 @@ def CalculateVariables(default_variables, params):
   # Stash msvs_version for later (so we don't have to probe the system twice).
   params['msvs_version'] = msvs_version
 
+  # The generation of Visual Studio vcproj files currently calculates the
+  # relative path of some files more than once, which can cause errors depending
+  # on the directory within which gyp is run.  With this option, we output
+  # these as absolute paths instead and are thus immune from that problem.
+  # See http://code.google.com/p/gyp/issues/detail?id=201
+  params['msvs_abspath_output'] = generator_flags.get(
+    'msvs_abspath_output', False)
+
   # Set a variable so conditions can be based on msvs_version.
   default_variables['MSVS_VERSION'] = msvs_version.ShortName()
 
@@ -1609,6 +1622,75 @@ def CalculateVariables(default_variables, params):
     default_variables['MSVS_OS_BITS'] = 64
   else:
     default_variables['MSVS_OS_BITS'] = 32
+
+
+def _ShardName(name, number):
+  """Add a shard number to the end of a target.
+
+  Arguments:
+    name: name of the target (foo#target)
+    number: shard number
+  Returns:
+    Target name with shard added (foo_1#target)
+  """
+  parts = name.rsplit('#', 1)
+  parts[0] = '%s_%d' % (parts[0], number)
+  return '#'.join(parts)
+
+
+def _ShardTargets(target_list, target_dicts):
+  """Shard some targets apart to work around the linkers limits.
+
+  Arguments:
+    target_list: List of target pairs: 'base/base.gyp:base'.
+    target_dicts: Dict of target properties keyed on target pair.
+  Returns:
+    Tuple of the new sharded versions of the inputs.
+  """
+  # Gather the targets to shard, and how many pieces.
+  targets_to_shard = {}
+  for t in target_dicts:
+    shards = int(target_dicts[t].get('msvs_shard', 0))
+    if shards:
+      targets_to_shard[t] = shards
+  print targets_to_shard
+  # Shard target_list.
+  new_target_list = []
+  for t in target_list:
+    if t in targets_to_shard:
+      for i in range(targets_to_shard[t]):
+        new_target_list.append(_ShardName(t, i))
+    else:
+      new_target_list.append(t)
+  # Shard target_dict.
+  new_target_dicts = {}
+  for t in target_dicts:
+    if t in targets_to_shard:
+      for i in range(targets_to_shard[t]):
+        name = _ShardName(t, i)
+        new_target_dicts[name] = copy.copy(target_dicts[t])
+        new_target_dicts[name]['target_name'] = _ShardName(
+             new_target_dicts[name]['target_name'], i)
+        sources = new_target_dicts[name].get('sources', [])
+        new_sources = []
+        for pos in range(i, len(sources), targets_to_shard[t]):
+          new_sources.append(sources[pos])
+        new_target_dicts[name]['sources'] = new_sources
+    else:
+      new_target_dicts[t] = target_dicts[t]
+  # Shard dependencies.
+  for t in new_target_dicts:
+    dependencies = copy.copy(new_target_dicts[t].get('dependencies', []))
+    new_dependencies = []
+    for d in dependencies:
+      if d in targets_to_shard:
+        for i in range(targets_to_shard[d]):
+          new_dependencies.append(_ShardName(d, i))
+      else:
+        new_dependencies.append(d)
+    new_target_dicts[t]['dependencies'] = new_dependencies
+
+  return (new_target_list, new_target_dicts)
 
 
 def GenerateOutput(target_list, target_dicts, data, params):
@@ -1627,6 +1709,10 @@ def GenerateOutput(target_list, target_dicts, data, params):
   # Get the project file format version back out of where we stashed it in
   # GeneratorCalculatedVariables.
   msvs_version = params['msvs_version']
+  options.msvs_abspath_output = params['msvs_abspath_output']
+
+  # Optionally shard targets marked with 'msvs_shard': SHARD_COUNT.
+  (target_list, target_dicts) = _ShardTargets(target_list, target_dicts)
 
   # Prepare the set of configurations.
   configs = set()
@@ -2257,36 +2343,32 @@ def _GetMSBuildGlobalProperties(spec, guid, gyp_file_name):
 
 
 def _GetMSBuildConfigurationDetails(spec, build_file):
-  groups = []
-  for (name, settings) in sorted(spec['configurations'].iteritems()):
+  properties = {}
+  for name, settings in spec['configurations'].iteritems():
     msbuild_attributes = _GetMSBuildAttributes(spec, settings, build_file)
-    group = ['PropertyGroup',
-             {'Condition': _GetConfigurationCondition(name, settings),
-              'Label': 'Configuration'},
-             ['ConfigurationType', msbuild_attributes['ConfigurationType']]]
-    if 'CharacterSet' in msbuild_attributes:
-      group.append(['CharacterSet', msbuild_attributes['CharacterSet']])
-    groups.append(group)
-  return groups
+    condition = _GetConfigurationCondition(name, settings)
+    character_set = msbuild_attributes.get('CharacterSet')
+    _AddConditionalProperty(properties, condition, 'ConfigurationType',
+                            msbuild_attributes['ConfigurationType'])
+    if character_set:
+      _AddConditionalProperty(properties, condition, 'CharacterSet',
+                              character_set)
+  return _GetMSBuildPropertyGroup(spec, 'Configuration', properties)
 
 
 def _GetMSBuildPropertySheets(configurations):
-  sheets = []
-  for (name, settings) in sorted(configurations.iteritems()):
-    user_props = r'$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props'
-    sheets.append(
-        ['ImportGroup',
-         {'Label': 'PropertySheets',
-          'Condition': _GetConfigurationCondition(name, settings)
-         },
-         ['Import',
-          {'Project': user_props,
-           'Condition': "exists('%s')" % user_props,
-           'Label': 'LocalAppDataPlatform'
-          }
-         ]
-        ])
-  return sheets
+  user_props = r'$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props'
+  return [
+      ['ImportGroup',
+       {'Label': 'PropertySheets'},
+       ['Import',
+        {'Project': user_props,
+         'Condition': "exists('%s')" % user_props,
+         'Label': 'LocalAppDataPlatform'
+        }
+       ]
+      ]
+    ]
 
 
 def _GetMSBuildAttributes(spec, config, build_file):
@@ -2319,40 +2401,83 @@ def _GetMSBuildAttributes(spec, config, build_file):
 
 
 def _GetMSBuildConfigurationGlobalProperties(spec, configurations, build_file):
-  group = ['PropertyGroup']
+  # TODO(jeanluc) We could optimize out the following and do it only if
+  # there are actions.
+  # TODO(jeanluc) Handle the equivalent of setting 'CYGWIN=nontsec'.
+  new_paths = []
+  cygwin_dirs = spec.get('msvs_cygwin_dirs', ['.'])[0]
+  if cygwin_dirs:
+    cyg_path = '$(MSBuildProjectDirectory)\\%s\\bin\\' % _FixPath(cygwin_dirs)
+    new_paths.append(cyg_path)
+    # TODO(jeanluc) Change the convention to have both a cygwin_dir and a
+    # python_dir.
+    python_path = cyg_path.replace('cygwin\\bin', 'python_26')
+    new_paths.append(python_path)
+    if new_paths:
+      new_paths = '$(ExecutablePath);' + ';'.join(new_paths)
+
+  properties = {}
   for (name, configuration) in sorted(configurations.iteritems()):
     condition = _GetConfigurationCondition(name, configuration)
     attributes = _GetMSBuildAttributes(spec, configuration, build_file)
     msbuild_settings = configuration['finalized_msbuild_settings']
-    group.extend(
-        [['IntDir',
-          {'Condition': condition},
-          attributes['IntermediateDirectory']
-         ],
-         ['OutDir',
-          {'Condition': condition},
-          attributes['OutputDirectory']
-         ],
-        ])
-    # TODO(jeanluc) We could optimize out the following and do it only if
-    # there are actions.
-    # TODO(jeanluc) Handle the equivalent of setting 'CYGWIN=nontsec'.
-    new_paths = []
-    cygwin_dirs = spec.get('msvs_cygwin_dirs', ['.'])[0]
-    if cygwin_dirs:
-      cyg_path = '$(MSBuildProjectDirectory)\\%s\\bin\\' % _FixPath(cygwin_dirs)
-      new_paths.append(cyg_path)
-      # TODO(jeanluc) Change the convention to have both a cygwin_dir and a
-      # python_dir.
-      python_path = cyg_path.replace('cygwin\\bin', 'python_26')
-      new_paths.append(python_path)
+    _AddConditionalProperty(properties, condition, 'IntDir',
+                            attributes['IntermediateDirectory'])
+    _AddConditionalProperty(properties, condition, 'OutDir',
+                            attributes['OutputDirectory'])
     if new_paths:
-      group.append(['ExecutablePath', {'Condition': condition},
-                    '$(ExecutablePath);' + ';'.join(new_paths)])
+      _AddConditionalProperty(properties, condition, 'ExecutablePath',
+                              new_paths)
     tool_settings = msbuild_settings.get('', {})
     for name, value in sorted(tool_settings.iteritems()):
       formatted_value = _GetValueFormattedForMSBuild('', name, value)
-      group.append([name, {'Condition': condition}, formatted_value])
+      _AddConditionalProperty(properties, condition, name, formatted_value)
+  return _GetMSBuildPropertyGroup(spec, None, properties)
+
+
+def _AddConditionalProperty(properties, condition, name, value):
+  """Adds a property / conditional value pair to a dictionary.
+
+  Arguments:
+    properties: The dictionary to be modified.  The key is the name of the
+        property.  The value is itself a dictionary; its key is the value and
+        the value a list of condition for which this value is true.
+    condition: The condition under which the named property has the value.
+    name: The name of the property.
+    value: The value of the property.
+  """
+  if name not in properties:
+    properties[name] = {}
+  values = properties[name]
+  if value not in values:
+    values[value] = []
+  conditions = values[value]
+  conditions.append(condition)
+
+
+def _GetMSBuildPropertyGroup(spec, label, properties):
+  """Returns a PropertyGroup definition for the specified properties.
+
+  Arguments:
+    spec: The target project dict.
+    label: An optional label for the PropertyGroup.
+    properties: The dictionary to be converted.  The key is the name of the
+        property.  The value is itself a dictionary; its key is the value and
+        the value a list of condition for which this value is true.
+  """
+  group = ['PropertyGroup']
+  if label:
+    group.append({'Label': label})
+  num_configurations = len(spec['configurations'])
+  for name, values in sorted(properties.iteritems()):
+    for value, conditions in sorted(values.iteritems()):
+      if len(conditions) == num_configurations:
+        # If the value is the same all configurations,
+        # just add one unconditional entry.
+        group.append([name, value])
+      else:
+        for condition in conditions:
+          group.append([name, {'Condition': condition}, value])
   return [group]
 
 
@@ -2509,16 +2634,22 @@ def _AddSources2(spec, root_dir, sources, exclusions, grouped_sources,
     else:
       # If it is a regular source file, i.e. not created at run time,
       # warn if it does not exists.  Missing header files will cause needless
-      # but no otherwise visible errors.
+      # recompilation but no otherwise visible errors.
       if '$' not in source:
         full_path = os.path.join(root_dir, source)
         if not os.path.exists(full_path):
           print 'Warning: Missing input file ' + full_path
       if not source in sources_handled_by_action:
         detail = []
-        for config_name, configuration in sorted(exclusions.get(source, [])):
-          condition = _GetConfigurationCondition(config_name, configuration)
-          detail.append(['ExcludedFromBuild', {'Condition': condition}, 'true'])
+        excluded_configurations = exclusions.get(source, [])
+        if len(excluded_configurations) == len(spec['configurations']):
+          detail.append(['ExcludedFromBuild', 'true'])
+        else:
+          for config_name, configuration in sorted(excluded_configurations):
+            condition = _GetConfigurationCondition(config_name, configuration)
+            detail.append(['ExcludedFromBuild',
+                           {'Condition': condition},
+                           'true'])
         # Add precompile if needed
         for config_name, configuration in spec['configurations'].iteritems():
           precompiled_source = configuration.get('msvs_precompiled_source', '')
@@ -2709,19 +2840,13 @@ def _AddMSBuildAction(spec, primary_input, inputs, outputs, cmd, description,
   outputs = ';'.join(outputs_array)
   sources_handled_by_action.add(primary_input)
   action_spec = ['CustomBuild', {'Include': primary_input}]
-  for name, configuration in spec['configurations'].iteritems():
-    condition_clause = {
-        'Condition':
-        _GetConfigurationCondition(name, configuration)
-        }
-    action_spec.extend(
-        # TODO(jeanluc) 'Document' for all or just if as_sources?
-        [['FileType', 'Document'],
-         ['Command', condition_clause, command],
-         ['Message', condition_clause, description],
-         ['Outputs', condition_clause, outputs]
-        ])
-    if additional_inputs:
-      action_spec.append(['AdditionalInputs', condition_clause,
-                          additional_inputs])
+  action_spec.extend(
+      # TODO(jeanluc) 'Document' for all or just if as_sources?
+      [['FileType', 'Document'],
+       ['Command', command],
+       ['Message', description],
+       ['Outputs', outputs]
+      ])
+  if additional_inputs:
+    action_spec.append(['AdditionalInputs', additional_inputs])
   actions_spec.append(action_spec)

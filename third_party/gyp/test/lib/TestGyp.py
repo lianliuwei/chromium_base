@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Copyright (c) 2009 Google Inc. All rights reserved.
+# Copyright (c) 2011 Google Inc. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -13,6 +13,7 @@ import re
 import shutil
 import stat
 import sys
+import tempfile
 
 import TestCommon
 from TestCommon import __all__
@@ -79,10 +80,15 @@ class TestGypBase(TestCommon.TestCommon):
     if not kw.has_key('match'):
       kw['match'] = TestCommon.match_exact
 
-    if not kw.has_key('workdir'):
-      # Default behavior:  the null string causes TestCmd to create
-      # a temporary directory for us.
-      kw['workdir'] = ''
+    # Put test output in out/testworkarea by default.
+    # Use temporary names so there are no collisions.
+    workdir = os.path.join('out', kw.get('workdir', 'testworkarea'))
+    # Create work area if it doesn't already exist.
+    try:
+      os.makedirs(workdir)
+    except OSError:
+      pass
+    kw['workdir'] = tempfile.mktemp(prefix='testgyp.', dir=workdir)
 
     formats = kw.get('formats', [])
     if kw.has_key('formats'):
@@ -385,7 +391,7 @@ class TestGypMake(TestGypBase):
     result.extend(['out', configuration])
     if type == self.STATIC_LIB:
       result.append(kw.get('libdir', 'obj.target'))
-    elif type == self.SHARED_LIB:
+    elif type == self.SHARED_LIB and sys.platform != 'darwin':
       result.append(kw.get('libdir', 'lib.target'))
     result.append(self.built_file_basename(name, type, **kw))
     return self.workpath(*result)
@@ -415,7 +421,8 @@ class TestGypMSVS(TestGypBase):
     Failing that, we search for likely deployment paths.
     """
     super(TestGypMSVS, self).initialize_build_tool()
-    possible_roots = ['C:\\Program Files (x86)', 'C:\\Program Files']
+    possible_roots = ['C:\\Program Files (x86)', 'C:\\Program Files',
+                      'E:\\Program Files (x86)', 'E:\\Program Files']
     possible_paths = {
         '2010': r'Microsoft Visual Studio 10.0\Common7\IDE\devenv.com',
         '2008': r'Microsoft Visual Studio 9.0\Common7\IDE\devenv.com',

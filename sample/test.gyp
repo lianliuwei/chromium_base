@@ -101,6 +101,18 @@
         '../base/base.gyp:*',
       ],
     },
+	{
+      'target_name': 'testing',
+      'type': 'executable',
+      'sources': [
+	    # Infrastructure files.
+        'testing/run_all_unittests.cc',
+        'testing/gtest_unittest.cc',
+      ],
+      'dependencies': [
+        '../testing/gtest.gyp:gtest',
+      ],
+    },
   ],
 
 }

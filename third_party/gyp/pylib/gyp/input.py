@@ -299,11 +299,19 @@ def ProcessToolsetsInDict(data):
     target_list = data['targets']
     new_target_list = []
     for target in target_list:
+      # If this target already has an explicit 'toolset', and no 'toolsets'
+      # list, don't modify it further.
+      if 'toolset' in target and 'toolsets' not in target:
+        new_target_list.append(target)
+        continue
       global multiple_toolsets
       if multiple_toolsets:
         toolsets = target.get('toolsets', ['target'])
       else:
         toolsets = ['target']
+      # Make sure this 'toolsets' definition is only processed once.
+      if 'toolsets' in target:
+        del target['toolsets']
       if len(toolsets) > 0:
         # Optimization: only do copies if more than one toolset is specified.
         for build in toolsets[1:]:
@@ -372,11 +380,17 @@ def LoadTargetBuildFile(build_file_path, data, aux_data, variables, includes,
                                 os.path.dirname(build_file_path))
     build_file_data['included_files'].append(included_relative)
 
+  # Do a first round of toolsets expansion so that conditions can be defined
+  # per toolset.
   ProcessToolsetsInDict(build_file_data)
 
   # Apply "pre"/"early" variable expansions and condition evaluations.
   ProcessVariablesAndConditionsInDict(build_file_data, False, variables,
                                       build_file_path)
+
+  # Since some toolsets might have been defined conditionally, perform
+  # a second round of toolsets expansion now.
+  ProcessToolsetsInDict(build_file_data)
 
   # Look at each project's target_defaults dict, and merge settings into
   # targets.
@@ -1591,7 +1605,23 @@ def MakePathRelative(to_file, fro_file, item):
     return ret
 
 def MergeLists(to, fro, to_file, fro_file, is_paths=False, append=True):
+  def is_hashable(x):
+    try:
+      hash(x)
+    except TypeError:
+      return False
+    return True
+  # If x is hashable, returns whether x is in s. Else returns whether x is in l.
+  def is_in_set_or_list(x, s, l):
+    if is_hashable(x):
+      return x in s
+    return x in l
+
   prepend_index = 0
+
+  # Make membership testing of hashables in |to| (in particular, strings)
+  # faster.
+  hashable_to_set = set([x for x in to if is_hashable(x)])
 
   for item in fro:
     singleton = False
@@ -1629,8 +1659,10 @@ def MergeLists(to, fro, to_file, fro_file, is_paths=False, append=True):
     if append:
       # If appending a singleton that's already in the list, don't append.
       # This ensures that the earliest occurrence of the item will stay put.
-      if not singleton or not to_item in to:
+      if not singleton or not is_in_set_or_list(to_item, hashable_to_set, to):
         to.append(to_item)
+        if is_hashable(to_item):
+          hashable_to_set.add(to_item)
     else:
       # If prepending a singleton that's already in the list, remove the
       # existing instance and proceed with the prepend.  This ensures that the
@@ -1642,6 +1674,8 @@ def MergeLists(to, fro, to_file, fro_file, is_paths=False, append=True):
       # items to the list in reverse order, which would be an unwelcome
       # surprise.
       to.insert(prepend_index, to_item)
+      if is_hashable(to_item):
+        hashable_to_set.add(to_item)
       prepend_index = prepend_index + 1
 
 
@@ -1947,23 +1981,26 @@ def ProcessListFiltersInDict(name, the_dict):
         [action, pattern] = regex_item
         pattern_re = re.compile(pattern)
 
+        if action == 'exclude':
+          # This item matches an exclude regex, so set its value to 0 (exclude).
+          action_value = 0
+        elif action == 'include':
+          # This item matches an include regex, so set its value to 1 (include).
+          action_value = 1
+        else:
+          # This is an action that doesn't make any sense.
+          raise ValueError, 'Unrecognized action ' + action + ' in ' + name + \
+                            ' key ' + key
+
         for index in xrange(0, len(the_list)):
           list_item = the_list[index]
+          if list_actions[index] == action_value:
+            # Even if the regex matches, nothing will change so continue (regex
+            # searches are expensive).
+            continue
           if pattern_re.search(list_item):
             # Regular expression match.
-
-            if action == 'exclude':
-              # This item matches an exclude regex, so set its value to 0
-              # (exclude).
-              list_actions[index] = 0
-            elif action == 'include':
-              # This item matches an include regex, so set its value to 1
-              # (include).
-              list_actions[index] = 1
-            else:
-              # This is an action that doesn't make any sense.
-              raise ValueError, 'Unrecognized action ' + action + ' in ' + \
-                                name + ' key ' + key
+            list_actions[index] = action_value
 
       # The "whatever/" list is no longer needed, dump it.
       del the_dict[regex_key]
