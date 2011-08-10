@@ -1,6 +1,6 @@
 build/build_config.h
 base/port.h
-base/base_api.h
+base/base_export.h
 base/basictypes.h
 base/string_piece.h
 base/string_piece.cc
@@ -148,10 +148,6 @@ base/metrics/histogram.cc
 base/debug/leak_annotations.h
 base/debug/alias.h
 base/debug/alias.cc
-from chromium/src@4ce018626d5ef271d92a7002beb99462ab7519f9
-
-build/common.gypi modify
-from gyp_test@01922df683529dc823f264187e8a1a95aaaed490
 
 testing/gmock.gyp 
 testing/gtest.gyp modify
@@ -159,7 +155,12 @@ testing/gmock_mutant.h
 testing/multiprocess_func_list.h
 testing/multiprocess_func_list.cc
 testing/platform_test.h
+
 from chromium/src@564b71a58d305b7577ba7260abfc7736bab382cb
+
+build/common.gypi modify
+from gyp_test@01922df683529dc823f264187e8a1a95aaaed490
+
 
 DEPS modify by .DEPS.git
 from chromium/src@564b71a58d305b7577ba7260abfc7736bab382cb

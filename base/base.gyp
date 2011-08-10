@@ -6,7 +6,7 @@
       'sources': [
         '../build/build_config.h',
 		'port.h',
-		'base_api.h',
+		'base_export.h',
 		'basictypes.h',
 		'string_piece.h',
 		'string_piece.cc',
