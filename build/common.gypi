@@ -96,6 +96,7 @@
           '_HAS_EXCEPTIONS=0',
           #using with /MD and /MDd
           '_STATIC_CPPLIB',
+		  '_DISABLE_DEPRECATE_STATIC_CPPLIB',
         ],
       }],
       ['secure_atl', {
