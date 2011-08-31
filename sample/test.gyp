@@ -113,6 +113,19 @@
         '../testing/gtest.gyp:gtest',
       ],
     },
+	{
+      'target_name': 'mocking',
+      'type': 'executable',
+      'sources': [
+	    'mocking/FooInterface.h',
+		'mocking/FooMock.h',
+        'mocking/FooMain.cc',
+        'mocking/Foo_test.cc',
+      ],
+      'dependencies': [
+        '../testing/gmock.gyp:gmock',
+      ],
+    },
   ],
 
 }
