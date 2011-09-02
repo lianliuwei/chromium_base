@@ -11,6 +11,8 @@ public:
 
 public:
     virtual std::string getArbitraryString() = 0;
+    virtual void setValue(std::string& value) = 0;
+    virtual void setDoubleValues(int x, int y) = 0;
 };
 
 } // end namespace seamless
