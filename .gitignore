@@ -20,5 +20,6 @@ Purify/
 *.pdb
 *.sdf
 *.opensdf
+*.aps
 #generate log file
 *.log
