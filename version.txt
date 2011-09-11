@@ -158,6 +158,9 @@ testing/platform_test.h
 
 from chromium/src@564b71a58d305b7577ba7260abfc7736bab382cb
 
+tools/grit/
+from chromium/src@1581329f0869d6b3a552d666dec9f3e68e6e3797
+
 build/common.gypi modify
 from gyp_test@01922df683529dc823f264187e8a1a95aaaed490
 
