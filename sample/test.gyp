@@ -126,6 +126,46 @@
         '../testing/gmock.gyp:gmock',
       ],
     },
+	{
+      'target_name': 'resource_en',
+      'type': 'loadable_module',
+      'sources': [
+	    'resource/resource_en.rc',
+      ],
+	  'msvs_settings': {
+		'VCLinkerTool': {
+		  'BaseAddress': '0x3CF00000',
+          'OutputFile': '$(OutDir)\\locales\\$(ProjectName).dll',
+          'LinkIncremental': '1',  # 1 == No
+          'LinkTimeCodeGeneration': '0',
+          'ResourceOnlyDLL': 'true',
+        },
+      },
+      'defines': [
+        '_USRDLL',
+        'GENERATED_RESOURCES_DLL_EXPORTS',
+      ],
+    },
+	{
+      'target_name': 'resource_zh-CH',
+      'type': 'loadable_module',
+      'sources': [
+	    'resource/resource_zh-CH.rc',
+      ],
+	  'msvs_settings': {
+		'VCLinkerTool': {
+		  'BaseAddress': '0x3CF00000',
+          'OutputFile': '$(OutDir)\\locales\\$(ProjectName).dll',
+          'LinkIncremental': '1',  # 1 == No
+          'LinkTimeCodeGeneration': '0',
+          'ResourceOnlyDLL': 'true',
+        },
+      },
+      'defines': [
+        '_USRDLL',
+        'GENERATED_RESOURCES_DLL_EXPORTS',
+      ],
+    },
   ],
 
 }
