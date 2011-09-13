@@ -4,7 +4,5 @@
 
 #pragma once
 
-#include <atlres.h>
-
-#define IDR_HELLP_WORLD 500
+#define IDR_HELLO_WORLD 500
 #define IDS_HELLO_WROLD 1000

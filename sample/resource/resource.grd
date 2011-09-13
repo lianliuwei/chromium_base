@@ -4,6 +4,7 @@
   <outputs>
     <output filename="resource.h" type="rc_header" />
     <output filename="resource_en.rc" type="rc_all" lang="en"/>
+    <output filename="resource_en.pak" type="data_package" lang="en"/>
     <output filename="resource_zh-CH.rc" type="rc_all" lang="zh-CH"/>
   </outputs>
   <translations>
@@ -11,7 +12,7 @@
   </translations>
   <release seq="1">
     <includes>
-      <include name="IDR_HELLP_WORLD" file="hello.png" type="BINDATA" />
+      <include name="IDR_HELLO_WORLD" file="hello.png" type="BINDATA" />
     </includes>
     <messages>
       <message name="IDS_HELLO_WROLD" use_name_for_id="true">
