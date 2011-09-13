@@ -166,6 +166,15 @@
         'GENERATED_RESOURCES_DLL_EXPORTS',
       ],
     },
+	{
+      'target_name': 'data_pack',
+      'type': 'executable',
+      'sources': [
+        'data_pack/main.cc',
+      ],
+      'dependencies': [
+        '../ui/ui.gyp:ui',
+      ],
+    },
   ],
-
 }
