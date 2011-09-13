@@ -158,6 +158,26 @@ testing/platform_test.h
 
 from chromium/src@564b71a58d305b7577ba7260abfc7736bab382cb
 
+base/memory/ref_counted_memory.h
+base/memory/ref_counted_memory.cc
+base/file_util.h modify
+base/file_util.cc
+base/file_util_win.cc
+base/platform_file.cc
+base/platform_file.h
+base/platform_file_win.cc
+base/win/pe_image.cc
+base/win/pe_image.h
+base/win/registry.cc
+base/win/registry.h
+base/win/scoped_comptr.h
+base/win/win_util.cc
+base/win/win_util.h
+ui/base/ui_export.h
+ui/base/resource/data_pack.cc
+ui/base/resource/data_pack.h
+from chromium/src@1581329f0869d6b3a552d666dec9f3e68e6e3797
+
 tools/grit/
 from chromium/src@1581329f0869d6b3a552d666dec9f3e68e6e3797
 
