@@ -6,6 +6,7 @@
 #include "base/logging.h"
 #include "base/string_piece.h"
 #include "base/file_path.h"
+#include "base/string_util.h"
 
 int main(int argc, char** argv)
 {
@@ -14,6 +15,9 @@ int main(int argc, char** argv)
     CHECK(datapack.Load(file));
     base::StringPiece piece;
     datapack.GetStringPiece(IDS_HELLO_WROLD, &piece);
-    std::cout << piece << std::endl;
+    //data pack string are UTF16 encode
+    string16 str(reinterpret_cast<const char16*>(piece.data()), 
+                 piece.length() / 2);
+    std::cout << UTF16ToASCII(str) << std::endl;
     return 0;
 }

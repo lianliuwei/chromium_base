@@ -171,6 +171,8 @@
       'type': 'executable',
       'sources': [
         'data_pack/main.cc',
+		'data_pack/resource.h',
+		'data_pack/data.pak',
       ],
       'dependencies': [
         '../ui/ui.gyp:ui',
