@@ -176,6 +176,17 @@ base/win/win_util.h
 ui/base/ui_export.h
 ui/base/resource/data_pack.cc
 ui/base/resource/data_pack.h
+ui/gfx/native_widget_types.h
+base/path_service.h
+base/path_service.cc
+base/base_paths.h
+base/base_paths.cc
+base/base_paths_win.h
+base/base_paths_win.cc
+ui/base/ui_base_paths.h
+ui/base/ui_base_paths.cc
+ui/base/ui_base_switches.h
+ui/base/ui_base_switches.cc
 from chromium/src@1581329f0869d6b3a552d666dec9f3e68e6e3797
 
 tools/grit/
