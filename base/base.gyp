@@ -159,6 +159,9 @@
       'include_dirs': [
           '..',
       ],
+      'defines': [
+         'BASE_IMPLEMENTATION',
+      ],
       # These warnings are needed for the files in third_party\dmg_fp.
       'msvs_disabled_warnings': [
         4244, 4554, 4018, 4102,

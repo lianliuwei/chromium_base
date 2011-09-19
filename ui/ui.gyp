@@ -12,7 +12,11 @@
       'include_dirs': [
           '..',
       ],
-
+      
+      'defines': [
+        'UI_IMPLEMENTATION',
+      ],
+      
       'dependencies': [
         '../base/base.gyp:base',
       ],
