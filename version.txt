@@ -187,6 +187,43 @@ ui/base/ui_base_paths.h
 ui/base/ui_base_paths.cc
 ui/base/ui_base_switches.h
 ui/base/ui_base_switches.cc
+ui/gfx/image/image.h
+ui/gfx/image/image.cc
+ui/gfx/font.h
+ui/gfx/font.cc
+ui/gfx/platform_font.h
+ui/gfx/platform_font_win.h
+ui/gfx/platform_font_win.cc
+ui/gfx/canvas.h
+ui/gfx/canvas.cc
+skia/
+base/i18n/base_i18n_export.h
+base/i18n/rtl.h
+base/i18n/rtl.cc
+ui/gfx/brush.h
+ui/gfx/rect.h
+ui/gfx/rect.cc
+ui/gfx/transform.h
+ui/gfx/transform.cc
+ui/gfx/point.h
+ui/gfx/point.cc
+ui/gfx/point3.h
+ui/gfx/skia_util.h
+ui/gfx/skia_util.cc
+ui/gfx/canvas_skia_paint.h
+base/win/scoped_gdi_object.h
+ui/gfx/color_utils.h
+ui/gfx/color_utils.cc
+ui/gfx/canvas_skia.h
+ui/gfx/canvas_skia.cc
+ui/gfx/canvas_skia_win.cc
+base/stl_util.h
+ui/base/l10n_util.h
+ui/base/l10n_util.cc
+ui/gfx/size.h
+ui/gfx/size.cc
+third_party/libpng/
+third_party/zlib/
 from chromium/src@1581329f0869d6b3a552d666dec9f3e68e6e3797
 
 tools/grit/
@@ -197,4 +234,4 @@ from gyp_test@01922df683529dc823f264187e8a1a95aaaed490
 
 
 DEPS modify by .DEPS.git
-from chromium/src@564b71a58d305b7577ba7260abfc7736bab382cb
+from chromium/src@1581329f0869d6b3a552d666dec9f3e68e6e3797
