@@ -12,6 +12,7 @@
 #include "base/lazy_instance.h"
 #include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
+#include "base/message_loop_proxy_impl.h"
 #include "base/message_pump_default.h"
 #include "base/metrics/histogram.h"
 #include "base/third_party/dynamic_annotations/dynamic_annotations.h"
@@ -31,11 +32,6 @@
 #if defined(OS_POSIX) && !defined(OS_MACOSX) && !defined(OS_ANDROID)
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
-#if defined(TOUCH_UI)
-#include "base/message_pump_x.h"
-#else
-#include "base/message_pump_gtk.h"
-#endif  // defined(TOUCH_UI)
 #endif  // defined(OS_POSIX) && !defined(OS_MACOSX)
 
 using base::TimeDelta;
@@ -140,6 +136,8 @@ MessageLoop::MessageLoop(Type type)
   DCHECK(!current()) << "should only have one message loop per thread";
   lazy_tls_ptr.Pointer()->Set(this);
 
+  message_loop_proxy_ = new base::MessageLoopProxyImpl();
+
 // TODO(rvargas): Get rid of the OS guards.
 #if defined(OS_WIN)
 #define MESSAGE_PUMP_UI new base::MessagePumpForUI()
@@ -150,7 +148,10 @@ MessageLoop::MessageLoop(Type type)
 #elif defined(OS_ANDROID)
 #define MESSAGE_PUMP_UI new base::MessagePumpForUI()
 #define MESSAGE_PUMP_IO new base::MessagePumpLibevent()
-#elif defined(TOUCH_UI)
+#elif defined(USE_WAYLAND)
+#define MESSAGE_PUMP_UI new base::MessagePumpWayland()
+#define MESSAGE_PUMP_IO new base::MessagePumpLibevent()
+#elif defined(TOUCH_UI) || defined(USE_AURA)
 #define MESSAGE_PUMP_UI new base::MessagePumpX()
 #define MESSAGE_PUMP_IO new base::MessagePumpLibevent()
 #elif defined(OS_NACL)
@@ -203,6 +204,11 @@ MessageLoop::~MessageLoop() {
   // Let interested parties have one last shot at accessing this.
   FOR_EACH_OBSERVER(DestructionObserver, destruction_observers_,
                     WillDestroyCurrentMessageLoop());
+
+  // Tell the message_loop_proxy that we are dying.
+  static_cast<base::MessageLoopProxyImpl*>(message_loop_proxy_.get())->
+      WillDestroyCurrentMessageLoop();
+  message_loop_proxy_ = NULL;
 
   // OK, now make it so that no one can find us.
   lazy_tls_ptr.Pointer()->Set(NULL);
@@ -526,12 +532,11 @@ void MessageLoop::ReloadWorkQueue() {
 bool MessageLoop::DeletePendingTasks() {
   bool did_work = !work_queue_.empty();
   // TODO(darin): Delete all tasks once it is safe to do so.
-  // Until it is totally safe, just do it when running Purify or
-  // Valgrind.
+  // Until it is totally safe, just do it when running Valgrind.
   //
   // See http://crbug.com/61131
   //
-#if defined(PURIFY) || defined(USE_HEAPCHECKER)
+#if defined(USE_HEAPCHECKER)
   should_leak_tasks_ = false;
 #else
       if (RunningOnValgrind())

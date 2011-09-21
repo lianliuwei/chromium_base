@@ -143,21 +143,17 @@ base/win/wrapped_window_proc.cc
 base/format_macros.h
 base/message_pump_default.h
 base/message_pump_default.cc modify
-base/metrics/histogram.h modify
+base/metrics/histogram.h
 base/metrics/histogram.cc
 base/debug/leak_annotations.h
 base/debug/alias.h
 base/debug/alias.cc
-
 testing/gmock.gyp 
 testing/gtest.gyp modify
 testing/gmock_mutant.h
 testing/multiprocess_func_list.h
 testing/multiprocess_func_list.cc
 testing/platform_test.h
-
-from chromium/src@564b71a58d305b7577ba7260abfc7736bab382cb
-
 base/memory/ref_counted_memory.h
 base/memory/ref_counted_memory.cc
 base/file_util.h modify

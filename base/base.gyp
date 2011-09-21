@@ -188,6 +188,7 @@
       ],
       'defines': [
          'BASE_IMPLEMENTATION',
+         'BASE_I18N_IMPLEMENTATION',
       ],
       # These warnings are needed for the files in third_party\dmg_fp.
       'msvs_disabled_warnings': [
