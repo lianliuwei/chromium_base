@@ -1,13 +1,54 @@
 { 
   'variables': {
     'variables': {
-        # To do a shared build on linux we need to be able to choose between
-        # type static_library and shared_library. We default to doing a static
-        # build but you can override this with "gyp -Dlibrary=shared_library"
-        # or you can add the following line (without the #) to
-        # ~/.gyp/include.gypi {'variables': {'library': 'shared_library'}}
-        # to compile as shared by default
-        'library%': 'static_library',
+      'variables': {
+        # Compute the architecture that we're building on.
+        'conditions': [
+          [ 'OS=="win" or OS=="mac"', {
+            'host_arch%': 'ia32',
+          }, {
+            # This handles the Unix platforms for which there is some support.
+            # Anything else gets passed through, which probably won't work very
+            # well; such hosts should pass an explicit target_arch to gyp.
+            'host_arch%':
+              '<!(uname -m | sed -e "s/i.86/ia32/;s/x86_64/x64/;s/amd64/x64/;s/arm.*/arm/;s/i86pc/ia32/")',
+          }],
+        ],
+      },
+      'host_arch%': '<(host_arch)',
+
+      # We used to provide a variable for changing how libraries were built.
+      # This variable remains until we can clean up all the users.
+      # This needs to be one nested variables dict in so that dependent
+      # gyp files can make use of it in their outer variables.  (Yikes!)
+      # http://code.google.com/p/chromium/issues/detail?id=83308
+      'library%': 'static_library',
+      # Default architecture we're building for is the architecture we're
+      # building on.
+      'target_arch%': '<(host_arch)',
+	    'conditions': [
+
+        # A flag for POSIX platforms
+        ['OS=="win"', {
+          'os_posix%': 0,
+        }, {
+          'os_posix%': 1,
+        }],
+
+        # Flags to use Gtk and X11 on non-Mac POSIX platforms
+        ['OS=="win" or OS=="mac"', {
+          'toolkit_uses_gtk%': 0,
+          'use_x11%': 0,
+        }, {
+          # TODO(dnicoara) Wayland build should have these disabled, but
+          # currently GTK and X is too spread and it's hard to completely
+          # remove every dependency.
+          'toolkit_uses_gtk%': 1,
+          'use_x11%': 1,
+        }],
+      ],
+      # Set ARM-v7 compilation flags
+      'armv7%': 0,
     },
     # Copy conditionally-set variables out one scope.
     'library%': '<(library)',
@@ -17,6 +58,11 @@
     # By default, component is set to whatever library is set to and
     # it can be overriden by the GYP command line or by ~/.gyp/include.gypi.
     'component%': '<(library)',
+    'target_arch%': '<(target_arch)',
+    'os_posix%': '<(os_posix)',
+    'toolkit_uses_gtk%': '<(toolkit_uses_gtk)',
+    'use_x11%': '<(use_x11)',
+    'armv7%': '<(armv7)',
   },
 
   'target_defaults': {
