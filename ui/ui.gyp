@@ -45,6 +45,9 @@
         'gfx/insets.cc',
         'base/l10n/l10n_util_win.h',
         'base/l10n/l10n_util_win.cc',
+        'base/resource/resource_bundle.h',
+        'base/resource/resource_bundle.cc',
+        'base/resource/resource_bundle_win.cc',
       ],
 
       'include_dirs': [

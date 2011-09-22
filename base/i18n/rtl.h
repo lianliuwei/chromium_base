@@ -35,10 +35,10 @@ enum TextDirection {
 // Get the locale that the currently running process has been configured to use.
 // The return value is of the form language[-country] (e.g., en-US) where the
 // language is the 2 or 3 letter code from ISO-639.
-BASE_I18N_EXPORT std::string GetConfiguredLocale();
+// BASE_I18N_EXPORT std::string GetConfiguredLocale();
 
 // Canonicalize a string (eg. a POSIX locale string) to a Chrome locale name.
-BASE_I18N_EXPORT std::string GetCanonicalLocale(const char* locale);
+// BASE_I18N_EXPORT std::string GetCanonicalLocale(const char* locale);
 
 // Sets the default locale of ICU.
 // Once the application locale of Chrome in GetApplicationLocale is determined,
@@ -47,7 +47,7 @@ BASE_I18N_EXPORT std::string GetCanonicalLocale(const char* locale);
 // This is handy in that we don't have to call GetApplicationLocale()
 // everytime we call locale-dependent ICU APIs as long as we make sure
 // that this is called before any locale-dependent API is called.
-BASE_I18N_EXPORT void SetICUDefaultLocale(const std::string& locale_string);
+// BASE_I18N_EXPORT void SetICUDefaultLocale(const std::string& locale_string);
 
 // Returns true if the application text direction is right-to-left.
 BASE_I18N_EXPORT bool IsRTL();
@@ -56,11 +56,11 @@ BASE_I18N_EXPORT bool IsRTL();
 // assumes that SetICUDefaultLocale has been called to set the default locale to
 // the UI locale of Chrome.
 // NOTE: Generally, you should call IsRTL() instead of this.
-BASE_I18N_EXPORT bool ICUIsRTL();
+// BASE_I18N_EXPORT bool ICUIsRTL();
 
 // Returns the text direction for |locale_name|.
-BASE_I18N_EXPORT TextDirection GetTextDirectionForLocale(
-    const char* locale_name);
+//  BASE_I18N_EXPORT TextDirection GetTextDirectionForLocale(
+//     const char* locale_name);
 
 // Given the string in |text|, returns the directionality of the first
 // character with strong directionality in the string. If no character in the
@@ -68,8 +68,8 @@ BASE_I18N_EXPORT TextDirection GetTextDirectionForLocale(
 // character types L, LRE, LRO, R, AL, RLE, and RLO are considered as strong
 // directionality characters. Please refer to http://unicode.org/reports/tr9/
 // for more information.
-BASE_I18N_EXPORT TextDirection GetFirstStrongCharacterDirection(
-    const string16& text);
+// BASE_I18N_EXPORT TextDirection GetFirstStrongCharacterDirection(
+//     const string16& text);
 
 // Given the string in |text|, this function modifies the string in place with
 // the appropriate Unicode formatting marks that mark the string direction

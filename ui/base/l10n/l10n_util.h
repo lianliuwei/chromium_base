@@ -31,12 +31,12 @@ namespace l10n_util {
 // as |pref_locale|), finally, we fall back on the system locale. We only return
 // a value if there's a corresponding resource DLL for the locale.  Otherwise,
 // we fall back to en-us.
-UI_EXPORT std::string GetApplicationLocale(const std::string& pref_locale);
+// UI_EXPORT std::string GetApplicationLocale(const std::string& pref_locale);
 
 // Given a locale code, return true if the OS is capable of supporting it.
 // For instance, Oriya is not well supported on Windows XP and we return
 // false for "or".
-bool IsLocaleSupportedByOS(const std::string& locale);
+// bool IsLocaleSupportedByOS(const std::string& locale);
 
 // This method returns the display name of the locale code in |display_locale|.
 
@@ -47,18 +47,18 @@ bool IsLocaleSupportedByOS(const std::string& locale);
 // in the UI thread.
 // If |is_for_ui| is true, U+200F is appended so that it can be
 // rendered properly in a RTL Chrome.
-UI_EXPORT string16 GetDisplayNameForLocale(const std::string& locale,
-                                           const std::string& display_locale,
-                                           bool is_for_ui);
+// UI_EXPORT string16 GetDisplayNameForLocale(const std::string& locale,
+//                                            const std::string& display_locale,
+//                                            bool is_for_ui);
 
 // Converts all - into _, to be consistent with ICU and file system names.
-UI_EXPORT std::string NormalizeLocale(const std::string& locale);
+// UI_EXPORT std::string NormalizeLocale(const std::string& locale);
 
 // Produce a vector of parent locales for given locale.
 // It includes the current locale in the result.
 // sr_Cyrl_RS generates sr_Cyrl_RS, sr_Cyrl and sr.
-UI_EXPORT void GetParentLocales(const std::string& current_locale,
-                                std::vector<std::string>* parent_locales);
+// UI_EXPORT void GetParentLocales(const std::string& current_locale,
+//                                 std::vector<std::string>* parent_locales);
 
 // Checks if a string is plausibly a syntactically-valid locale string,
 // for cases where we want the valid input to be a locale string such as
@@ -68,7 +68,7 @@ UI_EXPORT void GetParentLocales(const std::string& current_locale,
 // accepted, but 'z', 'German', 'en-$1', or 'abcd-1234' should not.
 // Case-insensitive. Based on BCP 47, see:
 //   http://unicode.org/reports/tr35/#Unicode_Language_and_Locale_Identifiers
-UI_EXPORT bool IsValidLocaleSyntax(const std::string& locale);
+// UI_EXPORT bool IsValidLocaleSyntax(const std::string& locale);
 
 //
 // Mac Note: See l10n_util_mac.h for some NSString versions and other support.
@@ -137,12 +137,12 @@ UI_EXPORT void SortStrings16(const std::string& locale,
 
 // Returns a vector of available locale codes. E.g., a vector containing
 // en-US, es, fr, fi, pt-PT, pt-BR, etc.
-UI_EXPORT const std::vector<std::string>& GetAvailableLocales();
+// UI_EXPORT const std::vector<std::string>& GetAvailableLocales();
 
 // Returns a vector of locale codes usable for accept-languages.
-UI_EXPORT void GetAcceptLanguagesForLocale(
-    const std::string& display_locale,
-    std::vector<std::string>* locale_codes);
+// UI_EXPORT void GetAcceptLanguagesForLocale(
+//     const std::string& display_locale,
+//     std::vector<std::string>* locale_codes);
 
 
 }  // namespace l10n_util

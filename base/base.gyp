@@ -182,6 +182,9 @@
         'sys_info_win.cc',
         'win/event_trace_provider.h',
         'win/event_trace_provider.cc',
+        'stack_container.h',
+        'win/resource_util.h',
+        'win/resource_util.cc',
       ],
       'include_dirs': [
           '..',

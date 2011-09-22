@@ -194,8 +194,8 @@ ui/gfx/canvas.h
 ui/gfx/canvas.cc
 skia/
 base/i18n/base_i18n_export.h
-base/i18n/rtl.h
-base/i18n/rtl.cc
+base/i18n/rtl.h modify
+base/i18n/rtl.cc modify	
 ui/gfx/brush.h
 ui/gfx/rect.h
 ui/gfx/rect.cc
@@ -214,8 +214,8 @@ ui/gfx/canvas_skia.h
 ui/gfx/canvas_skia.cc
 ui/gfx/canvas_skia_win.cc
 base/stl_util.h
-ui/base/l10n/l10n_util.h
-ui/base/l10n/l10n_util.cc
+ui/base/l10n/l10n_util.h modify
+ui/base/l10n/l10n_util.cc modify
 ui/gfx/size.h
 ui/gfx/size.cc
 third_party/libpng/
@@ -240,6 +240,14 @@ base/sys_info.h
 base/sys_info_win.cc
 base/win/event_trace_provider.h
 base/win/event_trace_provider.cc
+base/stack_container.h
+ui/base/resource/resource_bundle.h
+ui/base/resource/resource_bundle.cc
+ui/base/resource/resource_bundle_win.cc
+skia/config/SkUserConfig.h modify
+skia/skia.gyp modify
+base/win/resource_util.h
+base/win/resource_util.cc
 from chromium/src@1581329f0869d6b3a552d666dec9f3e68e6e3797
 
 tools/grit/

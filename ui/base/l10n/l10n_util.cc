@@ -14,7 +14,7 @@
 
 #include "base/command_line.h"
 #include "base/file_util.h"
-#include "base/i18n/file_util_icu.h"
+// #include "base/i18n/file_util_icu.h"
 #include "base/i18n/rtl.h"
 #include "base/memory/scoped_ptr.h"
 #include "base/path_service.h"
@@ -24,11 +24,11 @@
 #include "base/sys_string_conversions.h"
 #include "base/utf_string_conversions.h"
 #include "build/build_config.h"
-#include "ui/base/l10n/l10n_util_collator.h"
+// #include "ui/base/l10n/l10n_util_collator.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/base/ui_base_paths.h"
-#include "unicode/rbbi.h"
-#include "unicode/uloc.h"
+// #include "unicode/rbbi.h"
+// #include "unicode/uloc.h"
 
 #if defined(OS_WIN)
 #include "ui/base/l10n/l10n_util_win.h"
@@ -199,116 +199,116 @@ bool IsDuplicateName(const std::string& locale_name) {
   return false;
 }
 
-bool IsLocaleNameTranslated(const char* locale,
-                            const std::string& display_locale) {
-  string16 display_name =
-      l10n_util::GetDisplayNameForLocale(locale, display_locale, false);
-  // Because ICU sets the error code to U_USING_DEFAULT_WARNING whether or not
-  // uloc_getDisplayName returns the actual translation or the default
-  // value (locale code), we have to rely on this hack to tell whether
-  // the translation is available or not.  If ICU doesn't have a translated
-  // name for this locale, GetDisplayNameForLocale will just return the
-  // locale code.
-  return !IsStringASCII(display_name) || UTF16ToASCII(display_name) != locale;
-}
-
-// We added 30+ minimally populated locales with only a few entries
-// (exemplar character set, script, writing direction and its own
-// lanaguage name). These locales have to be distinguished from the
-// fully populated locales to which Chrome is localized.
-bool IsLocalePartiallyPopulated(const std::string& locale_name) {
-  // For partially populated locales, even the translation for "English"
-  // is not available. A more robust/elegant way to check is to add a special
-  // field (say, 'isPartial' to our version of ICU locale files) and
-  // check its value, but this hack seems to work well.
-  return !IsLocaleNameTranslated("en", locale_name);
-}
+// bool IsLocaleNameTranslated(const char* locale,
+//                             const std::string& display_locale) {
+//   string16 display_name =
+//       l10n_util::GetDisplayNameForLocale(locale, display_locale, false);
+//   // Because ICU sets the error code to U_USING_DEFAULT_WARNING whether or not
+//   // uloc_getDisplayName returns the actual translation or the default
+//   // value (locale code), we have to rely on this hack to tell whether
+//   // the translation is available or not.  If ICU doesn't have a translated
+//   // name for this locale, GetDisplayNameForLocale will just return the
+//   // locale code.
+//   return !IsStringASCII(display_name) || UTF16ToASCII(display_name) != locale;
+// }
+// 
+// // We added 30+ minimally populated locales with only a few entries
+// // (exemplar character set, script, writing direction and its own
+// // lanaguage name). These locales have to be distinguished from the
+// // fully populated locales to which Chrome is localized.
+// bool IsLocalePartiallyPopulated(const std::string& locale_name) {
+//   // For partially populated locales, even the translation for "English"
+//   // is not available. A more robust/elegant way to check is to add a special
+//   // field (say, 'isPartial' to our version of ICU locale files) and
+//   // check its value, but this hack seems to work well.
+//   return !IsLocaleNameTranslated("en", locale_name);
+// }
 
 #if !defined(OS_MACOSX)
-bool IsLocaleAvailable(const std::string& locale) {
-  // If locale has any illegal characters in it, we don't want to try to
-  // load it because it may be pointing outside the locale data file directory.
-  if (!file_util::IsFilenameLegal(ASCIIToUTF16(locale)))
-    return false;
+// bool IsLocaleAvailable(const std::string& locale) {
+//   // If locale has any illegal characters in it, we don't want to try to
+//   // load it because it may be pointing outside the locale data file directory.
+//   if (!file_util::IsFilenameLegal(ASCIIToUTF16(locale)))
+//     return false;
+// 
+//   // IsLocalePartiallyPopulated() can be called here for an early return w/o
+//   // checking the resource availability below. It'd help when Chrome is run
+//   // under a system locale Chrome is not localized to (e.g.Farsi on Linux),
+//   // but it'd slow down the start up time a little bit for locales Chrome is
+//   // localized to. So, we don't call it here.
+//   if (!l10n_util::IsLocaleSupportedByOS(locale))
+//     return false;
+// 
+//   return ResourceBundle::LocaleDataPakExists(locale);
+// }
 
-  // IsLocalePartiallyPopulated() can be called here for an early return w/o
-  // checking the resource availability below. It'd help when Chrome is run
-  // under a system locale Chrome is not localized to (e.g.Farsi on Linux),
-  // but it'd slow down the start up time a little bit for locales Chrome is
-  // localized to. So, we don't call it here.
-  if (!l10n_util::IsLocaleSupportedByOS(locale))
-    return false;
-
-  return ResourceBundle::LocaleDataPakExists(locale);
-}
-
-bool CheckAndResolveLocale(const std::string& locale,
-                           std::string* resolved_locale) {
-  if (IsLocaleAvailable(locale)) {
-    *resolved_locale = locale;
-    return true;
-  }
-
-  // If there's a variant, skip over it so we can try without the region
-  // code.  For example, ca_ES@valencia should cause us to try ca@valencia
-  // before ca.
-  std::string::size_type variant_pos = locale.find('@');
-  if (variant_pos != std::string::npos)
-    return false;
-
-  // If the locale matches language but not country, use that instead.
-  // TODO(jungshik) : Nothing is done about languages that Chrome
-  // does not support but available on Windows. We fall
-  // back to en-US in GetApplicationLocale so that it's a not critical,
-  // but we can do better.
-  std::string::size_type hyphen_pos = locale.find('-');
-  if (hyphen_pos != std::string::npos && hyphen_pos > 0) {
-    std::string lang(locale, 0, hyphen_pos);
-    std::string region(locale, hyphen_pos + 1);
-    std::string tmp_locale(lang);
-    // Map es-RR other than es-ES to es-419 (Chrome's Latin American
-    // Spanish locale).
-    if (LowerCaseEqualsASCII(lang, "es") && !LowerCaseEqualsASCII(region, "es"))
-      tmp_locale.append("-419");
-    else if (LowerCaseEqualsASCII(lang, "zh")) {
-      // Map zh-HK and zh-MO to zh-TW. Otherwise, zh-FOO is mapped to zh-CN.
-      if (LowerCaseEqualsASCII(region, "hk") ||
-          LowerCaseEqualsASCII(region, "mo")) { // Macao
-        tmp_locale.append("-TW");
-      } else {
-        tmp_locale.append("-CN");
-      }
-    }
-    if (IsLocaleAvailable(tmp_locale)) {
-      resolved_locale->swap(tmp_locale);
-      return true;
-    }
-  }
-
-  // Google updater uses no, iw and en for our nb, he, and en-US.
-  // We need to map them to our codes.
-  struct {
-    const char* source;
-    const char* dest;
-  } alias_map[] = {
-      {"no", "nb"},
-      {"tl", "fil"},
-      {"iw", "he"},
-      {"en", "en-US"},
-  };
-
-  for (size_t i = 0; i < ARRAYSIZE_UNSAFE(alias_map); ++i) {
-    if (LowerCaseEqualsASCII(locale, alias_map[i].source)) {
-      std::string tmp_locale(alias_map[i].dest);
-      if (IsLocaleAvailable(tmp_locale)) {
-        resolved_locale->swap(tmp_locale);
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
+// bool CheckAndResolveLocale(const std::string& locale,
+//                            std::string* resolved_locale) {
+//   if (IsLocaleAvailable(locale)) {
+//     *resolved_locale = locale;
+//     return true;
+//   }
+// 
+//   // If there's a variant, skip over it so we can try without the region
+//   // code.  For example, ca_ES@valencia should cause us to try ca@valencia
+//   // before ca.
+//   std::string::size_type variant_pos = locale.find('@');
+//   if (variant_pos != std::string::npos)
+//     return false;
+// 
+//   // If the locale matches language but not country, use that instead.
+//   // TODO(jungshik) : Nothing is done about languages that Chrome
+//   // does not support but available on Windows. We fall
+//   // back to en-US in GetApplicationLocale so that it's a not critical,
+//   // but we can do better.
+//   std::string::size_type hyphen_pos = locale.find('-');
+//   if (hyphen_pos != std::string::npos && hyphen_pos > 0) {
+//     std::string lang(locale, 0, hyphen_pos);
+//     std::string region(locale, hyphen_pos + 1);
+//     std::string tmp_locale(lang);
+//     // Map es-RR other than es-ES to es-419 (Chrome's Latin American
+//     // Spanish locale).
+//     if (LowerCaseEqualsASCII(lang, "es") && !LowerCaseEqualsASCII(region, "es"))
+//       tmp_locale.append("-419");
+//     else if (LowerCaseEqualsASCII(lang, "zh")) {
+//       // Map zh-HK and zh-MO to zh-TW. Otherwise, zh-FOO is mapped to zh-CN.
+//       if (LowerCaseEqualsASCII(region, "hk") ||
+//           LowerCaseEqualsASCII(region, "mo")) { // Macao
+//         tmp_locale.append("-TW");
+//       } else {
+//         tmp_locale.append("-CN");
+//       }
+//     }
+//     if (IsLocaleAvailable(tmp_locale)) {
+//       resolved_locale->swap(tmp_locale);
+//       return true;
+//     }
+//   }
+// 
+//   // Google updater uses no, iw and en for our nb, he, and en-US.
+//   // We need to map them to our codes.
+//   struct {
+//     const char* source;
+//     const char* dest;
+//   } alias_map[] = {
+//       {"no", "nb"},
+//       {"tl", "fil"},
+//       {"iw", "he"},
+//       {"en", "en-US"},
+//   };
+// 
+//   for (size_t i = 0; i < ARRAYSIZE_UNSAFE(alias_map); ++i) {
+//     if (LowerCaseEqualsASCII(locale, alias_map[i].source)) {
+//       std::string tmp_locale(alias_map[i].dest);
+//       if (IsLocaleAvailable(tmp_locale)) {
+//         resolved_locale->swap(tmp_locale);
+//         return true;
+//       }
+//     }
+//   }
+// 
+//   return false;
+// }
 #endif
 
 // On Linux, the text layout engine Pango determines paragraph directionality
@@ -326,243 +326,243 @@ void AdjustParagraphDirectionality(string16* paragraph) {
 }
 
 #if defined(OS_WIN)
-std::string GetCanonicalLocale(const std::string& locale) {
-  return base::i18n::GetCanonicalLocale(locale.c_str());
-}
+// std::string GetCanonicalLocale(const std::string& locale) {
+//   return base::i18n::GetCanonicalLocale(locale.c_str());
+// }
 #endif
 
 }  // namespace
 
 namespace l10n_util {
 
-std::string GetApplicationLocale(const std::string& pref_locale) {
-#if defined(OS_MACOSX)
+// std::string GetApplicationLocale(const std::string& pref_locale) {
+// #if defined(OS_MACOSX)
+// 
+//   // Use any override (Cocoa for the browser), otherwise use the preference
+//   // passed to the function.
+//   std::string app_locale = l10n_util::GetLocaleOverride();
+//   if (app_locale.empty())
+//     app_locale = pref_locale;
+// 
+//   // The above should handle all of the cases Chrome normally hits, but for some
+//   // unit tests, we need something to fall back too.
+//   if (app_locale.empty())
+//     app_locale = "en-US";
+// 
+//   // Windows/Linux call SetICUDefaultLocale after determining the actual locale
+//   // with CheckAndResolveLocal to make ICU APIs work in that locale.
+//   // Mac doesn't use a locale directory tree of resources (it uses Mac style
+//   // resources), so mirror the Windows/Linux behavior of calling
+//   // SetICUDefaultLocale.
+//   base::i18n::SetICUDefaultLocale(app_locale);
+//   return app_locale;
+// 
+// #else
+// 
+//   std::string resolved_locale;
+//   std::vector<std::string> candidates;
+// 
+//   // We only use --lang and the app pref on Windows.  On Linux, we only
+//   // look at the LC_*/LANG environment variables.  We do, however, pass --lang
+//   // to renderer and plugin processes so they know what language the parent
+//   // process decided to use.
+// 
+// #if defined(OS_WIN)
+// 
+//   // First, try the preference value.
+//   if (!pref_locale.empty())
+//     candidates.push_back(GetCanonicalLocale(pref_locale));
+// 
+//   // Next, try the overridden locale.
+//   const std::vector<std::string>& languages = l10n_util::GetLocaleOverrides();
+//   if (!languages.empty()) {
+//     candidates.reserve(candidates.size() + languages.size());
+//     std::transform(languages.begin(), languages.end(),
+//                    std::back_inserter(candidates), &GetCanonicalLocale);
+//   } else {
+//     // If no override was set, defer to ICU
+//     candidates.push_back(base::i18n::GetConfiguredLocale());
+//   }
+// 
+// #elif defined(OS_CHROMEOS)
+// 
+//   // On ChromeOS, use the application locale preference.
+//   if (!pref_locale.empty())
+//     candidates.push_back(pref_locale);
+// 
+// #elif defined(OS_POSIX) && defined(TOOLKIT_USES_GTK)
+// 
+//   // GLib implements correct environment variable parsing with
+//   // the precedence order: LANGUAGE, LC_ALL, LC_MESSAGES and LANG.
+//   // We used to use our custom parsing code along with ICU for this purpose.
+//   // If we have a port that does not depend on GTK, we have to
+//   // restore our custom code for that port.
+//   const char* const* languages = g_get_language_names();
+//   DCHECK(languages);  // A valid pointer is guaranteed.
+//   DCHECK(*languages);  // At least one entry, "C", is guaranteed.
+// 
+//   for (; *languages != NULL; ++languages) {
+//     candidates.push_back(base::i18n::GetCanonicalLocale(*languages));
+//   }
+// 
+// #else
+// #error Unsupported platform, see build/build_config.h
+// #endif
+// 
+//   std::vector<std::string>::const_iterator i = candidates.begin();
+//   for (; i != candidates.end(); ++i) {
+//     if (CheckAndResolveLocale(*i, &resolved_locale)) {
+//       base::i18n::SetICUDefaultLocale(resolved_locale);
+//       return resolved_locale;
+//     }
+//   }
+// 
+//   // Fallback on en-US.
+//   const std::string fallback_locale("en-US");
+//   if (IsLocaleAvailable(fallback_locale)) {
+//     base::i18n::SetICUDefaultLocale(fallback_locale);
+//     return fallback_locale;
+//   }
+// 
+//   // No locale data file was found; we shouldn't get here.
+//   NOTREACHED();
+// 
+//   return std::string();
+// 
+// #endif
+// }
 
-  // Use any override (Cocoa for the browser), otherwise use the preference
-  // passed to the function.
-  std::string app_locale = l10n_util::GetLocaleOverride();
-  if (app_locale.empty())
-    app_locale = pref_locale;
+// string16 GetDisplayNameForLocale(const std::string& locale,
+//                                  const std::string& display_locale,
+//                                  bool is_for_ui) {
+//   std::string locale_code = locale;
+//   // Internally, we use the language code of zh-CN and zh-TW, but we want the
+//   // display names to be Chinese (Simplified) and Chinese (Traditional) instead
+//   // of Chinese (China) and Chinese (Taiwan).  To do that, we pass zh-Hans
+//   // and zh-Hant to ICU. Even with this mapping, we'd get
+//   // 'Chinese (Simplified Han)' and 'Chinese (Traditional Han)' in English and
+//   // even longer results in other languages. Arguably, they're better than
+//   // the current results : Chinese (China) / Chinese (Taiwan).
+//   // TODO(jungshik): Do one of the following:
+//   // 1. Special-case Chinese by getting the custom-translation for them
+//   // 2. Recycle IDS_ENCODING_{SIMP,TRAD}_CHINESE.
+//   // 3. Get translations for two directly from the ICU resouce bundle
+//   // because they're not accessible with other any API.
+//   // 4. Patch ICU to special-case zh-Hans/zh-Hant for us.
+//   // #1 and #2 wouldn't work if display_locale != current UI locale although
+//   // we can think of additional hack to work around the problem.
+//   // #3 can be potentially expensive.
+//   if (locale_code == "zh-CN")
+//     locale_code = "zh-Hans";
+//   else if (locale_code == "zh-TW")
+//     locale_code = "zh-Hant";
+// 
+//   UErrorCode error = U_ZERO_ERROR;
+//   const int buffer_size = 1024;
+// 
+//   string16 display_name;
+//   int actual_size = uloc_getDisplayName(locale_code.c_str(),
+//       display_locale.c_str(),
+//       WriteInto(&display_name, buffer_size + 1), buffer_size, &error);
+//   DCHECK(U_SUCCESS(error));
+//   display_name.resize(actual_size);
+//   // Add an RTL mark so parentheses are properly placed.
+//   if (is_for_ui && base::i18n::IsRTL())
+//     display_name.push_back(static_cast<char16>(base::i18n::kRightToLeftMark));
+//   return display_name;
+// }
+// 
+// std::string NormalizeLocale(const std::string& locale) {
+//   std::string normalized_locale(locale);
+//   std::replace(normalized_locale.begin(), normalized_locale.end(), '-', '_');
+// 
+//   return normalized_locale;
+// }
+// 
+// void GetParentLocales(const std::string& current_locale,
+//                       std::vector<std::string>* parent_locales) {
+//   std::string locale(NormalizeLocale(current_locale));
+// 
+//   const int kNameCapacity = 256;
+//   char parent[kNameCapacity];
+//   base::strlcpy(parent, locale.c_str(), kNameCapacity);
+//   parent_locales->push_back(parent);
+//   UErrorCode err = U_ZERO_ERROR;
+//   while (uloc_getParent(parent, parent, kNameCapacity, &err) > 0) {
+//     if (U_FAILURE(err))
+//       break;
+//     parent_locales->push_back(parent);
+//   }
+// }
 
-  // The above should handle all of the cases Chrome normally hits, but for some
-  // unit tests, we need something to fall back too.
-  if (app_locale.empty())
-    app_locale = "en-US";
-
-  // Windows/Linux call SetICUDefaultLocale after determining the actual locale
-  // with CheckAndResolveLocal to make ICU APIs work in that locale.
-  // Mac doesn't use a locale directory tree of resources (it uses Mac style
-  // resources), so mirror the Windows/Linux behavior of calling
-  // SetICUDefaultLocale.
-  base::i18n::SetICUDefaultLocale(app_locale);
-  return app_locale;
-
-#else
-
-  std::string resolved_locale;
-  std::vector<std::string> candidates;
-
-  // We only use --lang and the app pref on Windows.  On Linux, we only
-  // look at the LC_*/LANG environment variables.  We do, however, pass --lang
-  // to renderer and plugin processes so they know what language the parent
-  // process decided to use.
-
-#if defined(OS_WIN)
-
-  // First, try the preference value.
-  if (!pref_locale.empty())
-    candidates.push_back(GetCanonicalLocale(pref_locale));
-
-  // Next, try the overridden locale.
-  const std::vector<std::string>& languages = l10n_util::GetLocaleOverrides();
-  if (!languages.empty()) {
-    candidates.reserve(candidates.size() + languages.size());
-    std::transform(languages.begin(), languages.end(),
-                   std::back_inserter(candidates), &GetCanonicalLocale);
-  } else {
-    // If no override was set, defer to ICU
-    candidates.push_back(base::i18n::GetConfiguredLocale());
-  }
-
-#elif defined(OS_CHROMEOS)
-
-  // On ChromeOS, use the application locale preference.
-  if (!pref_locale.empty())
-    candidates.push_back(pref_locale);
-
-#elif defined(OS_POSIX) && defined(TOOLKIT_USES_GTK)
-
-  // GLib implements correct environment variable parsing with
-  // the precedence order: LANGUAGE, LC_ALL, LC_MESSAGES and LANG.
-  // We used to use our custom parsing code along with ICU for this purpose.
-  // If we have a port that does not depend on GTK, we have to
-  // restore our custom code for that port.
-  const char* const* languages = g_get_language_names();
-  DCHECK(languages);  // A valid pointer is guaranteed.
-  DCHECK(*languages);  // At least one entry, "C", is guaranteed.
-
-  for (; *languages != NULL; ++languages) {
-    candidates.push_back(base::i18n::GetCanonicalLocale(*languages));
-  }
-
-#else
-#error Unsupported platform, see build/build_config.h
-#endif
-
-  std::vector<std::string>::const_iterator i = candidates.begin();
-  for (; i != candidates.end(); ++i) {
-    if (CheckAndResolveLocale(*i, &resolved_locale)) {
-      base::i18n::SetICUDefaultLocale(resolved_locale);
-      return resolved_locale;
-    }
-  }
-
-  // Fallback on en-US.
-  const std::string fallback_locale("en-US");
-  if (IsLocaleAvailable(fallback_locale)) {
-    base::i18n::SetICUDefaultLocale(fallback_locale);
-    return fallback_locale;
-  }
-
-  // No locale data file was found; we shouldn't get here.
-  NOTREACHED();
-
-  return std::string();
-
-#endif
-}
-
-string16 GetDisplayNameForLocale(const std::string& locale,
-                                 const std::string& display_locale,
-                                 bool is_for_ui) {
-  std::string locale_code = locale;
-  // Internally, we use the language code of zh-CN and zh-TW, but we want the
-  // display names to be Chinese (Simplified) and Chinese (Traditional) instead
-  // of Chinese (China) and Chinese (Taiwan).  To do that, we pass zh-Hans
-  // and zh-Hant to ICU. Even with this mapping, we'd get
-  // 'Chinese (Simplified Han)' and 'Chinese (Traditional Han)' in English and
-  // even longer results in other languages. Arguably, they're better than
-  // the current results : Chinese (China) / Chinese (Taiwan).
-  // TODO(jungshik): Do one of the following:
-  // 1. Special-case Chinese by getting the custom-translation for them
-  // 2. Recycle IDS_ENCODING_{SIMP,TRAD}_CHINESE.
-  // 3. Get translations for two directly from the ICU resouce bundle
-  // because they're not accessible with other any API.
-  // 4. Patch ICU to special-case zh-Hans/zh-Hant for us.
-  // #1 and #2 wouldn't work if display_locale != current UI locale although
-  // we can think of additional hack to work around the problem.
-  // #3 can be potentially expensive.
-  if (locale_code == "zh-CN")
-    locale_code = "zh-Hans";
-  else if (locale_code == "zh-TW")
-    locale_code = "zh-Hant";
-
-  UErrorCode error = U_ZERO_ERROR;
-  const int buffer_size = 1024;
-
-  string16 display_name;
-  int actual_size = uloc_getDisplayName(locale_code.c_str(),
-      display_locale.c_str(),
-      WriteInto(&display_name, buffer_size + 1), buffer_size, &error);
-  DCHECK(U_SUCCESS(error));
-  display_name.resize(actual_size);
-  // Add an RTL mark so parentheses are properly placed.
-  if (is_for_ui && base::i18n::IsRTL())
-    display_name.push_back(static_cast<char16>(base::i18n::kRightToLeftMark));
-  return display_name;
-}
-
-std::string NormalizeLocale(const std::string& locale) {
-  std::string normalized_locale(locale);
-  std::replace(normalized_locale.begin(), normalized_locale.end(), '-', '_');
-
-  return normalized_locale;
-}
-
-void GetParentLocales(const std::string& current_locale,
-                      std::vector<std::string>* parent_locales) {
-  std::string locale(NormalizeLocale(current_locale));
-
-  const int kNameCapacity = 256;
-  char parent[kNameCapacity];
-  base::strlcpy(parent, locale.c_str(), kNameCapacity);
-  parent_locales->push_back(parent);
-  UErrorCode err = U_ZERO_ERROR;
-  while (uloc_getParent(parent, parent, kNameCapacity, &err) > 0) {
-    if (U_FAILURE(err))
-      break;
-    parent_locales->push_back(parent);
-  }
-}
-
-bool IsValidLocaleSyntax(const std::string& locale) {
-  // Check that the length is plausible.
-  if (locale.size() < 2 || locale.size() >= ULOC_FULLNAME_CAPACITY)
-    return false;
-
-  // Strip off the part after an '@' sign, which might contain keywords,
-  // as in en_IE@currency=IEP or fr@collation=phonebook;calendar=islamic-civil.
-  // We don't validate that part much, just check that there's at least one
-  // equals sign in a plausible place. Normalize the prefix so that hyphens
-  // are changed to underscores.
-  std::string prefix = NormalizeLocale(locale);
-  size_t split_point = locale.find("@");
-  if (split_point != std::string::npos) {
-    std::string keywords = locale.substr(split_point + 1);
-    prefix = locale.substr(0, split_point);
-
-    size_t equals_loc = keywords.find("=");
-    if (equals_loc == std::string::npos ||
-        equals_loc < 1 || equals_loc > keywords.size() - 2)
-      return false;
-  }
-
-  // Check that all characters before the at-sign are alphanumeric or
-  // underscore.
-  for (size_t i = 0; i < prefix.size(); i++) {
-    char ch = prefix[i];
-    if (!IsAsciiAlpha(ch) && !IsAsciiDigit(ch) && ch != '_')
-      return false;
-  }
-
-  // Check that the initial token (before the first hyphen/underscore)
-  // is 1 - 3 alphabetical characters (a language tag).
-  for (size_t i = 0; i < prefix.size(); i++) {
-    char ch = prefix[i];
-    if (ch == '_') {
-      if (i < 1 || i > 3)
-        return false;
-      break;
-    }
-    if (!IsAsciiAlpha(ch))
-      return false;
-  }
-
-  // Check that the all tokens after the initial token are 1 - 8 characters.
-  // (Tokenize/StringTokenizer don't work here, they collapse multiple
-  // delimiters into one.)
-  int token_len = 0;
-  int token_index = 0;
-  for (size_t i = 0; i < prefix.size(); i++) {
-    if (prefix[i] != '_') {
-      token_len++;
-      continue;
-    }
-
-    if (token_index > 0 && (token_len < 1 || token_len > 8)) {
-      return false;
-    }
-    token_index++;
-    token_len = 0;
-  }
-  if (token_index == 0 && (token_len < 1 || token_len > 3)) {
-    return false;
-  } else if (token_len < 1 || token_len > 8) {
-    return false;
-  }
-
-  return true;
-}
+// bool IsValidLocaleSyntax(const std::string& locale) {
+//   // Check that the length is plausible.
+//   if (locale.size() < 2 || locale.size() >= ULOC_FULLNAME_CAPACITY)
+//     return false;
+// 
+//   // Strip off the part after an '@' sign, which might contain keywords,
+//   // as in en_IE@currency=IEP or fr@collation=phonebook;calendar=islamic-civil.
+//   // We don't validate that part much, just check that there's at least one
+//   // equals sign in a plausible place. Normalize the prefix so that hyphens
+//   // are changed to underscores.
+//   std::string prefix = NormalizeLocale(locale);
+//   size_t split_point = locale.find("@");
+//   if (split_point != std::string::npos) {
+//     std::string keywords = locale.substr(split_point + 1);
+//     prefix = locale.substr(0, split_point);
+// 
+//     size_t equals_loc = keywords.find("=");
+//     if (equals_loc == std::string::npos ||
+//         equals_loc < 1 || equals_loc > keywords.size() - 2)
+//       return false;
+//   }
+// 
+//   // Check that all characters before the at-sign are alphanumeric or
+//   // underscore.
+//   for (size_t i = 0; i < prefix.size(); i++) {
+//     char ch = prefix[i];
+//     if (!IsAsciiAlpha(ch) && !IsAsciiDigit(ch) && ch != '_')
+//       return false;
+//   }
+// 
+//   // Check that the initial token (before the first hyphen/underscore)
+//   // is 1 - 3 alphabetical characters (a language tag).
+//   for (size_t i = 0; i < prefix.size(); i++) {
+//     char ch = prefix[i];
+//     if (ch == '_') {
+//       if (i < 1 || i > 3)
+//         return false;
+//       break;
+//     }
+//     if (!IsAsciiAlpha(ch))
+//       return false;
+//   }
+// 
+//   // Check that the all tokens after the initial token are 1 - 8 characters.
+//   // (Tokenize/StringTokenizer don't work here, they collapse multiple
+//   // delimiters into one.)
+//   int token_len = 0;
+//   int token_index = 0;
+//   for (size_t i = 0; i < prefix.size(); i++) {
+//     if (prefix[i] != '_') {
+//       token_len++;
+//       continue;
+//     }
+// 
+//     if (token_index > 0 && (token_len < 1 || token_len > 8)) {
+//       return false;
+//     }
+//     token_index++;
+//     token_len = 0;
+//   }
+//   if (token_index == 0 && (token_len < 1 || token_len > 3)) {
+//     return false;
+//   } else if (token_len < 1 || token_len > 8) {
+//     return false;
+//   }
+// 
+//   return true;
+// }
 
 std::string GetStringUTF8(int message_id) {
   return UTF16ToUTF8(GetStringUTF16(message_id));
@@ -730,78 +730,78 @@ string16 GetStringFUTF16Int(int message_id, int64 a) {
 
 // Compares the character data stored in two different string16 strings by
 // specified Collator instance.
-UCollationResult CompareString16WithCollator(const icu::Collator* collator,
-                                             const string16& lhs,
-                                             const string16& rhs) {
-  DCHECK(collator);
-  UErrorCode error = U_ZERO_ERROR;
-  UCollationResult result = collator->compare(
-      static_cast<const UChar*>(lhs.c_str()), static_cast<int>(lhs.length()),
-      static_cast<const UChar*>(rhs.c_str()), static_cast<int>(rhs.length()),
-      error);
-  DCHECK(U_SUCCESS(error));
-  return result;
-}
-
+// UCollationResult CompareString16WithCollator(const icu::Collator* collator,
+//                                              const string16& lhs,
+//                                              const string16& rhs) {
+//   DCHECK(collator);
+//   UErrorCode error = U_ZERO_ERROR;
+//   UCollationResult result = collator->compare(
+//       static_cast<const UChar*>(lhs.c_str()), static_cast<int>(lhs.length()),
+//       static_cast<const UChar*>(rhs.c_str()), static_cast<int>(rhs.length()),
+//       error);
+//   DCHECK(U_SUCCESS(error));
+//   return result;
+// }
+// 
 // Specialization of operator() method for string16 version.
-template <>
-bool StringComparator<string16>::operator()(const string16& lhs,
-                                            const string16& rhs) {
-  // If we can not get collator instance for specified locale, just do simple
-  // string compare.
-  if (!collator_)
-    return lhs < rhs;
-  return CompareString16WithCollator(collator_, lhs, rhs) == UCOL_LESS;
-};
-
-void SortStrings16(const std::string& locale,
-                   std::vector<string16>* strings) {
-  SortVectorWithStringKey(locale, strings, false);
-}
-
-const std::vector<std::string>& GetAvailableLocales() {
-  static std::vector<std::string> locales;
-  if (locales.empty()) {
-    int num_locales = uloc_countAvailable();
-    for (int i = 0; i < num_locales; ++i) {
-      std::string locale_name = uloc_getAvailable(i);
-      // Filter out the names that have aliases.
-      if (IsDuplicateName(locale_name))
-        continue;
-      // Filter out locales for which we have only partially populated data
-      // and to which Chrome is not localized.
-      if (IsLocalePartiallyPopulated(locale_name))
-        continue;
-      if (!IsLocaleSupportedByOS(locale_name))
-        continue;
-      // Normalize underscores to hyphens because that's what our locale files
-      // use.
-      std::replace(locale_name.begin(), locale_name.end(), '_', '-');
-
-      // Map the Chinese locale names over to zh-CN and zh-TW.
-      if (LowerCaseEqualsASCII(locale_name, "zh-hans")) {
-        locale_name = "zh-CN";
-      } else if (LowerCaseEqualsASCII(locale_name, "zh-hant")) {
-        locale_name = "zh-TW";
-      }
-      locales.push_back(locale_name);
-    }
-
-    // Manually add 'es-419' to the list. See the comment in IsDuplicateName().
-    locales.push_back("es-419");
-  }
-  return locales;
-}
-
-void GetAcceptLanguagesForLocale(const std::string& display_locale,
-                                 std::vector<std::string>* locale_codes) {
-  for (size_t i = 0; i < arraysize(kAcceptLanguageList); ++i) {
-    if (!IsLocaleNameTranslated(kAcceptLanguageList[i], display_locale))
-      // TODO(jungshik) : Put them at the of the list with language codes
-      // enclosed by brackets instead of skipping.
-        continue;
-    locale_codes->push_back(kAcceptLanguageList[i]);
-  }
-}
+// template <>
+// bool StringComparator<string16>::operator()(const string16& lhs,
+//                                             const string16& rhs) {
+//   // If we can not get collator instance for specified locale, just do simple
+//   // string compare.
+//   if (!collator_)
+//     return lhs < rhs;
+//   return CompareString16WithCollator(collator_, lhs, rhs) == UCOL_LESS;
+// };
+// 
+// void SortStrings16(const std::string& locale,
+//                    std::vector<string16>* strings) {
+//   SortVectorWithStringKey(locale, strings, false);
+// }
+// 
+// const std::vector<std::string>& GetAvailableLocales() {
+//   static std::vector<std::string> locales;
+//   if (locales.empty()) {
+//     int num_locales = uloc_countAvailable();
+//     for (int i = 0; i < num_locales; ++i) {
+//       std::string locale_name = uloc_getAvailable(i);
+//       // Filter out the names that have aliases.
+//       if (IsDuplicateName(locale_name))
+//         continue;
+//       // Filter out locales for which we have only partially populated data
+//       // and to which Chrome is not localized.
+//       if (IsLocalePartiallyPopulated(locale_name))
+//         continue;
+//       if (!IsLocaleSupportedByOS(locale_name))
+//         continue;
+//       // Normalize underscores to hyphens because that's what our locale files
+//       // use.
+//       std::replace(locale_name.begin(), locale_name.end(), '_', '-');
+// 
+//       // Map the Chinese locale names over to zh-CN and zh-TW.
+//       if (LowerCaseEqualsASCII(locale_name, "zh-hans")) {
+//         locale_name = "zh-CN";
+//       } else if (LowerCaseEqualsASCII(locale_name, "zh-hant")) {
+//         locale_name = "zh-TW";
+//       }
+//       locales.push_back(locale_name);
+//     }
+// 
+//     // Manually add 'es-419' to the list. See the comment in IsDuplicateName().
+//     locales.push_back("es-419");
+//   }
+//   return locales;
+// }
+// 
+// void GetAcceptLanguagesForLocale(const std::string& display_locale,
+//                                  std::vector<std::string>* locale_codes) {
+//   for (size_t i = 0; i < arraysize(kAcceptLanguageList); ++i) {
+//     if (!IsLocaleNameTranslated(kAcceptLanguageList[i], display_locale))
+//       // TODO(jungshik) : Put them at the of the list with language codes
+//       // enclosed by brackets instead of skipping.
+//         continue;
+//     locale_codes->push_back(kAcceptLanguageList[i]);
+//   }
+// }
 
 }  // namespace l10n_util
