@@ -48,6 +48,7 @@
         'base/resource/resource_bundle.h',
         'base/resource/resource_bundle.cc',
         'base/resource/resource_bundle_win.cc',
+        'base/strings/app_locale_settings.grd',
       ],
 
       'include_dirs': [

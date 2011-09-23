@@ -248,6 +248,7 @@ skia/config/SkUserConfig.h modify
 skia/skia.gyp modify
 base/win/resource_util.h
 base/win/resource_util.cc
+ui/base/strings/app_locale_settings.grd modify
 from chromium/src@1581329f0869d6b3a552d666dec9f3e68e6e3797
 
 tools/grit/
