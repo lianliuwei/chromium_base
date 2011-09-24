@@ -125,8 +125,6 @@ base/message_pump_win.h
 base/message_pump_win.cc
 base/task.h
 base/task.cc
-base/tracked.h
-base/tracked.cc
 base/tracked_objects.h
 base/tracked_objects.cc
 base/synchronization/waitable_event.h
@@ -249,6 +247,8 @@ skia/skia.gyp modify
 base/win/resource_util.h
 base/win/resource_util.cc
 ui/base/strings/app_locale_settings.grd modify
+base/location.h
+base/location.cc
 from chromium/src@69b878ded4d5ef2e464b0fb6d5c78fe4c55a0059
 
 

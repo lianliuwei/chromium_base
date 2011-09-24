@@ -120,8 +120,6 @@
 	      'message_pump_default.cc',
 	      'task.h',
 	      'task.cc',
-	      'tracked.h',
-	      'tracked.cc',
 	      'tracked_objects.h',
 	      'tracked_objects.cc',
 	      'synchronization/waitable_event.h',
@@ -185,6 +183,8 @@
         'stack_container.h',
         'win/resource_util.h',
         'win/resource_util.cc',
+        'location.h',
+        'location.cc',
       ],
       'include_dirs': [
           '..',
