@@ -12,6 +12,10 @@
 #include "base/memory/ref_counted.h"
 #include "base/task.h"
 
+namespace tracked_objects {
+class Location;
+} // namespace tracked_objects
+
 namespace base {
 
 struct MessageLoopProxyTraits;
@@ -87,7 +91,7 @@ class BASE_EXPORT MessageLoopProxy
   // };
   //
   //
-  // class DataLoader : public SupportsWeakPtr<ReadToBuffer> {
+  // class DataLoader : public SupportsWeakPtr<DataLoader> {
   //  public:
   //    void GetData() {
   //      scoped_refptr<DataBuffer> buffer = new DataBuffer();

@@ -107,7 +107,6 @@
         '../third_party/skia/gpu/include/GrStencil.h',
         '../third_party/skia/gpu/include/GrStopwatch.h',
         '../third_party/skia/gpu/include/GrStringBuilder.h',
-        '../third_party/skia/gpu/include/GrTArray.h',
         '../third_party/skia/gpu/include/GrTBSearch.h',
         '../third_party/skia/gpu/include/GrTDArray.h',
         '../third_party/skia/gpu/include/GrTHashCache.h',
@@ -595,6 +594,7 @@
         '../third_party/skia/include/core/SkStream.h',
         '../third_party/skia/include/core/SkString.h',
         '../third_party/skia/include/core/SkStroke.h',
+        '../third_party/skia/include/core/SkTArray.h',
         '../third_party/skia/include/core/SkTDArray.h',
         '../third_party/skia/include/core/SkTDStack.h',
         '../third_party/skia/include/core/SkTDict.h',
@@ -664,8 +664,9 @@
         '../third_party/skia/include/images/SkMovie.h',
         '../third_party/skia/include/images/SkPageFlipper.h',
 
-        'ext/bitmap_platform_device.cc',
         'ext/bitmap_platform_device.h',
+        'ext/bitmap_platform_device_android.cc',
+        'ext/bitmap_platform_device_android.h',
         'ext/bitmap_platform_device_data.h',
         'ext/bitmap_platform_device_linux.cc',
         'ext/bitmap_platform_device_linux.h',
@@ -727,7 +728,6 @@
         'GR_AGGRESSIVE_SHADER_OPTS=1',
         'SK_DISABLE_FAST_AA_STROKE_RECT',
         'SK_IGNORE_CF_OPTIMIZATION',
-        'SK_BLUR_MASK_FILTER_IGNORE_MARGIN_FIX',
       ],
       'sources!': [
         '../third_party/skia/include/core/SkTypes.h',
@@ -743,15 +743,13 @@
             '../third_party/skia/src/utils/SkMatrix44.cpp',
           ],
         }],
-        [ 'toolkit_uses_gtk == 0', {
-          'sources/': [ ['exclude', '_(linux|gtk)\\.(cc|cpp)$'] ],
-          'sources!': [
-            '../third_party/skia/src/ports/SkFontHost_FreeType.cpp',
-            '../third_party/skia/src/ports/SkFontHost_TryeType_Tables.cpp',
-            '../third_party/skia/src/ports/SkFontHost_gamma_none.cpp',
-            '../third_party/skia/src/ports/SkFontHost_gamma_none.cpp',
-            '../third_party/skia/src/ports/SkFontHost_tables.cpp',
+        [ 'OS == "android"', {
+          'sources/': [
+            ['include', 'ext/platform_device_linux.cc'],
+            ['include', 'ext/platform_canvas_linux.cc'],
           ],
+        }, { # OS != "android"
+          'sources/': [ ['exclude', '_android\\.(cc|cpp)$'] ],
         }],
         [ 'OS != "win"', {
           'sources/': [ ['exclude', '_win\\.(cc|cpp)$'] ],
@@ -771,9 +769,8 @@
             '../third_party/skia/src/opts/opts_check_SSE2.cpp'
           ],
         }],
-        [ 'toolkit_uses_gtk == 1', {
+        [ 'use_glib == 1', {
           'dependencies': [
-            '../build/linux/system.gyp:gdk',
             '../build/linux/system.gyp:fontconfig',
             '../build/linux/system.gyp:freetype2',
             '../third_party/harfbuzz/harfbuzz.gyp:harfbuzz',
@@ -787,6 +784,24 @@
             'ext/SkFontHost_fontconfig.cpp',
             'ext/SkFontHost_fontconfig_direct.cpp',
           ],
+          'defines': [
+            'SK_MAX_SIZE_FOR_LCDTEXT=256',
+          ],
+        }, {  # use_glib == 0
+          'sources/': [ ['exclude', '_linux\\.(cc|cpp)$'] ],
+          'sources!': [
+            '../third_party/skia/src/ports/SkFontHost_FreeType.cpp',
+            '../third_party/skia/src/ports/SkFontHost_TryeType_Tables.cpp',
+            '../third_party/skia/src/ports/SkFontHost_gamma_none.cpp',
+            '../third_party/skia/src/ports/SkFontHost_tables.cpp',
+          ],
+        }],
+        [ 'toolkit_uses_gtk == 1', {
+          'dependencies': [
+            '../build/linux/system.gyp:gdk',
+          ],
+        }, {  # toolkit_uses_gtk == 0
+          'sources/': [ ['exclude', '_gtk\\.(cc|cpp)$'] ],
         }],
         [ 'OS == "mac"', {
           'defines': [

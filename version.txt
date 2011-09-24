@@ -58,7 +58,7 @@ base/debug/debugger.h
 base/debug/debugger.cc
 base/debug/debugger_win.cc
 base/gtest_prod_util.h
-base/pickle.h  modify
+base/pickle.h
 base/pickle.cc
 base/at_exit.h
 base/at_exit.cc
@@ -222,7 +222,7 @@ third_party/libpng/
 third_party/zlib/
 ui/gfx/insets.h
 ui/gfx/insets.cc
-ui/base/l10n/l10n_util_win.h
+ui/base/l10n/l10n_util_win.h modify
 ui/base/l10n/l10n_util_win.cc modify
 base/process.h
 base/process_util.h
@@ -249,7 +249,7 @@ skia/skia.gyp modify
 base/win/resource_util.h
 base/win/resource_util.cc
 ui/base/strings/app_locale_settings.grd modify
-from chromium/src@1581329f0869d6b3a552d666dec9f3e68e6e3797
+from chromium/src@69b878ded4d5ef2e464b0fb6d5c78fe4c55a0059
 
 
 build/common.gypi modify

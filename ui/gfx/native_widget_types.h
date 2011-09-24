@@ -37,7 +37,10 @@
 // 'views'.
 
 #if defined(USE_AURA)
-#include "aura/window.h"
+class SkRegion;
+namespace aura {
+class Window;
+}
 #endif
 #if defined(OS_WIN)
 #include <windows.h>  // NOLINT
@@ -58,9 +61,12 @@ class NSView;
 class NSWindow;
 class NSTextField;
 #endif  // __OBJC__
-#elif defined(USE_WAYLAND)
+#elif defined(OS_POSIX)
 typedef struct _PangoFontDescription PangoFontDescription;
 typedef struct _cairo cairo_t;
+#endif
+
+#if defined(USE_WAYLAND)
 typedef struct _GdkPixbuf GdkPixbuf;
 struct wl_egl_window;
 
@@ -71,13 +77,13 @@ class WaylandCursor;
 
 typedef struct _GdkRegion GdkRegion;
 #elif defined(TOOLKIT_USES_GTK)
-typedef struct _PangoFontDescription PangoFontDescription;
 typedef struct _GdkCursor GdkCursor;
 typedef struct _GdkPixbuf GdkPixbuf;
 typedef struct _GdkRegion GdkRegion;
 typedef struct _GtkWidget GtkWidget;
 typedef struct _GtkWindow GtkWindow;
-typedef struct _cairo cairo_t;
+#elif defined(OS_ANDROID)
+class ChromeView;
 #endif
 class SkBitmap;
 
@@ -125,13 +131,31 @@ typedef void* NativeMenu;
 // a Wayland specific region
 typedef GdkRegion* NativeRegion;
 typedef void* NativeViewAccessible;
-#elif defined(USE_X11)
+#elif defined(TOOLKIT_USES_GTK)
 typedef PangoFontDescription* NativeFont;
 typedef GtkWidget* NativeEditView;
 typedef cairo_t* NativeDrawingContext;
 typedef GdkCursor* NativeCursor;
 typedef GtkWidget* NativeMenu;
 typedef GdkRegion* NativeRegion;
+typedef void* NativeViewAccessible;
+#elif defined(USE_AURA)
+typedef PangoFontDescription* NativeFont;
+typedef void* NativeEditView;
+typedef cairo_t* NativeDrawingContext;
+typedef void* NativeCursor;
+typedef void* NativeMenu;
+typedef SkRegion* NativeRegion;
+typedef void* NativeViewAccessible;
+#elif defined(OS_ANDROID)
+typedef void* NativeFont;
+typedef ChromeView* NativeView;
+typedef ChromeView* NativeWindow;
+typedef void* NativeEditView;
+typedef void* NativeDrawingContext;
+typedef void* NativeCursor;
+typedef void* NativeMenu;
+typedef void* NativeRegion;
 typedef void* NativeViewAccessible;
 #endif
 

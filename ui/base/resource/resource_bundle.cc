@@ -11,6 +11,7 @@
 #include "base/stl_util.h"
 #include "base/string_piece.h"
 #include "base/synchronization/lock.h"
+#include "base/utf_string_conversions.h"
 #include "build/build_config.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -144,13 +145,15 @@ std::string ResourceBundle::LoadLocaleResources(
     const std::string& pref_locale) {
   DCHECK(!locale_resources_data_.get()) << "locale.pak already loaded";
   std::string app_locale = l10n_util::GetApplicationLocale(pref_locale);
-  FilePath locale_file_path;
-  CommandLine *command_line = CommandLine::ForCurrentProcess();
-  if (command_line->HasSwitch(switches::kLocalePak)) {
-    locale_file_path =
-      command_line->GetSwitchValuePath(switches::kLocalePak);
-  } else {
-    locale_file_path = GetLocaleFilePath(app_locale);
+  FilePath locale_file_path = GetOverriddenPakPath();
+  if (locale_file_path.empty()) {
+    CommandLine *command_line = CommandLine::ForCurrentProcess();
+    if (command_line->HasSwitch(switches::kLocalePak)) {
+      locale_file_path =
+          command_line->GetSwitchValuePath(switches::kLocalePak);
+    } else {
+      locale_file_path = GetLocaleFilePath(app_locale);
+    }
   }
   if (locale_file_path.empty()) {
     // It's possible that there is no locale.pak.
@@ -185,11 +188,28 @@ string16 ResourceBundle::GetLocalizedString(int message_id) {
     }
   }
 
-  // Data pack encodes strings as UTF16.
-  DCHECK_EQ(data.length() % 2, 0U);
-  string16 msg(reinterpret_cast<const char16*>(data.data()),
-               data.length() / 2);
+  // Strings should not be loaded from a data pack that contains binary data.
+  DCHECK(locale_resources_data_->GetTextEncodingType() == DataPack::UTF16 ||
+         locale_resources_data_->GetTextEncodingType() == DataPack::UTF8)
+      << "requested localized string from binary pack file";
+
+  // Data pack encodes strings as either UTF8 or UTF16.
+  string16 msg;
+  if (locale_resources_data_->GetTextEncodingType() == DataPack::UTF16) {
+    msg = string16(reinterpret_cast<const char16*>(data.data()),
+                   data.length() / 2);
+  } else if (locale_resources_data_->GetTextEncodingType() == DataPack::UTF8) {
+    msg = UTF8ToUTF16(data);
+  }
   return msg;
+}
+
+void ResourceBundle::OverrideLocalePakForTest(const FilePath& pak_path) {
+  overridden_pak_path_ = pak_path;
+}
+
+const FilePath& ResourceBundle::GetOverriddenPakPath() {
+  return overridden_pak_path_;
 }
 
 SkBitmap* ResourceBundle::GetBitmapNamed(int resource_id) {

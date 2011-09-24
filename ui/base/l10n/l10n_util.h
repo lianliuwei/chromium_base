@@ -31,7 +31,7 @@ namespace l10n_util {
 // as |pref_locale|), finally, we fall back on the system locale. We only return
 // a value if there's a corresponding resource DLL for the locale.  Otherwise,
 // we fall back to en-us.
- UI_EXPORT std::string GetApplicationLocale(const std::string& pref_locale);
+UI_EXPORT std::string GetApplicationLocale(const std::string& pref_locale);
 
 // Given a locale code, return true if the OS is capable of supporting it.
 // For instance, Oriya is not well supported on Windows XP and we return
@@ -137,12 +137,12 @@ UI_EXPORT void SortStrings16(const std::string& locale,
 
 // Returns a vector of available locale codes. E.g., a vector containing
 // en-US, es, fr, fi, pt-PT, pt-BR, etc.
-// UI_EXPORT const std::vector<std::string>& GetAvailableLocales();
+UI_EXPORT const std::vector<std::string>& GetAvailableLocales();
 
 // Returns a vector of locale codes usable for accept-languages.
-// UI_EXPORT void GetAcceptLanguagesForLocale(
-//     const std::string& display_locale,
-//     std::vector<std::string>* locale_codes);
+UI_EXPORT void GetAcceptLanguagesForLocale(
+    const std::string& display_locale,
+    std::vector<std::string>* locale_codes);
 
 
 }  // namespace l10n_util
