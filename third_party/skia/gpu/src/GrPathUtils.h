@@ -13,14 +13,13 @@
 #include "GrMatrix.h"
 #include "GrPath.h"
 
-class GrPoint;
-
 /**
  *  Utilities for evaluating paths.
  */
 namespace GrPathUtils {
     GrScalar scaleToleranceToSrc(GrScalar devTol,
-                                 const GrMatrix& viewM);
+                                 const GrMatrix& viewM,
+                                 const GrRect& pathBounds);
 
     /// Since we divide by tol if we're computing exact worst-case bounds,
     /// very small tolerances will be increased to gMinCurveTol.

@@ -32,18 +32,23 @@ class FilePatchBase(object):
   is_new = False
 
   def __init__(self, filename):
-    self.filename = None
-    self._set_filename(filename)
+    self.filename = self._process_filename(filename)
+    # Set when the file is copied or moved.
+    self.source_filename = None
 
-  def _set_filename(self, filename):
-    self.filename = filename.replace('\\', '/')
+  @staticmethod
+  def _process_filename(filename):
+    filename = filename.replace('\\', '/')
     # Blacklist a few characters for simplicity.
     for i in ('%', '$', '..', '\'', '"'):
-      if i in self.filename:
-        self._fail('Can\'t use \'%s\' in filename.' % i)
+      if i in filename:
+        raise UnsupportedPatchFormat(
+            filename, 'Can\'t use \'%s\' in filename.' % i)
     for i in ('/', 'CON', 'COM'):
-      if self.filename.startswith(i):
-        self._fail('Filename can\'t start with \'%s\'.' % i)
+      if filename.startswith(i):
+        raise UnsupportedPatchFormat(
+            filename, 'Filename can\'t start with \'%s\'.' % i)
+    return filename
 
   def get(self):  # pragma: no coverage
     raise NotImplementedError('Nothing to grab')
@@ -54,9 +59,14 @@ class FilePatchBase(object):
     relpath = relpath.replace('\\', '/')
     if relpath[0] == '/':
       self._fail('Relative path starts with %s' % relpath[0])
-    self._set_filename(posixpath.join(relpath, self.filename))
+    self.filename = self._process_filename(
+        posixpath.join(relpath, self.filename))
+    if self.source_filename:
+      self.source_filename = self._process_filename(
+          posixpath.join(relpath, self.source_filename))
 
   def _fail(self, msg):
+    """Shortcut function to raise UnsupportedPatchFormat."""
     raise UnsupportedPatchFormat(self.filename, msg)
 
 
@@ -107,9 +117,21 @@ class FilePatchDiff(FilePatchBase):
 
   def set_relpath(self, relpath):
     old_filename = self.filename
+    old_source_filename = self.source_filename or self.filename
     super(FilePatchDiff, self).set_relpath(relpath)
     # Update the header too.
-    self.diff_header = self.diff_header.replace(old_filename, self.filename)
+    source_filename = self.source_filename or self.filename
+    lines = self.diff_header.splitlines(True)
+    for i, line in enumerate(lines):
+      if line.startswith('diff --git'):
+        lines[i] = line.replace(
+            'a/' + old_source_filename, source_filename).replace(
+                'b/' + old_filename, self.filename)
+      elif re.match(r'^\w+ from .+$', line) or line.startswith('---'):
+        lines[i] = line.replace(old_source_filename, source_filename)
+      elif re.match(r'^\w+ to .+$', line) or line.startswith('+++'):
+        lines[i] = line.replace(old_filename, self.filename)
+    self.diff_header = ''.join(lines)
 
   def _split_header(self, diff):
     """Splits a diff in two: the header and the hunks."""
@@ -181,12 +203,11 @@ class FilePatchDiff(FilePatchBase):
       match = re.match(r'^diff \-\-git (.*?) (.*)$', lines.pop(0))
       if not match:
         continue
-      old = match.group(1).replace('\\', '/')
-      new = match.group(2).replace('\\', '/')
-      if old.startswith('a/') and new.startswith('b/'):
+      if match.group(1).startswith('a/') and match.group(2).startswith('b/'):
         self.patchlevel = 1
-        old = old[2:]
-        new = new[2:]
+      old = self.mangle(match.group(1))
+      new = self.mangle(match.group(2))
+
       # The rename is about the new file so the old file can be anything.
       if new not in (self.filename, 'dev/null'):
         self._fail('Unexpected git diff output name %s.' % new)
@@ -197,13 +218,16 @@ class FilePatchDiff(FilePatchBase):
     if not old or not new:
       self._fail('Unexpected git diff; couldn\'t find git header.')
 
+    if old not in (self.filename, 'dev/null'):
+      # Copy or rename.
+      self.source_filename = old
+      self.is_new = True
+
     last_line = ''
 
     while lines:
       line = lines.pop(0)
-      # TODO(maruel): old should be replace with self.source_file
-      # TODO(maruel): new == self.filename and remove new
-      self._verify_git_header_process_line(lines, line, last_line, old, new)
+      self._verify_git_header_process_line(lines, line, last_line)
       last_line = line
 
     # Cheap check to make sure the file name is at least mentioned in the
@@ -211,7 +235,7 @@ class FilePatchDiff(FilePatchBase):
     if not self.filename in self.diff_header:
       self._fail('Diff seems corrupted.')
 
-  def _verify_git_header_process_line(self, lines, line, last_line, old, new):
+  def _verify_git_header_process_line(self, lines, line, last_line):
     """Processes a single line of the header.
 
     Returns True if it should continue looping.
@@ -220,6 +244,7 @@ class FilePatchDiff(FilePatchBase):
     http://www.kernel.org/pub/software/scm/git/docs/git-diff.html
     """
     match = re.match(r'^(rename|copy) from (.+)$', line)
+    old = self.source_filename or self.filename
     if match:
       if old != match.group(2):
         self._fail('Unexpected git diff input name for line %s.' % line)
@@ -231,7 +256,7 @@ class FilePatchDiff(FilePatchBase):
 
     match = re.match(r'^(rename|copy) to (.+)$', line)
     if match:
-      if new != match.group(2):
+      if self.filename != match.group(2):
         self._fail('Unexpected git diff output name for line %s.' % line)
       if not last_line.startswith('%s from ' % match.group(1)):
         self._fail(
@@ -251,9 +276,10 @@ class FilePatchDiff(FilePatchBase):
     if match:
       if last_line[:3] in ('---', '+++'):
         self._fail('--- and +++ are reversed')
-      self.is_new = match.group(1) == '/dev/null'
-      # TODO(maruel): Use self.source_file.
-      if old != self.mangle(match.group(1)) and match.group(1) != '/dev/null':
+      if match.group(1) == '/dev/null':
+        self.is_new = True
+      elif self.mangle(match.group(1)) != old:
+        # git patches are always well formatted, do not allow random filenames.
         self._fail('Unexpected git diff: %s != %s.' % (old, match.group(1)))
       if not lines or not lines[0].startswith('+++'):
         self._fail('Missing git diff output name.')
@@ -263,11 +289,11 @@ class FilePatchDiff(FilePatchBase):
     if match:
       if not last_line.startswith('---'):
         self._fail('Unexpected git diff: --- not following +++.')
-      # TODO(maruel): new == self.filename.
-      if new != self.mangle(match.group(1)) and '/dev/null' != match.group(1):
-        # TODO(maruel): Can +++ be /dev/null? If so, assert self.is_delete ==
-        # True.
-        self._fail('Unexpected git diff: %s != %s.' % (new, match.group(1)))
+      if '/dev/null' == match.group(1):
+        self.is_delete = True
+      elif self.filename != self.mangle(match.group(1)):
+        self._fail(
+            'Unexpected git diff: %s != %s.' % (self.filename, match.group(1)))
       if lines:
         self._fail('Crap after +++')
       # We're done.
@@ -302,14 +328,12 @@ class FilePatchDiff(FilePatchBase):
     if match:
       if last_line[:3] in ('---', '+++'):
         self._fail('--- and +++ are reversed')
-      self.is_new = match.group(1) == '/dev/null'
-      # For copy and renames, it's possible that the -- line doesn't match
-      # +++, so don't check match.group(1) to match self.filename or
-      # '/dev/null', it can be anything else.
-      # TODO(maruel): Handle rename/copy explicitly.
-      # if (self.mangle(match.group(1)) != self.filename and
-      #     match.group(1) != '/dev/null'):
-      #  self.source_file = match.group(1)
+      if match.group(1) == '/dev/null':
+        self.is_new = True
+      elif self.mangle(match.group(1)) != self.filename:
+        # guess the source filename.
+        self.source_filename = match.group(1)
+        self.is_new = True
       if not lines or not lines[0].startswith('+++'):
         self._fail('Nothing after header.')
       return
@@ -318,10 +342,9 @@ class FilePatchDiff(FilePatchBase):
     if match:
       if not last_line.startswith('---'):
         self._fail('Unexpected diff: --- not following +++.')
-      if (self.mangle(match.group(1)) != self.filename and
-          match.group(1) != '/dev/null'):
-        # TODO(maruel): Can +++ be /dev/null? If so, assert self.is_delete ==
-        # True.
+      if match.group(1) == '/dev/null':
+        self.is_delete = True
+      elif self.mangle(match.group(1)) != self.filename:
         self._fail('Unexpected diff: %s.' % match.group(1))
       if lines:
         self._fail('Crap after +++')

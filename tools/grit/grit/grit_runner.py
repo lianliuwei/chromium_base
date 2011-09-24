@@ -52,12 +52,16 @@ _TOOLS = [
                  _REQUIRES_INPUT : False }],
   ['sdiff', { _CLASS : grit.tool.diff_structures.DiffStructures,
                        _REQUIRES_INPUT : False }],
-  ['resize', { _CLASS : grit.tool.resize.ResizeDialog, _REQUIRES_INPUT : True }],
+  ['resize', {
+      _CLASS : grit.tool.resize.ResizeDialog, _REQUIRES_INPUT : True }],
   ['unit', { _CLASS : grit.tool.unit.UnitTestTool, _REQUIRES_INPUT : False }],
   ['count', { _CLASS : grit.tool.count.CountMessage, _REQUIRES_INPUT : True }],
-  ['test', { _CLASS: grit.tool.test.TestTool, _REQUIRES_INPUT : True, _HIDDEN : True }],
-  ['menufromparts', { _CLASS: grit.tool.menu_from_parts.MenuTranslationsFromParts,
-                     _REQUIRES_INPUT : True, _HIDDEN : True }],
+  ['test', {
+      _CLASS: grit.tool.test.TestTool, _REQUIRES_INPUT : True,
+      _HIDDEN : True }],
+  ['menufromparts', {
+      _CLASS: grit.tool.menu_from_parts.MenuTranslationsFromParts,
+      _REQUIRES_INPUT : True, _HIDDEN : True }],
 ]
 
 

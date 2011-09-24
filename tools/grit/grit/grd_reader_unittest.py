@@ -114,8 +114,10 @@ class GrdReaderUnittest(unittest.TestCase):
     grit_root_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                  '..')
     root.AssignFirstIds(
-        os.path.join(grit_root_dir, "../../chrome/app/generated_resources.grd"),
-        None, {})
+        os.path.join(grit_root_dir,
+                     "grit/testdata/chrome/app/generated_resources.grd"),
+        os.path.join(grit_root_dir, "grit/testdata/tools/grit/resource_ids"),
+        {})
     messages_node = root.children[0].children[0]
     self.failUnless(isinstance(messages_node, empty.MessagesNode))
     self.failUnless(messages_node.attrs["first_id"] !=
@@ -144,7 +146,10 @@ class GrdReaderUnittest(unittest.TestCase):
     grit_root_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                  '..')
     root.AssignFirstIds(
-        os.path.join(grit_root_dir, "../../test.grd"),
+        # This file does not actually exist, but must use absolute
+        # path as resource_ids has '' for SRCDIR (see special handling
+        # in grit.node.misc).
+        os.path.join(grit_root_dir, "/test.grd"),
         os.path.join(grit_root_dir, "grit/testdata/resource_ids"),
         {})
     messages_node = root.children[0].children[0]

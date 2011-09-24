@@ -15,6 +15,7 @@ The following hypothesis are made:
 
 import logging
 import os
+import re
 import sys
 import time
 import urllib2
@@ -120,52 +121,104 @@ class Rietveld(object):
     for filename, state in props.get('files', {}).iteritems():
       logging.debug('%s' % filename)
       status = state.get('status')
-      if status is None:
+      if not status:
         raise patch.UnsupportedPatchFormat(
             filename, 'File\'s status is None, patchset upload is incomplete.')
+      if status[0] not in ('A', 'D', 'M'):
+        raise patch.UnsupportedPatchFormat(
+            filename, 'Change with status \'%s\' is not supported.' % status)
 
-      # TODO(maruel): That's bad, it confuses property change.
-      status = status.strip()
+      svn_props = self.parse_svn_properties(
+          state.get('property_changes', ''), filename)
 
-      if status == 'D':
-        # Ignore the diff.
-        out.append(patch.FilePatchDelete(filename, state['is_binary']))
-      elif status in ('A', 'M'):
-        # TODO(maruel): Rietveld support is still weird, add this line once it's
-        # safe to use.
-        # props = state.get('property_changes', '').splitlines() or []
-        props = []
-        if state['is_binary']:
+      if state.get('is_binary'):
+        if status[0] == 'D':
+          if status[0] != status.strip():
+            raise patch.UnsupportedPatchFormat(
+                filename, 'Deleted file shouldn\'t have property change.')
+          out.append(patch.FilePatchDelete(filename, state['is_binary']))
+        else:
           out.append(patch.FilePatchBinary(
               filename,
               self.get_file_content(issue, patchset, state['id']),
-              props,
+              svn_props,
               is_new=(status[0] == 'A')))
-        else:
-          # Ignores num_chunks since it may only contain an header.
-          try:
-            diff = self.get_file_diff(issue, patchset, state['id'])
-          except urllib2.HTTPError, e:
-            if e.code == 404:
-              raise patch.UnsupportedPatchFormat(
-                  filename, 'File doesn\'t have a diff.')
-          out.append(patch.FilePatchDiff(filename, diff, props))
-          if status[0] == 'A':
-            # It won't be set for empty file.
-            out[-1].is_new = True
-      else:
-        # Line too long (N/80)
-        # pylint: disable=C0301
-        # TODO: Add support for MM, A+, etc. Rietveld removes the svn properties
-        # from the diff.
-        # Example of mergeinfo across branches:
-        # http://codereview.chromium.org/202046/diff/1/third_party/libxml/xmlcatalog_dummy.cc
-        # svn:eol-style property that is lost in the diff
-        # http://codereview.chromium.org/202046/diff/1/third_party/libxml/xmllint_dummy.cc
-        # Change with no diff, only svn property change:
-        # http://codereview.chromium.org/6462019/
-        raise patch.UnsupportedPatchFormat(filename, status)
+        continue
+
+      try:
+        diff = self.get_file_diff(issue, patchset, state['id'])
+      except urllib2.HTTPError, e:
+        if e.code == 404:
+          raise patch.UnsupportedPatchFormat(
+              filename, 'File doesn\'t have a diff.')
+        raise
+
+      # FilePatchDiff() will detect file deletion automatically.
+      p = patch.FilePatchDiff(filename, diff, svn_props)
+      out.append(p)
+      if status[0] == 'A':
+        # It won't be set for empty file.
+        p.is_new = True
+      if (len(status) > 1 and
+          status[1] == '+' and
+          not (p.source_filename or p.svn_properties)):
+        raise patch.UnsupportedPatchFormat(
+            filename, 'Failed to process the svn properties')
+
     return patch.PatchSet(out)
+
+  @staticmethod
+  def parse_svn_properties(rietveld_svn_props, filename):
+    """Returns a list of tuple [('property', 'newvalue')].
+
+    rietveld_svn_props is the exact format from 'svn diff'.
+    """
+    rietveld_svn_props = rietveld_svn_props.splitlines()
+    svn_props = []
+    if not rietveld_svn_props:
+      return svn_props
+    # 1. Ignore svn:mergeinfo.
+    # 2. Accept svn:eol-style and svn:executable.
+    # 3. Refuse any other.
+    # \n
+    # Added: svn:ignore\n
+    #    + LF\n
+
+    spacer = rietveld_svn_props.pop(0)
+    if spacer or not rietveld_svn_props:
+      # svn diff always put a spacer between the unified diff and property
+      # diff
+      raise patch.UnsupportedPatchFormat(
+          filename, 'Failed to parse svn properties.')
+
+    while rietveld_svn_props:
+      # Something like 'Added: svn:eol-style'. Note the action is localized.
+      # *sigh*.
+      action = rietveld_svn_props.pop(0)
+      match = re.match(r'^(\w+): (.+)$', action)
+      if not match or not rietveld_svn_props:
+        raise patch.UnsupportedPatchFormat(
+            filename, 'Failed to parse svn properties.')
+
+      if match.group(2) == 'svn:mergeinfo':
+        # Silently ignore the content.
+        rietveld_svn_props.pop(0)
+        continue
+
+      if match.group(1) not in ('Added', 'Modified'):
+        # Will fail for our French friends.
+        raise patch.UnsupportedPatchFormat(
+            filename, 'Unsupported svn property operation.')
+
+      if match.group(2) in ('svn:eol-style', 'svn:executable'):
+        # '   + foo' where foo is the new value. That's fragile.
+        content = rietveld_svn_props.pop(0)
+        match2 = re.match(r'^   \+ (.*)$', content)
+        if not match2:
+          raise patch.UnsupportedPatchFormat(
+              filename, 'Unsupported svn property format.')
+        svn_props.append((match.group(2), match2.group(1)))
+    return svn_props
 
   def update_description(self, issue, description):
     """Sets the description for an issue on Rietveld."""
@@ -188,6 +241,64 @@ class Rietveld(object):
         ('last_patchset', str(patchset)),
         ('xsrf_token', self.xsrf_token()),
         (flag, value)])
+
+  def search(
+      self,
+      owner=None, reviewer=None,
+      base=None,
+      closed=None, private=None, commit=None,
+      created_before=None, created_after=None,
+      modified_before=None, modified_after=None,
+      per_request=None, keys_only=False,
+      with_messages=False):
+    """Yields search results."""
+    # These are expected to be strings.
+    string_keys = {
+        'owner': owner,
+        'reviewer': reviewer,
+        'base': base,
+        'created_before': created_before,
+        'created_after': created_after,
+        'modified_before': modified_before,
+        'modified_after': modified_after,
+    }
+    # These are either None, False or True.
+    three_state_keys = {
+      'closed': closed,
+      'private': private,
+      'commit': commit,
+    }
+
+    url = '/search?format=json'
+    # Sort the keys mainly to ease testing.
+    for key in sorted(string_keys):
+      value = string_keys[key]
+      if value:
+        url += '&%s=%s' % (key, urllib2.quote(value))
+    for key in sorted(three_state_keys):
+      value = three_state_keys[key]
+      if value is not None:
+        url += '&%s=%d' % (key, int(value) + 1)
+
+    if keys_only:
+      url += '&keys_only=True'
+    if with_messages:
+      url += '&with_messages=True'
+    if per_request:
+      url += '&limit=%d' % per_request
+
+    cursor = ''
+    while True:
+      output = self.get(url + cursor)
+      if output.startswith('<'):
+        # It's an error message. Return as no result.
+        break
+      data = json.loads(output) or {}
+      if not data.get('results'):
+        break
+      for i in data['results']:
+        yield i
+      cursor = '&cursor=%s' % data['cursor']
 
   def get(self, request_path, **kwargs):
     kwargs.setdefault('payload', None)

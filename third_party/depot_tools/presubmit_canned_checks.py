@@ -1,4 +1,4 @@
-# Copyright (c) 2010 The Chromium Authors. All rights reserved.
+# Copyright (c) 2011 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -62,6 +62,15 @@ def CheckChangeHasDescription(input_api, output_api):
     else:
       return [output_api.PresubmitNotifyResult('Add a description.')]
   return []
+
+
+def CheckChangeWasUploaded(input_api, output_api):
+  """Checks that the issue was uploaded before committing."""
+  if input_api.is_committing and not input_api.change.issue:
+    return [output_api.PresubmitError(
+      'Issue wasn\'t uploaded. Please upload first.')]
+  return []
+
 
 ### Content checks
 
@@ -468,7 +477,9 @@ def RunUnitTestsInDirectory(
   def check(filename, filters):
     return any(True for i in filters if input_api.re.match(i, filename))
 
+  to_run = found = 0
   for filename in input_api.os_listdir(test_path):
+    found += 1
     fullpath = input_api.os_path.join(test_path, filename)
     if not input_api.os_path.isfile(fullpath):
       continue
@@ -477,6 +488,14 @@ def RunUnitTestsInDirectory(
     if blacklist and check(filename, blacklist):
       continue
     unit_tests.append(input_api.os_path.join(directory, filename))
+    to_run += 1
+  input_api.logging.debug('Found %d files, running %d' % (found, to_run))
+  if not to_run:
+    return [
+        output_api.PresubmitPromptWarning(
+          'Out of %d files, found none that matched w=%r, b=%r in directory %s'
+          % (found, whitelist, blacklist, directory))
+    ]
   return RunUnitTests(input_api, output_api, unit_tests)
 
 
@@ -506,7 +525,9 @@ def RunUnitTests(input_api, output_api, unit_tests):
         input_api.subprocess.check_call(cmd, cwd=input_api.PresubmitLocalPath())
       else:
         input_api.subprocess.check_output(
-            cmd, cwd=input_api.PresubmitLocalPath())
+            cmd,
+            stderr=input_api.subprocess.STDOUT,
+            cwd=input_api.PresubmitLocalPath())
     except (OSError, input_api.subprocess.CalledProcessError), e:
       results.append(message_type('%s failed!\n%s' % (unit_test, e)))
   return results
@@ -549,7 +570,8 @@ def RunPythonUnitTests(input_api, output_api, unit_tests):
       env['PYTHONPATH'] = input_api.os_path.pathsep.join((backpath))
     cmd = [input_api.python_executable, '-m', '%s' % unit_test]
     try:
-      input_api.subprocess.check_output(cmd, cwd=cwd, env=env)
+      input_api.subprocess.check_output(
+          cmd, stderr=input_api.subprocess.STDOUT, cwd=cwd, env=env)
     except (OSError, input_api.subprocess.CalledProcessError), e:
       results.append(message_type('%s failed!\n%s' % (unit_test_name, e)))
   return results
@@ -819,14 +841,17 @@ def _CheckConstNSObject(input_api, output_api, source_file_filter):
 
 def _CheckSingletonInHeaders(input_api, output_api, source_file_filter):
   """Checks to make sure no header files have |Singleton<|."""
-  pattern = input_api.re.compile(r'Singleton<')
+  pattern = input_api.re.compile(r'Singleton\s*<')
   files = []
   for f in input_api.AffectedSourceFiles(source_file_filter):
     if (f.LocalPath().endswith('.h') or f.LocalPath().endswith('.hxx') or
         f.LocalPath().endswith('.hpp') or f.LocalPath().endswith('.inl')):
       contents = input_api.ReadFile(f)
-      if pattern.search(contents):
-        files.append(f)
+      for line in contents.splitlines(False):
+        line = input_api.re.sub(r'//.*$', '', line)  # Strip C++ comment.
+        if pattern.search(line):
+          files.append(f)
+          break
 
   if files:
     return [ output_api.PresubmitError(
@@ -929,5 +954,8 @@ def PanProjectChecks(input_api, output_api,
     snapshot("checking license")
     results.extend(input_api.canned_checks.CheckLicense(
         input_api, output_api, license_header, source_file_filter=sources))
+    snapshot("checking was uploaded")
+    results.extend(input_api.canned_checks.CheckChangeWasUploaded(
+        input_api, output_api))
   snapshot("done")
   return results

@@ -1,4 +1,4 @@
-# Copyright (c) 2010 The Chromium Authors. All rights reserved.
+# Copyright (c) 2011 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -10,93 +10,16 @@ import os
 import Queue
 import re
 import stat
-import subprocess
 import sys
 import threading
 import time
 
-
-def hack_subprocess():
-  """subprocess functions may throw exceptions when used in multiple threads.
-
-  See http://bugs.python.org/issue1731717 for more information.
-  """
-  subprocess._cleanup = lambda: None
+import subprocess2
 
 
 class Error(Exception):
   """gclient exception class."""
   pass
-
-
-class CheckCallError(OSError, Error):
-  """CheckCall() returned non-0."""
-  def __init__(self, command, cwd, returncode, stdout, stderr=None):
-    OSError.__init__(self, command, cwd, returncode)
-    Error.__init__(self, command)
-    self.command = command
-    self.cwd = cwd
-    self.returncode = returncode
-    self.stdout = stdout
-    self.stderr = stderr
-
-  def __str__(self):
-    out = ' '.join(self.command)
-    if self.cwd:
-      out += ' in ' + self.cwd
-    if self.returncode is not None:
-      out += ' returned %d' % self.returncode
-    if self.stdout is not None:
-      out += '\nstdout: %s\n' % self.stdout
-    if self.stderr is not None:
-      out += '\nstderr: %s\n' % self.stderr
-    return out
-
-
-def Popen(args, **kwargs):
-  """Calls subprocess.Popen() with hacks to work around certain behaviors.
-
-  Ensure English outpout for svn and make it work reliably on Windows.
-  """
-  logging.debug(u'%s, cwd=%s' % (u' '.join(args), kwargs.get('cwd', '')))
-  if not 'env' in kwargs:
-    # It's easier to parse the stdout if it is always in English.
-    kwargs['env'] = os.environ.copy()
-    kwargs['env']['LANGUAGE'] = 'en'
-  if not 'shell' in kwargs:
-    # *Sigh*:  Windows needs shell=True, or else it won't search %PATH% for the
-    # executable, but shell=True makes subprocess on Linux fail when it's called
-    # with a list because it only tries to execute the first item in the list.
-    kwargs['shell'] = (sys.platform=='win32')
-  try:
-    return subprocess.Popen(args, **kwargs)
-  except OSError, e:
-    if e.errno == errno.EAGAIN and sys.platform == 'cygwin':
-      raise Error(
-          'Visit '
-          'http://code.google.com/p/chromium/wiki/CygwinDllRemappingFailure to '
-          'learn how to fix this error; you need to rebase your cygwin dlls')
-    raise
-
-
-def CheckCall(command, print_error=True, **kwargs):
-  """Similar subprocess.check_call() but redirects stdout and
-  returns (stdout, stderr).
-
-  Works on python 2.4
-  """
-  try:
-    stderr = None
-    if not print_error:
-      stderr = subprocess.PIPE
-    process = Popen(command, stdout=subprocess.PIPE, stderr=stderr, **kwargs)
-    std_out, std_err = process.communicate()
-  except OSError, e:
-    raise CheckCallError(command, kwargs.get('cwd', None), e.errno, None)
-  if process.returncode:
-    raise CheckCallError(command, kwargs.get('cwd', None), process.returncode,
-        std_out, std_err)
-  return std_out, std_err
 
 
 def SplitUrlRevision(url):
@@ -397,10 +320,10 @@ def CheckCallAndFilter(args, stdout=None, filter_fn=None,
                        **kwargs):
   """Runs a command and calls back a filter function if needed.
 
-  Accepts all subprocess.Popen() parameters plus:
+  Accepts all subprocess2.Popen() parameters plus:
     print_stdout: If True, the command's stdout is forwarded to stdout.
     filter_fn: A function taking a single string argument called with each line
-               of the subprocess's output. Each line has the trailing newline
+               of the subprocess2's output. Each line has the trailing newline
                character trimmed.
     stdout: Can be any bufferable output.
 
@@ -409,40 +332,45 @@ def CheckCallAndFilter(args, stdout=None, filter_fn=None,
   assert print_stdout or filter_fn
   stdout = stdout or sys.stdout
   filter_fn = filter_fn or (lambda x: None)
-  assert not 'stderr' in kwargs
-  kid = Popen(args, bufsize=0,
-              stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-              **kwargs)
+  kid = subprocess2.Popen(
+      args, bufsize=0, stdout=subprocess2.PIPE, stderr=subprocess2.STDOUT,
+      **kwargs)
 
-  # Do a flush of stdout before we begin reading from the subprocess's stdout
+  # Do a flush of stdout before we begin reading from the subprocess2's stdout
   stdout.flush()
 
   # Also, we need to forward stdout to prevent weird re-ordering of output.
   # This has to be done on a per byte basis to make sure it is not buffered:
   # normally buffering is done for each line, but if svn requests input, no
   # end-of-line character is output after the prompt and it would not show up.
-  in_byte = kid.stdout.read(1)
-  if in_byte:
-    if call_filter_on_first_line:
-      filter_fn(None)
-    in_line = ''
-    while in_byte:
-      if in_byte != '\r':
-        if print_stdout:
-          stdout.write(in_byte)
-        if in_byte != '\n':
-          in_line += in_byte
-        else:
-          filter_fn(in_line)
-          in_line = ''
-      in_byte = kid.stdout.read(1)
-    # Flush the rest of buffered output. This is only an issue with
-    # stdout/stderr not ending with a \n.
-    if len(in_line):
-      filter_fn(in_line)
-  rv = kid.wait()
+  try:
+    in_byte = kid.stdout.read(1)
+    if in_byte:
+      if call_filter_on_first_line:
+        filter_fn(None)
+      in_line = ''
+      while in_byte:
+        if in_byte != '\r':
+          if print_stdout:
+            stdout.write(in_byte)
+          if in_byte != '\n':
+            in_line += in_byte
+          else:
+            filter_fn(in_line)
+            in_line = ''
+        in_byte = kid.stdout.read(1)
+      # Flush the rest of buffered output. This is only an issue with
+      # stdout/stderr not ending with a \n.
+      if len(in_line):
+        filter_fn(in_line)
+    rv = kid.wait()
+  except KeyboardInterrupt:
+    print >> sys.stderr, 'Failed while running "%s"' % ' '.join(args)
+    raise
+
   if rv:
-    raise CheckCallError(args, kwargs.get('cwd', None), rv, None)
+    raise subprocess2.CalledProcessError(
+        rv, args, kwargs.get('cwd', None), None, None)
   return 0
 
 
@@ -528,17 +456,44 @@ def GetGClientRootAndEntries(path=None):
   return config_dir, env['entries']
 
 
+def lockedmethod(method):
+  """Method decorator that holds self.lock for the duration of the call."""
+  def inner(self, *args, **kwargs):
+    try:
+      try:
+        self.lock.acquire()
+      except KeyboardInterrupt:
+        print >> sys.stderr, 'Was deadlocked'
+        raise
+      return method(self, *args, **kwargs)
+    finally:
+      self.lock.release()
+  return inner
+
+
 class WorkItem(object):
   """One work item."""
-  # A list of string, each being a WorkItem name.
-  requirements = []
-  # A unique string representing this work item.
-  name = None
+  def __init__(self, name):
+    # A list of string, each being a WorkItem name.
+    self._requirements = set()
+    # A unique string representing this work item.
+    self._name = name
+    self.lock = threading.RLock()
 
+  @lockedmethod
   def run(self, work_queue):
     """work_queue is passed as keyword argument so it should be
     the last parameters of the function when you override it."""
     pass
+
+  @property
+  def name(self):
+    return self._name
+
+  @property
+  @lockedmethod
+  def requirements(self):
+    return tuple(self._requirements)
 
 
 class ExecutionQueue(object):
@@ -554,7 +509,6 @@ class ExecutionQueue(object):
   def __init__(self, jobs, progress):
     """jobs specifies the number of concurrent tasks to allow. progress is a
     Progress instance."""
-    hack_subprocess()
     # Set when a thread is done or a new item is enqueued.
     self.ready_cond = threading.Condition()
     # Maximum number of concurrent tasks.
@@ -625,7 +579,20 @@ class ExecutionQueue(object):
           # We're done.
           break
         # We need to poll here otherwise Ctrl-C isn't processed.
-        self.ready_cond.wait(10)
+        try:
+          self.ready_cond.wait(10)
+        except KeyboardInterrupt:
+          # Help debugging by printing some information:
+          print >> sys.stderr, (
+              ('\nAllowed parallel jobs: %d\n# queued: %d\nRan: %s\n'
+                'Running: %d') % (
+              self.jobs,
+              len(self.queued),
+              ', '.join(self.ran),
+              len(self.running)))
+          for i in self.queued:
+            print >> sys.stderr, '%s: %s' % (i.name, ', '.join(i.requirements))
+          raise
         # Something happened: self.enqueue() or a thread terminated. Loop again.
     finally:
       self.ready_cond.release()
@@ -651,7 +618,10 @@ class ExecutionQueue(object):
         sys.stdout.full_flush()  # pylint: disable=E1101
         if self.progress:
           self.progress.update(1, t.item.name)
-        assert not t.item.name in self.ran
+        if t.item.name in self.ran:
+          raise Error(
+              'gclient is confused, "%s" is already in "%s"' % (
+                t.item.name, ', '.join(self.ran)))
         if not t.item.name in self.ran:
           self.ran.append(t.item.name)
 

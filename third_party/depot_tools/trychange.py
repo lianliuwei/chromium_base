@@ -401,12 +401,9 @@ def _SendChangeSVN(options):
       if scm.SVN.AssertVersion("1.5")[0]:
         command.append('--no-ignore')
 
-      gclient_utils.CheckCall(command)
-    except gclient_utils.CheckCallError, e:
-      out = e.stdout
-      if e.stderr:
-        out += e.stderr
-      raise NoTryServerAccess(' '.join(e.command) + '\nOuput:\n' + out)
+      subprocess2.check_call(command)
+    except subprocess2.CalledProcessError, e:
+      raise NoTryServerAccess(str(e))
   finally:
     temp_file.close()
     shutil.rmtree(temp_dir, True)
@@ -443,10 +440,11 @@ def GuessVCS(options, path):
   # Git has a command to test if you're in a git tree.
   # Try running it, but don't die if we don't have git installed.
   try:
-    gclient_utils.CheckCall(['git', 'rev-parse', '--is-inside-work-tree'],
-                            cwd=real_path)
+    subprocess2.check_output(
+        ['git', 'rev-parse', '--is-inside-work-tree'], cwd=real_path,
+        stderr=subprocess2.VOID)
     return GIT(options, path)
-  except gclient_utils.CheckCallError, e:
+  except subprocess2.CalledProcessError, e:
     if e.returncode != errno.ENOENT and e.returncode != 128:
       # ENOENT == 2 = they don't have git installed.
       # 128 = git error code when not in a repo.
@@ -640,7 +638,7 @@ def TryChange(argv,
     # Try to extract the review number if possible and fix the protocol.
     if not '://' in options.rietveld_url:
       options.rietveld_url = 'http://' + options.rietveld_url
-    match = re.match(r'^(.*)/(\d+)$', options.rietveld_url)
+    match = re.match(r'^(.*)/(\d+)/?$', options.rietveld_url)
     if match:
       if options.issue or options.patchset:
         parser.error('Cannot use both --issue and use a review number url')

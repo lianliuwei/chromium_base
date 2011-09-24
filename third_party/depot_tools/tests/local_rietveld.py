@@ -51,18 +51,28 @@ class LocalRietveld(object):
     self.base_dir = base_dir
     if not self.base_dir:
       self.base_dir = os.path.dirname(os.path.abspath(__file__))
-      self.base_dir = os.path.realpath(os.path.join(self.base_dir, '..'))
-    self.sdk_path = os.path.abspath(
-        os.path.join(self.base_dir, '..', 'google_appengine'))
-    self.dev_app = os.path.join(self.sdk_path, 'dev_appserver.py')
-    self.rietveld = os.path.join(self.base_dir, 'tests', '_rietveld')
+    # TODO(maruel): This should be in /tmp but that would mean having to fetch
+    # everytime. This test is already annoyingly slow.
+    self.rietveld = os.path.join(self.base_dir, '_rietveld')
     self.test_server = None
     self.port = None
+
+    # Find the GAE SDK
+    previous_dir = ''
+    self.sdk_path = ''
+    base_dir = self.base_dir
+    while base_dir != previous_dir:
+      previous_dir = base_dir
+      self.sdk_path = os.path.join(base_dir, 'google_appengine')
+      if not os.path.isfile(os.path.join(self.sdk_path, 'VERSION')):
+        base_dir = os.path.dirname(base_dir)
+    self.dev_app = os.path.join(self.sdk_path, 'dev_appserver.py')
 
   def install_prerequisites(self):
     # First, verify the Google AppEngine SDK is available.
     if not os.path.isfile(self.dev_app):
-      raise Failure('Install google_appengine sdk in %s' % self.sdk_path)
+      raise Failure(
+          'Install google_appengine sdk in %s or higher up' % self.base_dir)
 
     # Second, checkout rietveld if not available.
     if not os.path.isdir(self.rietveld):
@@ -96,6 +106,14 @@ class LocalRietveld(object):
         '--port=%d' % self.port,
         '--datastore_path=' + os.path.join(self.rietveld, 'tmp.db'),
         '-c']
+
+    # CHEAP TRICK
+    # By default you only want to bind on loopback but I'm testing over a
+    # headless computer so it's useful to be able to access the test instance
+    # remotely.
+    if os.environ.get('GAE_LISTEN_ALL', '') == 'true':
+      cmd.extend(('-a', '0.0.0.0'))
+
     self.test_server = subprocess2.Popen(
         cmd, stdout=pipe, stderr=pipe, cwd=self.rietveld)
     # Loop until port 127.0.0.1:port opens or the process dies.

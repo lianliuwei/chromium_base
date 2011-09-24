@@ -24,17 +24,17 @@
  * Helpers for glGetString()
  */
 
+typedef uint32_t GrGLVersion;
+
+#define GR_GL_VER(major, minor) (((int)(major) << 16) | ((int)(minor)))
+
 // these variants assume caller already has a string from glGetString()
-void gl_version_from_string(int* major, int* minor,
-                            const char* versionString);
-float gl_version_as_float_from_string(const char* versionString);
-bool has_gl_extension_from_string(const char* ext,
-                                  const char* extensionString);
+GrGLVersion GrGLGetVersionFromString(const char* versionString);
+bool GrGLHasExtensionFromString(const char* ext, const char* extensionString);
 
 // these variants call glGetString()
-bool has_gl_extension(const GrGLInterface*, const char* ext);
-void gl_version(const GrGLInterface*, int* major, int* minor);
-float gl_version_as_float(const GrGLInterface*);
+bool GrGLGetString(const GrGLInterface*, const char* ext);
+GrGLVersion GrGLGetVersion(const GrGLInterface*);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -45,14 +45,14 @@ float gl_version_as_float(const GrGLInterface*);
  * passed to Create then the "default" GL interface is used. If the default is
  * also NULL GrContext creation will fail.
  *
- * The default interface is specified by calling GrGLSetDefaultInterface. If
- * this function hasn't been called or was last called with NULL then
- * GrGLInitializeDefaultGLInterface will be called to attempt to initialize it.
- * There are several implementations of this function provided. Each builds a
- * GrGLInterface for a specific platform and sets it as the default. There is
- * also an implementation that does nothing. You can link in any of the provided
- * implementations or your own implementation that sets up the GL function 
- * pointers for your specific platform.
+ * The default interface is returned by GrGLDefaultInterface. This function's
+ * implementation is platform-specifc. Several have been provided, along with an
+ * implementation that simply returns NULL. It is implementation-specific
+ * whether the same GrGLInterface is returned or whether a new one is created
+ * at each call. Some platforms may not be able to use a single GrGLInterface
+ * because extension function ptrs vary across contexts. Note that GrGLInterface
+ * is ref-counted. So if the same object is returned by multiple calls to 
+ * GrGLDefaultInterface, each should bump the ref count.
  *
  * By defining GR_GL_PER_GL_CALL_IFACE_CALLBACK to 1 the client can specify a
  * callback function that will be called prior to each GL function call. See
@@ -61,13 +61,7 @@ float gl_version_as_float(const GrGLInterface*);
 
 struct GrGLInterface;
 
-GR_API const GrGLInterface* GrGLGetDefaultGLInterface();
-// returns param so that you can unref it
-GR_API const GrGLInterface* GrGLSetDefaultGLInterface(const GrGLInterface* gl_interface);
-
-// If this is implemented it must allocate a GrGLInterface on the heap because
-// GrGLInterface subclasses SkRefCnt.
-void GrGLInitializeDefaultGLInterface();
+const GrGLInterface* GrGLDefaultInterface();
 
 typedef unsigned int GrGLenum;
 typedef unsigned char GrGLboolean;
@@ -101,6 +95,7 @@ extern "C" {
     typedef GrGLvoid (GR_GL_FUNCTION_TYPE *GrGLBindBufferProc)(GrGLenum target, GrGLuint buffer);
     typedef GrGLvoid (GR_GL_FUNCTION_TYPE *GrGLBindTextureProc)(GrGLenum target, GrGLuint texture);
     typedef GrGLvoid (GR_GL_FUNCTION_TYPE *GrGLBlendColorProc)(GrGLclampf red, GrGLclampf green, GrGLclampf blue, GrGLclampf alpha);
+    typedef GrGLvoid (GR_GL_FUNCTION_TYPE *GrGLBindFragDataLocationProc)(GrGLuint program, GrGLuint colorNumber, const GrGLchar* name);
     typedef GrGLvoid (GR_GL_FUNCTION_TYPE *GrGLBlendFuncProc)(GrGLenum sfactor, GrGLenum dfactor);
     typedef GrGLvoid (GR_GL_FUNCTION_TYPE *GrGLBufferDataProc)(GrGLenum target, GrGLsizeiptr size, const GrGLvoid* data, GrGLenum usage);
     typedef GrGLvoid (GR_GL_FUNCTION_TYPE *GrGLBufferSubDataProc)(GrGLenum target, GrGLintptr offset, GrGLsizeiptr size, const GrGLvoid* data);
@@ -277,6 +272,7 @@ struct GR_API GrGLInterface : public GrRefCnt {
     GrGLAttachShaderProc fAttachShader;
     GrGLBindAttribLocationProc fBindAttribLocation;
     GrGLBindBufferProc fBindBuffer;
+    GrGLBindFragDataLocationProc fBindFragDataLocation;
     GrGLBindTextureProc fBindTexture;
     GrGLBlendColorProc fBlendColor;
     GrGLBlendFuncProc fBlendFunc;

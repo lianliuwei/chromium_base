@@ -31,8 +31,7 @@ extern void gr_run_unittests();
 #define DEBUG_INVAL_START_IDX -1
 
 GrGpu::GrGpu()
-    : f8bitPaletteSupport(false)
-    , fContext(NULL)
+    : fContext(NULL)
     , fVertexPool(NULL)
     , fIndexPool(NULL)
     , fVertexPoolUseCnt(0)
@@ -490,6 +489,8 @@ int process_initial_clip_elements(const GrClip& clip,
                     done = true;
                 }
                 break;
+            default:
+                GrCrash("Unknown set op.");
         }
     }
     return done ? curr-1 : count;
@@ -567,7 +568,7 @@ bool GrGpu::setupClipAndFlushState(GrPrimitiveType type) {
             clipBit = (1 << (clipBit-1));
             
             bool clearToInside;
-            GrSetOp startOp;
+            GrSetOp startOp = kReplace_SetOp; // suppress warning
             int start = process_initial_clip_elements(clip, &clearToInside,
                                                       &startOp);
 

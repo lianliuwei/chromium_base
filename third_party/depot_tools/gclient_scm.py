@@ -1,4 +1,4 @@
-# Copyright (c) 2010 The Chromium Authors. All rights reserved.
+# Copyright (c) 2011 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -174,9 +174,13 @@ class GitWrapper(SCMWrapper):
     url, deps_revision = gclient_utils.SplitUrlRevision(self.url)
     rev_str = ""
     revision = deps_revision
+    managed = True
     if options.revision:
       # Override the revision number.
       revision = str(options.revision)
+    if revision == 'unmanaged':
+      revision = None
+      managed = False
     if not revision:
       revision = default_rev
 
@@ -216,6 +220,10 @@ class GitWrapper(SCMWrapper):
         # Make the output a little prettier. It's nice to have some whitespace
         # between projects when cloning.
         print('')
+      return
+
+    if not managed:
+      print ('________ unmanaged solution; skipping %s' % self.relpath)
       return
 
     if not os.path.exists(os.path.join(self.checkout_path, '.git')):
@@ -291,7 +299,7 @@ class GitWrapper(SCMWrapper):
             ['remote'] + verbose + ['update'],
             cwd=self.checkout_path)
         break
-      except gclient_utils.CheckCallError, e:
+      except subprocess2.CalledProcessError, e:
         # Hackish but at that point, git is known to work so just checking for
         # 502 in stderr should be fine.
         if '502' in e.stderr:
@@ -355,9 +363,12 @@ class GitWrapper(SCMWrapper):
       if verbose:
         print('Trying fast-forward merge to branch : %s' % upstream_branch)
       try:
-        merge_output = scm.GIT.Capture(['merge', '--ff-only', upstream_branch],
-            cwd=self.checkout_path)
-      except gclient_utils.CheckCallError, e:
+        merge_args = ['merge']
+        if not options.merge:
+          merge_args.append('--ff-only')
+        merge_args.append(upstream_branch)
+        merge_output = scm.GIT.Capture(merge_args, cwd=self.checkout_path)
+      except subprocess2.CalledProcessError, e:
         if re.match('fatal: Not possible to fast-forward, aborting.', e.stderr):
           if not printed_path:
             print('\n_____ %s%s' % (self.relpath, rev_str))
@@ -503,13 +514,11 @@ class GitWrapper(SCMWrapper):
       try:
         self._Run(clone_cmd, options, cwd=self._root_dir)
         break
-      except (gclient_utils.Error, subprocess2.CalledProcessError), e:
-        # TODO(maruel): Hackish, should be fixed by moving _Run() to
-        # CheckCall().
-        # Too bad we don't have access to the actual output.
+      except subprocess2.CalledProcessError, e:
+        # Too bad we don't have access to the actual output yet.
         # We should check for "transfer closed with NNN bytes remaining to
         # read". In the meantime, just make sure .git exists.
-        if (e.args[0] == 'git command clone returned 128' and
+        if (e.returncode == 128 and
             os.path.exists(os.path.join(self.checkout_path, '.git'))):
           print(str(e))
           print('Retrying...')
@@ -552,7 +561,7 @@ class GitWrapper(SCMWrapper):
 
     try:
       rebase_output = scm.GIT.Capture(rebase_cmd, cwd=self.checkout_path)
-    except gclient_utils.CheckCallError, e:
+    except subprocess2.CalledProcessError, e:
       if (re.match(r'cannot rebase: you have unstaged changes', e.stderr) or
           re.match(r'cannot rebase: your index contains uncommitted changes',
                    e.stderr)):
@@ -616,7 +625,7 @@ class GitWrapper(SCMWrapper):
     try:
       scm.GIT.Capture(['update-index', '--ignore-submodules', '--refresh'],
                       cwd=self.checkout_path)
-    except gclient_utils.CheckCallError:
+    except subprocess2.CalledProcessError:
       raise gclient_utils.Error('\n____ %s%s\n'
                                 '\tYou have unstaged changes.\n'
                                 '\tPlease commit, stash, or reset.\n'
@@ -625,7 +634,7 @@ class GitWrapper(SCMWrapper):
       scm.GIT.Capture(['diff-index', '--cached', '--name-status', '-r',
                        '--ignore-submodules', 'HEAD', '--'],
                        cwd=self.checkout_path)
-    except gclient_utils.CheckCallError:
+    except subprocess2.CalledProcessError:
       raise gclient_utils.Error('\n____ %s%s\n'
                                 '\tYour index contains uncommitted changes\n'
                                 '\tPlease commit, stash, or reset.\n'
@@ -638,7 +647,7 @@ class GitWrapper(SCMWrapper):
     try:
       scm.GIT.Capture(['name-rev', '--no-undefined', 'HEAD'],
           cwd=self.checkout_path)
-    except gclient_utils.CheckCallError:
+    except subprocess2.CalledProcessError:
       # Commit is not contained by any rev. See if the user is rebasing:
       if self._IsRebasing():
         # Punt to the user
@@ -663,8 +672,10 @@ class GitWrapper(SCMWrapper):
     return branch
 
   def _Capture(self, args):
-    return gclient_utils.CheckCall(
-        ['git'] + args, cwd=self.checkout_path, print_error=False)[0].strip()
+    return subprocess2.check_output(
+        ['git'] + args,
+        stderr=subprocess2.PIPE,
+        cwd=self.checkout_path).strip()
 
   def _Run(self, args, options, **kwargs):
     kwargs.setdefault('cwd', self.checkout_path)
@@ -732,14 +743,19 @@ class SVNWrapper(SCMWrapper):
     url, revision = gclient_utils.SplitUrlRevision(self.url)
     # Keep the original unpinned url for reference in case the repo is switched.
     base_url = url
+    managed = True
     if options.revision:
       # Override the revision number.
       revision = str(options.revision)
     if revision:
-      forced_revision = True
-      # Reconstruct the url.
-      url = '%s@%s' % (url, revision)
-      rev_str = ' at %s' % revision
+      if revision != 'unmanaged':
+        forced_revision = True
+        # Reconstruct the url.
+        url = '%s@%s' % (url, revision)
+        rev_str = ' at %s' % revision
+      else:
+        managed = False
+        revision = None
     else:
       forced_revision = False
       rev_str = ''
@@ -751,6 +767,10 @@ class SVNWrapper(SCMWrapper):
       self._RunAndGetFileList(command, options, file_list, self._root_dir)
       return
 
+    if not managed:
+      print ('________ unmanaged solution; skipping %s' % self.relpath)
+      return
+
     # Get the existing scm url and the revision number of the current checkout.
     try:
       from_info = scm.SVN.CaptureInfo(os.path.join(self.checkout_path, '.'))
@@ -759,12 +779,33 @@ class SVNWrapper(SCMWrapper):
           ('Can\'t update/checkout %s if an unversioned directory is present. '
            'Delete the directory and try again.') % self.checkout_path)
 
+    if 'URL' not in from_info:
+      raise gclient_utils.Error(
+          ('gclient is confused. Couldn\'t get the url for %s.\n'
+           'Try using @unmanaged.\n%s') % (
+            self.checkout_path, from_info))
+
     # Look for locked directories.
     dir_info = scm.SVN.CaptureStatus(os.path.join(self.checkout_path, '.'))
-    if [True for d in dir_info
-        if d[0][2] == 'L' and d[1] == self.checkout_path]:
-      # The current directory is locked, clean it up.
-      self._Run(['cleanup'], options)
+    if any(d[0][2] == 'L' for d in dir_info):
+      try:
+        self._Run(['cleanup', self.checkout_path], options)
+      except subprocess2.CalledProcessError, e:
+        # Get the status again, svn cleanup may have cleaned up at least
+        # something.
+        dir_info = scm.SVN.CaptureStatus(os.path.join(self.checkout_path, '.'))
+
+        # Try to fix the failures by removing troublesome files.
+        for d in dir_info:
+          if d[0][2] == 'L':
+            if d[0][0] == '!' and options.force:
+              print 'Removing troublesome path %s' % d[1]
+              gclient_utils.rmtree(d[1])
+            else:
+              print 'Not removing troublesome path %s automatically.' % d[1]
+              if d[0][0] == '!':
+                print 'You can pass --force to enable automatic removal.'
+              raise e
 
     # Retrieve the current HEAD version because svn is slow at null updates.
     if options.manually_grab_svn_rev and not revision:

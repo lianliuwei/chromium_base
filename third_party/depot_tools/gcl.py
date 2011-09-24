@@ -13,12 +13,12 @@ import os
 import random
 import re
 import string
-import subprocess
 import sys
 import tempfile
 import time
-from third_party import upload
 import urllib2
+
+import breakpad  # pylint: disable=W0611
 
 try:
   import simplejson as json  # pylint: disable=F0401
@@ -30,16 +30,13 @@ except ImportError:
     sys.path.append(os.path.join(os.path.dirname(__file__), 'third_party'))
     import simplejson as json  # pylint: disable=F0401
 
-import breakpad  # pylint: disable=W0611
-
-# gcl now depends on gclient.
-from scm import SVN
-
 import fix_encoding
 import gclient_utils
 import presubmit_support
 import rietveld
+from scm import SVN
 import subprocess2
+from third_party import upload
 
 __version__ = '1.2.1'
 
@@ -232,8 +229,9 @@ def ErrorExit(msg):
 
 def RunShellWithReturnCode(command, print_output=False):
   """Executes a command and returns the output and the return code."""
-  p = gclient_utils.Popen(command, stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT, universal_newlines=True)
+  p = subprocess2.Popen(
+      command, stdout=subprocess2.PIPE,
+      stderr=subprocess2.STDOUT, universal_newlines=True)
   if print_output:
     output_array = []
     while True:
@@ -1097,7 +1095,12 @@ def CMDchange(args):
                 "---Repository Root: " + change_info.GetLocalRoot() + "\n"
                 "---Paths in this changelist (" + change_info.name + "):\n")
   separator2 = "\n\n---Paths modified but not in any changelist:\n\n"
-  text = (description + separator1 + '\n' +
+  
+  description_to_write = description
+  if sys.platform == 'win32':
+    description_to_write = description.replace('\n', '\r\n')
+  
+  text = (description_to_write + separator1 + '\n' +
           '\n'.join([f[0] + f[1] for f in change_info.GetFiles()]))
 
   if change_info.Exists():
@@ -1122,8 +1125,8 @@ def CMDchange(args):
       try:
         # shell=True to allow the shell to handle all forms of quotes in
         # $EDITOR.
-        subprocess.check_call(cmd, shell=True)
-      except subprocess.CalledProcessError, e:
+        subprocess2.check_call(cmd, shell=True)
+      except subprocess2.CalledProcessError, e:
         ErrorExit('Editor returned %d' % e.returncode)
     result = gclient_utils.FileRead(filename, 'r')
   finally:
@@ -1138,6 +1141,10 @@ def CMDchange(args):
 
   # Update the CL description if it has changed.
   new_description = split_result[0]
+  
+  if sys.platform == 'win32':
+    new_description = new_description.replace('\r\n', '\n')
+  
   cl_files_text = split_result[1]
   if new_description != description or override_description:
     change_info.description = new_description
@@ -1183,6 +1190,7 @@ def CMDlint(change_info, args):
   """
   try:
     import cpplint
+    import cpplint_chromium
   except ImportError:
     ErrorExit("You need to install cpplint.py to lint C++ files.")
   # Change the current working directory before calling lint so that it
@@ -1200,6 +1208,7 @@ def CMDlint(change_info, args):
   if not black_list:
     black_list = DEFAULT_LINT_IGNORE_REGEX
   black_regex = re.compile(black_list)
+  extra_check_functions = [cpplint_chromium.CheckPointerDeclarationWhitespace]
   # Access to a protected member _XX of a client class
   # pylint: disable=W0212
   for filename in filenames:
@@ -1207,7 +1216,8 @@ def CMDlint(change_info, args):
       if black_regex.match(filename):
         print "Ignoring file %s" % filename
       else:
-        cpplint.ProcessFile(filename, cpplint._cpplint_state.verbose_level)
+        cpplint.ProcessFile(filename, cpplint._cpplint_state.verbose_level,
+                            extra_check_functions)
     else:
       print "Skipping file %s" % filename
 
@@ -1234,7 +1244,6 @@ def DoPresubmitChecks(change_info, committing, may_prompt):
       input_stream=sys.stdin,
       default_presubmit=root_presubmit,
       may_prompt=may_prompt,
-      tbr=False,
       rietveld_obj=change_info.RpcServer())
   if not output.should_continue() and may_prompt:
     # TODO(dpranke): move into DoPresubmitChecks(), unify cmd line args.

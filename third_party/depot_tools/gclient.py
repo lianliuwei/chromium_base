@@ -139,39 +139,58 @@ class GClientKeywords(object):
 class Dependency(GClientKeywords, gclient_utils.WorkItem):
   """Object that represents a dependency checkout."""
 
-  def __init__(self, parent, name, url, safesync_url, custom_deps,
+  def __init__(self, parent, name, url, safesync_url, managed, custom_deps,
                custom_vars, deps_file, should_process):
+    # Warning: this function can be called from any thread. Both
+    # self.dependencies and self.requirements are read and modified from
+    # multiple threads at the same time. Sad.
     GClientKeywords.__init__(self)
-    gclient_utils.WorkItem.__init__(self)
-    self.parent = parent
-    self.name = name
+    gclient_utils.WorkItem.__init__(self, name)
+
+    # These are not mutable:
+    self._parent = parent
+    self._safesync_url = safesync_url
+    self._deps_file = deps_file
+    self._should_process = should_process
+
+    # This is in both .gclient and DEPS files:
     self.url = url
-    self.parsed_url = None
-    # These 2 are only set in .gclient and not in DEPS files.
-    self.safesync_url = safesync_url
-    self.custom_vars = custom_vars or {}
-    self.custom_deps = custom_deps or {}
+
+    # These are only set in .gclient and not in DEPS files.
+    # 'managed' determines whether or not this dependency is synced/updated by
+    # gclient after gclient checks it out initially.  The difference between
+    # 'managed' and 'should_process' (defined below) is that the user specifies
+    # 'managed' via the --unmanaged command-line flag or a .gclient config,
+    # where 'should_process' is dynamically set by gclient if it goes over its
+    # recursion limit and controls gclient's behavior so it does not misbehave.
+    self._managed = managed
+    self._custom_vars = custom_vars or {}
+    self._custom_deps = custom_deps or {}
     self.deps_hooks = []
+
+    # Calculates properties:
+    self.parsed_url = None
     self.dependencies = []
-    self.deps_file = deps_file
     # A cache of the files affected by the current operation, necessary for
     # hooks.
     self._file_list = []
     # If it is not set to True, the dependency wasn't processed for its child
     # dependency, i.e. its DEPS wasn't read.
     self.deps_parsed = False
-    # This dependency should be processed, i.e. checked out
-    self.should_process = should_process
     # This dependency has been processed, i.e. checked out
     self.processed = False
     # This dependency had its hook run
     self.hooks_ran = False
-    # Required dependencies to run before running this one:
-    self.requirements = []
-    if self.parent and self.parent.name:
-      self.requirements.append(self.parent.name)
-    if isinstance(self.url, self.FromImpl):
-      self.requirements.append(self.url.module_name)
+
+    # Post process the url to remove trailing slashes.
+    if isinstance(self.url, basestring):
+      # urls are sometime incorrectly written as proto://host/path/@rev. Replace
+      # it to proto://host/path@rev.
+      if self.url.count('@') > 1:
+        raise gclient_utils.Error('Invalid url "%s"' % self.url)
+      self.url = self.url.replace('/@', '@')
+
+    self._FindDependencies()
 
     # Sanity checks
     if not self.name and self.parent:
@@ -185,6 +204,62 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
       raise gclient_utils.Error('deps_file name must not be a path, just a '
                                 'filename. %s' % self.deps_file)
 
+  def _FindDependencies(self):
+    """Setup self.requirements and find any other dependency who would have self
+    as a requirement.
+    """
+    # self.parent is implicitly a requirement. This will be recursive by
+    # definition.
+    if self.parent and self.parent.name:
+      self._requirements.add(self.parent.name)
+
+    # For a tree with at least 2 levels*, the leaf node needs to depend
+    # on the level higher up in an orderly way.
+    # This becomes messy for >2 depth as the DEPS file format is a dictionary,
+    # thus unsorted, while the .gclient format is a list thus sorted.
+    #
+    # * _recursion_limit is hard coded 2 and there is no hope to change this
+    # value.
+    #
+    # Interestingly enough, the following condition only works in the case we
+    # want: self is a 2nd level node. 3nd level node wouldn't need this since
+    # they already have their parent as a requirement.
+    root_deps = self.root.dependencies
+    if self.parent in root_deps:
+      for i in root_deps:
+        if i is self.parent:
+          break
+        if i.name:
+          self._requirements.add(i.name)
+
+    if isinstance(self.url, self.FromImpl):
+      self._requirements.add(self.url.module_name)
+
+    if self.name and self.should_process:
+      def yield_full_tree(root):
+        """Depth-first recursion."""
+        yield root
+        for i in root.dependencies:
+          for j in yield_full_tree(i):
+            if j.should_process:
+              yield j
+
+      for obj in yield_full_tree(self.root):
+        if obj is self or not obj.name:
+          continue
+        # Step 1: Find any requirements self may need.
+        if self.name.startswith(posixpath.join(obj.name, '')):
+          self._requirements.add(obj.name)
+        # Step 2: Find any requirements self may impose.
+        if obj.name.startswith(posixpath.join(self.name, '')):
+          try:
+            # Access to a protected member _requirements of a client class
+            # pylint: disable=W0212
+            obj.lock.acquire()
+            obj._requirements.add(self.name)
+          finally:
+            obj.lock.release()
+
   def LateOverride(self, url):
     """Resolves the parsed url from url.
 
@@ -197,7 +272,9 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
           overriden_url))
       return overriden_url
     elif isinstance(url, self.FromImpl):
-      ref = [dep for dep in self.tree(True) if url.module_name == dep.name]
+      ref = [
+          dep for dep in self.root.subtree(True) if url.module_name == dep.name
+      ]
       if not ref:
         raise gclient_utils.Error('Failed to find one reference to %s. %s' % (
             url.module_name, ref))
@@ -214,8 +291,10 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
           break
       if not found_dep:
         raise gclient_utils.Error(
-            'Couldn\'t find %s in %s, referenced by %s\n%s' % (
-                sub_target, ref.name, self.name, str(self.root_parent())))
+            'Couldn\'t find %s in %s, referenced by %s (parent: %s)\n%s' % (
+                sub_target, ref.name, self.name, self.parent.name,
+                str(self.root)))
+
       # Call LateOverride() again.
       parsed_url = found_dep.LateOverride(found_dep.url)
       logging.info('%s, %s to %s' % (self.name, url, parsed_url))
@@ -232,7 +311,7 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
         parent_url = self.parent.parsed_url
         if isinstance(parent_url, self.FileImpl):
           parent_url = parent_url.file_location
-        scm = gclient_scm.CreateSCM(parent_url, self.root_dir(), None)
+        scm = gclient_scm.CreateSCM(parent_url, self.root.root_dir, None)
         parsed_url = scm.FullUrlForRelativeUrl(url)
       else:
         parsed_url = url
@@ -263,7 +342,7 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
       'Var': var.Lookup,
       'deps_os': {},
     }
-    filepath = os.path.join(self.root_dir(), self.name, self.deps_file)
+    filepath = os.path.join(self.root.root_dir, self.name, self.deps_file)
     if not os.path.isfile(filepath):
       logging.info('%s: No %s file found at %s' % (self.name, self.deps_file,
                                                    filepath))
@@ -279,9 +358,10 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
     # load os specific dependencies if defined.  these dependencies may
     # override or extend the values defined by the 'deps' member.
     if 'deps_os' in local_scope:
-      for deps_os_key in self.enforced_os():
+      enforced_os = self.root.enforced_os
+      for deps_os_key in enforced_os:
         os_deps = local_scope['deps_os'].get(deps_os_key, {})
-        if len(self.enforced_os()) > 1:
+        if len(enforced_os) > 1:
           # Ignore any conflict when including deps for more than one
           # platform, so we collect the broadest set of dependencies
           # available. We may end up with the wrong revision of something for
@@ -316,9 +396,9 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
         raise gclient_utils.Error(
             'The same name "%s" appears multiple times in the deps section' %
                 name)
-      should_process = self.recursion_limit() > 0 and self.should_process
+      should_process = self.recursion_limit and self.should_process
       if should_process:
-        tree = dict((d.name, d) for d in self.tree(False))
+        tree = dict((d.name, d) for d in self.root.subtree(False))
         if name in tree:
           if url == tree[name].url:
             logging.info('Won\'t process duplicate dependency %s' % tree[name])
@@ -331,7 +411,7 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
                 'Dependency %s specified more than once:\n  %s\nvs\n  %s' %
                 (name, tree[name].hierarchy(), self.hierarchy()))
       self.dependencies.append(Dependency(self, name, url, None, None, None,
-          self.deps_file, should_process))
+          None, self.deps_file, should_process))
     logging.debug('Loaded: %s' % str(self))
 
   # Arguments number differs from overridden method
@@ -387,7 +467,7 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
         if not command in (None, 'cleanup', 'diff', 'pack', 'status'):
           options.revision = self.parsed_url.GetRevision()
           scm = gclient_scm.SVNWrapper(self.parsed_url.GetPath(),
-                                       self.root_dir(),
+                                       self.root.root_dir,
                                        self.name)
           scm.RunCommand('updatesingle', options,
                          args + [self.parsed_url.GetFilename()],
@@ -397,25 +477,30 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
         options = copy.copy(options)
         options.revision = revision_overrides.get(self.name)
         maybeGetParentRevision(options)
-        scm = gclient_scm.CreateSCM(self.parsed_url, self.root_dir(), self.name)
+        scm = gclient_scm.CreateSCM(
+            self.parsed_url, self.root.root_dir, self.name)
         scm.RunCommand(command, options, args, self._file_list)
         maybeConvertToDateRevision(options)
         self._file_list = [os.path.join(self.name, f.strip())
                            for f in self._file_list]
+
+      # TODO(phajdan.jr): We should know exactly when the paths are absolute.
+      # Convert all absolute paths to relative.
+      for i in range(len(self._file_list)):
+        # It depends on the command being executed (like runhooks vs sync).
+        if not os.path.isabs(self._file_list[i]):
+          continue
+        prefix = os.path.commonprefix(
+            [self.root.root_dir.lower(), self._file_list[i].lower()])
+        self._file_list[i] = self._file_list[i][len(prefix):]
+        # Strip any leading path separators.
+        while (self._file_list[i].startswith('\\') or
+                self._file_list[i].startswith('/')):
+          self._file_list[i] = self._file_list[i][1:]
     self.processed = True
-    if self.recursion_limit() > 0:
+    if self.recursion_limit:
       # Then we can parse the DEPS file.
       self.ParseDepsFile()
-      # Adjust the implicit dependency requirement; e.g. if a DEPS file contains
-      # both src/foo and src/foo/bar, src/foo/bar is implicitly dependent of
-      # src/foo. Yes, it's O(n^2)... It's important to do that before
-      # enqueueing them.
-      for s in self.dependencies:
-        for s2 in self.dependencies:
-          if s is s2:
-            continue
-          if s.name.startswith(posixpath.join(s2.name, '')):
-            s.requirements.append(s2.name)
 
       # Parse the dependencies of this dependency.
       for s in self.dependencies:
@@ -425,7 +510,7 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
     """Evaluates all hooks, running actions as needed. run()
     must have been called before to load the DEPS."""
     assert self.hooks_ran == False
-    if not self.should_process or self.recursion_limit() <= 0:
+    if not self.should_process or not self.recursion_limit:
       # Don't run the hook when it is above recursion_limit.
       return
     # If "--force" was specified, run all hooks regardless of what files have
@@ -437,32 +522,15 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
       if (options.force or
           isinstance(self.parsed_url, self.FileImpl) or
           gclient_scm.GetScmName(self.parsed_url) in ('git', None) or
-          os.path.isdir(os.path.join(self.root_dir(), self.name, '.git'))):
+          os.path.isdir(os.path.join(self.root.root_dir, self.name, '.git'))):
         for hook_dict in self.deps_hooks:
           self._RunHookAction(hook_dict, [])
       else:
-        # TODO(phajdan.jr): We should know exactly when the paths are absolute.
-        # Convert all absolute paths to relative.
-        file_list = self.file_list()
-        for i in range(len(file_list)):
-          # It depends on the command being executed (like runhooks vs sync).
-          if not os.path.isabs(file_list[i]):
-            continue
-
-          prefix = os.path.commonprefix([self.root_dir().lower(),
-                                         file_list[i].lower()])
-          file_list[i] = file_list[i][len(prefix):]
-
-          # Strip any leading path separators.
-          while (file_list[i].startswith('\\') or
-                 file_list[i].startswith('/')):
-            file_list[i] = file_list[i][1:]
-
         # Run hooks on the basis of whether the files from the gclient operation
         # match each hook's pattern.
         for hook_dict in self.deps_hooks:
           pattern = re.compile(hook_dict['pattern'])
-          matching_file_list = [f for f in file_list if pattern.search(f)]
+          matching_file_list = [f for f in self.file_list if pattern.search(f)]
           if matching_file_list:
             self._RunHookAction(hook_dict, matching_file_list)
     for s in self.dependencies:
@@ -489,7 +557,7 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
 
     try:
       gclient_utils.CheckCallAndFilterAndHeader(
-          command, cwd=self.root_dir(), always=True)
+          command, cwd=self.root.root_dir, always=True)
     except (gclient_utils.Error, subprocess2.CalledProcessError), e:
       # Use a discrete exit status code of 2 to indicate that a hook action
       # failed.  Users of this script may wish to treat hook action failures
@@ -497,25 +565,14 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
       print >> sys.stderr, 'Error: %s' % str(e)
       sys.exit(2)
 
-  def root_dir(self):
-    return self.parent.root_dir()
-
-  def enforced_os(self):
-    return self.parent.enforced_os()
-
-  def recursion_limit(self):
-    return self.parent.recursion_limit() - 1
-
-  def tree(self, include_all):
-    return self.parent.tree(include_all)
-
   def subtree(self, include_all):
     """Breadth first"""
     result = []
-    for d in self.dependencies:
+    dependencies = self.dependencies
+    for d in dependencies:
       if d.should_process or include_all:
         result.append(d)
-    for d in self.dependencies:
+    for d in dependencies:
       result.extend(d.subtree(include_all))
     return result
 
@@ -526,20 +583,68 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
     # None is a valid return value to disable a dependency.
     return self.custom_deps.get(name, url)
 
+  @property
+  def recursion_limit(self):
+    """Returns > 0 if this dependency is not too recursed to be processed.
+
+    Immutable so no need to lock."""
+    return max(self.parent.recursion_limit - 1, 0)
+
+  @property
+  def deps_file(self):
+    """Immutable so no need to lock."""
+    return self._deps_file
+
+  @property
+  def managed(self):
+    """Immutable so no need to lock."""
+    return self._managed
+
+  @property
+  def safesync_url(self):
+    """Immutable so no need to lock."""
+    return self._safesync_url
+
+  @property
+  def should_process(self):
+    """True if this dependency should be processed, i.e. checked out."""
+    return self._should_process
+
+  @property
+  def parent(self):
+    """Immutable so no need to lock."""
+    return self._parent
+
+  @property
+  def custom_vars(self):
+    """Immutable so no need to lock."""
+    return self._custom_vars.copy()
+
+  @property
+  def custom_deps(self):
+    """Immutable so no need to lock."""
+    return self._custom_deps.copy()
+
+  @property
+  @gclient_utils.lockedmethod
   def file_list(self):
     result = self._file_list[:]
     for d in self.dependencies:
-      result.extend(d.file_list())
-    return result
+      result.extend(d.file_list)
+    return tuple(result)
 
   def __str__(self):
     out = []
     for i in ('name', 'url', 'parsed_url', 'safesync_url', 'custom_deps',
-              'custom_vars', 'deps_hooks', '_file_list', 'should_process',
+              'custom_vars', 'deps_hooks', 'file_list', 'should_process',
               'processed', 'hooks_ran', 'deps_parsed', 'requirements'):
-      # 'deps_file'
-      if self.__dict__[i]:
-        out.append('%s: %s' % (i, self.__dict__[i]))
+      # First try the native property if it exists.
+      if hasattr(self, '_' + i):
+        value = getattr(self, '_' + i, False)
+      else:
+        value = getattr(self, i, False)
+      if value:
+        out.append('%s: %s' % (i, value))
 
     for d in self.dependencies:
       out.extend(['  ' + x for x in str(d).splitlines()])
@@ -558,12 +663,13 @@ class Dependency(GClientKeywords, gclient_utils.WorkItem):
       i = i.parent
     return out
 
-  def root_parent(self):
-    """Returns the root object, normally a GClient object."""
-    d = self
-    while d.parent:
-      d = d.parent
-    return d
+  @property
+  def root(self):
+    """Returns the root node, a GClient object."""
+    if not self.parent:
+      # This line is to signal pylint that it could be a GClient instance.
+      return self or GClient(None, None)
+    return self.parent.root
 
 
 class GClient(Dependency):
@@ -587,6 +693,7 @@ solutions = [
   { "name"        : "%(solution_name)s",
     "url"         : "%(solution_url)s",
     "deps_file"   : "%(deps_file)s",
+    "managed"     : %(managed)s,
     "custom_deps" : {
     },
     "safesync_url": "%(safesync_url)s",
@@ -598,6 +705,7 @@ solutions = [
   { "name"        : "%(solution_name)s",
     "url"         : "%(solution_url)s",
     "deps_file"   : "%(deps_file)s",
+    "managed"     : %(managed)s,
     "custom_deps" : {
 %(solution_deps)s    },
     "safesync_url": "%(safesync_url)s",
@@ -614,8 +722,8 @@ solutions = [
     # Do not change previous behavior. Only solution level and immediate DEPS
     # are processed.
     self._recursion_limit = 2
-    Dependency.__init__(self, None, None, None, None, None, None, 'unused',
-                        True)
+    Dependency.__init__(self, None, None, None, None, True, None, None,
+                        'unused', True)
     self._options = options
     if options.deps_os:
       enforced_os = options.deps_os.split(',')
@@ -623,12 +731,12 @@ solutions = [
       enforced_os = [self.DEPS_OS_CHOICES.get(sys.platform, 'unix')]
     if 'all' in enforced_os:
       enforced_os = self.DEPS_OS_CHOICES.itervalues()
-    self._enforced_os = list(set(enforced_os))
+    self._enforced_os = tuple(set(enforced_os))
     self._root_dir = root_dir
     self.config_content = None
 
   def SetConfig(self, content):
-    assert self.dependencies == []
+    assert not self.dependencies
     config_dict = {}
     self.config_content = content
     try:
@@ -637,13 +745,14 @@ solutions = [
       gclient_utils.SyntaxErrorToError('.gclient', e)
     for s in config_dict.get('solutions', []):
       try:
-        tree = dict((d.name, d) for d in self.tree(False))
+        tree = dict((d.name, d) for d in self.root.subtree(False))
         if s['name'] in tree:
           raise gclient_utils.Error(
               'Dependency %s specified more than once in .gclient' % s['name'])
         self.dependencies.append(Dependency(
             self, s['name'], s['url'],
             s.get('safesync_url', None),
+            s.get('managed', True),
             s.get('custom_deps', {}),
             s.get('custom_vars', {}),
             s.get('deps_file', 'DEPS'),
@@ -656,7 +765,7 @@ solutions = [
     self.deps_parsed = True
 
   def SaveConfig(self):
-    gclient_utils.FileWrite(os.path.join(self.root_dir(),
+    gclient_utils.FileWrite(os.path.join(self.root_dir,
                                          self._options.config_filename),
                             self.config_content)
 
@@ -673,12 +782,13 @@ solutions = [
     return client
 
   def SetDefaultConfig(self, solution_name, deps_file, solution_url,
-                       safesync_url):
+                       safesync_url, managed=True):
     self.SetConfig(self.DEFAULT_CLIENT_FILE_TEXT % {
       'solution_name': solution_name,
       'solution_url': solution_url,
       'deps_file': deps_file,
       'safesync_url' : safesync_url,
+      'managed': managed,
     })
 
   def _SaveEntries(self):
@@ -689,13 +799,13 @@ solutions = [
     # Sometimes pprint.pformat will use {', sometimes it'll use { ' ... It
     # makes testing a bit too fun.
     result = 'entries = {\n'
-    for entry in self.tree(False):
+    for entry in self.root.subtree(False):
       # Skip over File() dependencies as we can't version them.
       if not isinstance(entry.parsed_url, self.FileImpl):
         result += '  %s: %s,\n' % (pprint.pformat(entry.name),
             pprint.pformat(entry.parsed_url))
     result += '}\n'
-    file_path = os.path.join(self.root_dir(), self._options.entries_filename)
+    file_path = os.path.join(self.root_dir, self._options.entries_filename)
     logging.info(result)
     gclient_utils.FileWrite(file_path, result)
 
@@ -707,7 +817,7 @@ solutions = [
       entries file hasn't been created yet.
     """
     scope = {}
-    filename = os.path.join(self.root_dir(), self._options.entries_filename)
+    filename = os.path.join(self.root_dir, self._options.entries_filename)
     if not os.path.exists(filename):
       return {}
     try:
@@ -724,13 +834,14 @@ solutions = [
     # Do not check safesync_url if one or more --revision flag is specified.
     if not self._options.revisions:
       for s in self.dependencies:
-        if not s.safesync_url:
-          continue
-        handle = urllib.urlopen(s.safesync_url)
-        rev = handle.read().strip()
-        handle.close()
-        if len(rev):
-          self._options.revisions.append('%s@%s' % (s.name, rev))
+        if not s.managed:
+          self._options.revisions.append('%s@unmanaged' % s.name)
+        elif s.safesync_url:
+          handle = urllib.urlopen(s.safesync_url)
+          rev = handle.read().strip()
+          handle.close()
+          if len(rev):
+            self._options.revisions.append('%s@%s' % (s.name, rev))
     if not self._options.revisions:
       return revision_overrides
     solutions_names = [s.name for s in self.dependencies]
@@ -778,18 +889,18 @@ solutions = [
       # Notify the user if there is an orphaned entry in their working copy.
       # Only delete the directory if there are no changes in it, and
       # delete_unversioned_trees is set to true.
-      entries = [i.name for i in self.tree(False) if i.url]
+      entries = [i.name for i in self.root.subtree(False) if i.url]
       for entry, prev_url in self._ReadEntries().iteritems():
         if not prev_url:
           # entry must have been overridden via .gclient custom_deps
           continue
         # Fix path separator on Windows.
         entry_fixed = entry.replace('/', os.path.sep)
-        e_dir = os.path.join(self.root_dir(), entry_fixed)
+        e_dir = os.path.join(self.root_dir, entry_fixed)
         # Use entry and not entry_fixed there.
         if entry not in entries and os.path.exists(e_dir):
           file_list = []
-          scm = gclient_scm.CreateSCM(prev_url, self.root_dir(), entry_fixed)
+          scm = gclient_scm.CreateSCM(prev_url, self.root_dir, entry_fixed)
           scm.status(self._options, [], file_list)
           modified_files = file_list != []
           if (not self._options.delete_unversioned_trees or
@@ -802,7 +913,7 @@ solutions = [
           else:
             # Delete the entry
             print('\n________ deleting \'%s\' in \'%s\'' % (
-                entry_fixed, self.root_dir()))
+                entry_fixed, self.root_dir))
             gclient_utils.RemoveDirectory(e_dir)
       # record the current list of entries for next time
       self._SaveEntries()
@@ -826,7 +937,7 @@ solutions = [
       else:
         original_url = dep.parsed_url
       url, _ = gclient_utils.SplitUrlRevision(original_url)
-      scm = gclient_scm.CreateSCM(original_url, self.root_dir(), dep.name)
+      scm = gclient_scm.CreateSCM(original_url, self.root_dir, dep.name)
       if not os.path.isdir(scm.checkout_path):
         return None
       return '%s@%s' % (url, scm.revinfo(self._options, [], None))
@@ -854,13 +965,14 @@ solutions = [
             'solution_url': d.url,
             'deps_file': d.deps_file,
             'safesync_url' : d.safesync_url or '',
+            'managed': d.managed,
             'solution_deps': ''.join(custom_deps),
         }
       # Print the snapshot configuration file
       print(self.DEFAULT_SNAPSHOT_FILE_TEXT % {'solution_list': new_gclient})
     else:
       entries = {}
-      for d in self.tree(False):
+      for d in self.root.subtree(False):
         if self._options.actual:
           entries[d.name] = GetURLAndRev(d)
         else:
@@ -874,21 +986,20 @@ solutions = [
     """No DEPS to parse for a .gclient file."""
     raise gclient_utils.Error('Internal error')
 
+  @property
   def root_dir(self):
     """Root directory of gclient checkout."""
     return self._root_dir
 
+  @property
   def enforced_os(self):
     """What deps_os entries that are to be parsed."""
     return self._enforced_os
 
+  @property
   def recursion_limit(self):
     """How recursive can each dependencies in DEPS file can load DEPS file."""
     return self._recursion_limit
-
-  def tree(self, include_all):
-    """Returns a flat list of all the dependencies."""
-    return self.subtree(include_all)
 
 
 #### gclient commands.
@@ -951,7 +1062,7 @@ def CMDrecurse(parser, args):
       env['GCLIENT_SCM'] = scm
     if url:
       env['GCLIENT_URL'] = url
-    gclient_utils.Popen(args, cwd=cwd, env=env).communicate()
+    subprocess2.call(args, cwd=cwd, env=env)
   return 0
 
 
@@ -974,6 +1085,11 @@ URL.
   parser.add_option('--deps-file', default='DEPS',
                     help='overrides the default name for the DEPS file for the'
                          'main solutions and all sub-dependencies')
+  parser.add_option('--unmanaged', action='store_true', default=False,
+                    help='overrides the default behavior to make it possible '
+                         'to have the main solution untouched by gclient '
+                         '(gclient will check out unmanaged dependencies but '
+                         'will never sync them)')
   parser.add_option('--git-deps', action='store_true',
                     help='sets the deps file to ".DEPS.git" instead of "DEPS"')
   (options, args) = parser.parse_args(args)
@@ -981,9 +1097,6 @@ URL.
       (not options.spec and not args)):
     parser.error('Inconsistent arguments. Use either --spec or one or 2 args')
 
-  if os.path.exists(options.config_filename):
-    raise gclient_utils.Error('%s file already exists in the current directory'
-                                  % options.config_filename)
   client = GClient('.', options)
   if options.spec:
     client.SetConfig(options.spec)
@@ -1002,7 +1115,8 @@ URL.
     safesync_url = ''
     if len(args) > 1:
       safesync_url = args[1]
-    client.SetDefaultConfig(name, deps_file, base_url, safesync_url)
+    client.SetDefaultConfig(name, deps_file, base_url, safesync_url,
+                            managed=not options.unmanaged)
   client.SaveConfig()
   return 0
 
@@ -1090,6 +1204,9 @@ def CMDsync(parser, args):
                          'local modifications')
   parser.add_option('-R', '--reset', action='store_true',
                     help='resets any local changes before updating (git only)')
+  parser.add_option('-M', '--merge', action='store_true',
+                    help='merge upstream changes instead of trying to '
+                         'fast-forward or rebase')
   parser.add_option('--deps', dest='deps_os', metavar='OS_LIST',
                     help='override deps for the specified (comma-separated) '
                          'platform(s); \'all\' will process all deps_os '
@@ -1229,6 +1346,54 @@ def GenUsage(parser, command):
   parser.epilog = getattr(obj, 'epilog', None)
 
 
+def Parser():
+  """Returns the default parser."""
+  parser = optparse.OptionParser(version='%prog ' + __version__)
+  parser.add_option('-j', '--jobs', default=1, type='int',
+                    help='Specify how many SCM commands can run in parallel; '
+                          'default=%default')
+  parser.add_option('-v', '--verbose', action='count', default=0,
+                    help='Produces additional output for diagnostics. Can be '
+                          'used up to three times for more logging info.')
+  parser.add_option('--gclientfile', dest='config_filename',
+                    default=os.environ.get('GCLIENT_FILE', '.gclient'),
+                    help='Specify an alternate %default file')
+  # Integrate standard options processing.
+  old_parser = parser.parse_args
+  def Parse(args):
+    (options, args) = old_parser(args)
+    level = None
+    if options.verbose == 2:
+      level = logging.INFO
+    elif options.verbose > 2:
+      level = logging.DEBUG
+    logging.basicConfig(level=level,
+        format='%(module)s(%(lineno)d) %(funcName)s:%(message)s')
+    options.entries_filename = options.config_filename + '_entries'
+    if options.jobs < 1:
+      parser.error('--jobs must be 1 or higher')
+
+    # These hacks need to die.
+    if not hasattr(options, 'revisions'):
+      # GClient.RunOnDeps expects it even if not applicable.
+      options.revisions = []
+    if not hasattr(options, 'head'):
+      options.head = None
+    if not hasattr(options, 'nohooks'):
+      options.nohooks = True
+    if not hasattr(options, 'deps_os'):
+      options.deps_os = None
+    if not hasattr(options, 'manually_grab_svn_rev'):
+      options.manually_grab_svn_rev = None
+    if not hasattr(options, 'force'):
+      options.force = None
+    return (options, args)
+  parser.parse_args = Parse
+  # We don't want wordwrapping in epilog (usually examples)
+  parser.format_epilog = lambda _: parser.epilog or ''
+  return parser
+
+
 def Main(argv):
   """Doesn't parse the arguments here, just find the right subcommand to
   execute."""
@@ -1247,49 +1412,7 @@ def Main(argv):
     CMDhelp.usage = ('\n\nCommands are:\n' + '\n'.join([
         '  %-10s %s' % (fn[3:], Command(fn[3:]).__doc__.split('\n')[0].strip())
         for fn in dir(sys.modules[__name__]) if fn.startswith('CMD')]))
-    parser = optparse.OptionParser(version='%prog ' + __version__)
-    parser.add_option('-j', '--jobs', default=1, type='int',
-                      help='Specify how many SCM commands can run in parallel; '
-                           'default=%default')
-    parser.add_option('-v', '--verbose', action='count', default=0,
-                      help='Produces additional output for diagnostics. Can be '
-                           'used up to three times for more logging info.')
-    parser.add_option('--gclientfile', dest='config_filename',
-                      default=os.environ.get('GCLIENT_FILE', '.gclient'),
-                      help='Specify an alternate %default file')
-    # Integrate standard options processing.
-    old_parser = parser.parse_args
-    def Parse(args):
-      (options, args) = old_parser(args)
-      level = None
-      if options.verbose == 2:
-        level = logging.INFO
-      elif options.verbose > 2:
-        level = logging.DEBUG
-      logging.basicConfig(level=level,
-          format='%(module)s(%(lineno)d) %(funcName)s:%(message)s')
-      options.entries_filename = options.config_filename + '_entries'
-      if options.jobs < 1:
-        parser.error('--jobs must be 1 or higher')
-
-      # These hacks need to die.
-      if not hasattr(options, 'revisions'):
-        # GClient.RunOnDeps expects it even if not applicable.
-        options.revisions = []
-      if not hasattr(options, 'head'):
-        options.head = None
-      if not hasattr(options, 'nohooks'):
-        options.nohooks = True
-      if not hasattr(options, 'deps_os'):
-        options.deps_os = None
-      if not hasattr(options, 'manually_grab_svn_rev'):
-        options.manually_grab_svn_rev = None
-      if not hasattr(options, 'force'):
-        options.force = None
-      return (options, args)
-    parser.parse_args = Parse
-    # We don't want wordwrapping in epilog (usually examples)
-    parser.format_epilog = lambda _: parser.epilog or ''
+    parser = Parser()
     if argv:
       command = Command(argv[0])
       if command:

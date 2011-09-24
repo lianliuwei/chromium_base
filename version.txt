@@ -115,7 +115,7 @@ base/cpu.cc
 base/callback_old.h
 base/message_loop.h
 base/message_loop.cc
-base/message_loop_proxy.h
+base/message_loop_proxy.hA
 base/message_loop_proxy.cc
 base/message_loop_proxy_impl.h
 base/message_loop_proxy_impl.cc
@@ -251,12 +251,10 @@ base/win/resource_util.cc
 ui/base/strings/app_locale_settings.grd modify
 from chromium/src@1581329f0869d6b3a552d666dec9f3e68e6e3797
 
-tools/grit/
-from chromium/src@1581329f0869d6b3a552d666dec9f3e68e6e3797
 
 build/common.gypi modify
 from gyp_test@01922df683529dc823f264187e8a1a95aaaed490
 
 
 DEPS modify by .DEPS.git
-from chromium/src@1581329f0869d6b3a552d666dec9f3e68e6e3797
+from chromium/src@69b878ded4d5ef2e464b0fb6d5c78fe4c55a0059

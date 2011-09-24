@@ -6,6 +6,8 @@
  * found in the LICENSE file.
  */
 
+#include "GrGLInterface.h"
 
-void GrGLInitializeDefaultGLInterface() {
+const GrGLInterface* GrGLDefaultInterface() {
+    return NULL;
 }
