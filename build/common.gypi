@@ -154,7 +154,9 @@
         ],
       }],
     ],
-    
+    # no using cygwin method in chromium
+    'msvs_cygwin_shell': 0,
+
     'msvs_system_include_dirs': [
       '$(VSInstallDir)/VC/atlmfc/include',
     ],

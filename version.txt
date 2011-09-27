@@ -251,6 +251,140 @@ base/location.h
 base/location.cc
 ui/gfx/codec/png_codec.h
 ui/gfx/codec/png_codec.cc
+ui/base/accessibility/accessibility_types.h
+ui/base/accessibility/accessible_view_state.h
+ui/base/accessibility/accessible_view_state.cc
+ui/base/animation/animation.h
+ui/base/animation/animation.cc
+ui/base/animation/animation_container.h
+ui/base/animation/animation_container.cc
+ui/base/animation/animation_container_element.h
+ui/base/animation/animation_container_observer.h
+ui/base/animation/animation_delegate.h
+ui/base/animation/linear_animation.cc
+ui/base/animation/linear_animation.h
+ui/base/animation/multi_animation.cc
+ui/base/animation/multi_animation.h
+ui/base/animation/slide_animation.cc
+ui/base/animation/slide_animation.h
+ui/base/animation/test_animation_delegate.h
+ui/base/animation/throb_animation.cc
+ui/base/animation/throb_animation.h
+ui/base/animation/tween.cc
+ui/base/animation/tween.h
+ui/base/clipboard/clipboard.cc
+ui/base/clipboard/clipboard.h
+ui/base/clipboard/clipboard_util_win.cc
+ui/base/clipboard/clipboard_util_win.h
+ui/base/clipboard/clipboard_win.cc
+ui/base/clipboard/scoped_clipboard_writer.cc
+ui/base/clipboard/scoped_clipboard_writer.h
+ui/base/dragdrop/download_file_interface.h
+ui/base/dragdrop/drag_drop_types.h
+ui/base/dragdrop/drag_drop_types_win.cc
+ui/base/dragdrop/drag_source.cc
+ui/base/dragdrop/drag_source.h
+ui/base/dragdrop/drop_target.cc
+ui/base/dragdrop/drop_target.h
+ui/base/dragdrop/os_exchange_data.cc modify
+ui/base/dragdrop/os_exchange_data.h modify
+ui/base/dragdrop/os_exchange_data_provider_win.cc modify
+ui/base/dragdrop/os_exchange_data_provider_win.h modify
+ui/base/ime/composition_text.cc
+ui/base/ime/composition_text.h
+ui/base/ime/composition_underline.h
+ui/base/ime/text_input_type.h
+ui/base/keycodes/keyboard_code_conversion_win.cc
+ui/base/keycodes/keyboard_code_conversion_win.h
+ui/base/keycodes/keyboard_codes.h
+ui/base/keycodes/keyboard_codes_win.h
+ui/base/l10n/l10n_font_util.cc
+ui/base/l10n/l10n_font_util.h
+ui/base/models/accelerator.h
+ui/base/models/button_menu_item_model.cc
+ui/base/models/button_menu_item_model.h
+ui/base/models/combobox_model.h
+ui/base/models/menu_model.cc
+ui/base/models/menu_model.h
+ui/base/models/menu_model_delegate.h
+ui/base/models/simple_menu_model.cc
+ui/base/models/simple_menu_model.h
+ui/base/models/table_model.cc modify
+ui/base/models/table_model.h modify
+ui/base/models/table_model_observer.h
+ui/base/models/tree_model.cc
+ui/base/models/tree_model.h
+ui/base/models/tree_node_iterator.h
+ui/base/models/tree_node_model.h
+ui/base/range/range.cc
+ui/base/range/range.h
+ui/base/range/range_win.cc
+ui/base/text/text_elider.cc modify
+ui/base/text/text_elider.h modify
+ui/base/win/hwnd_util.cc
+ui/base/win/hwnd_util.h
+ui/base/win/ime_input.cc
+ui/base/win/ime_input.h
+ui/base/win/mouse_wheel_util.cc
+ui/base/win/mouse_wheel_util.h
+ui/base/win/shell.cc
+ui/base/win/shell.h
+ui/base/win/window_impl.cc
+ui/base/win/window_impl.h modify
+ui/gfx/DEPS
+ui/gfx/blit.cc
+ui/gfx/blit.h
+ui/gfx/codec/DEPS
+ui/gfx/codec/jpeg_codec.cc
+ui/gfx/codec/jpeg_codec.h
+ui/gfx/color_analysis.cc
+ui/gfx/color_analysis.h
+ui/gfx/empty.cc
+ui/gfx/favicon_size.h
+ui/gfx/gdi_util.cc
+ui/gfx/gdi_util.h
+ui/gfx/gfx_paths.cc
+ui/gfx/gfx_paths.h
+ui/gfx/icon_util.cc
+ui/gfx/icon_util.h
+ui/gfx/image/image_util.cc
+ui/gfx/image/image_util.h
+ui/gfx/interpolated_transform.cc
+ui/gfx/interpolated_transform.h
+ui/gfx/native_theme.cc
+ui/gfx/native_theme.h
+ui/gfx/native_theme_win.cc
+ui/gfx/native_theme_win.h
+ui/gfx/path.cc
+ui/gfx/path.h
+ui/gfx/path_win.cc
+ui/gfx/screen.h
+ui/gfx/screen_win.cc
+ui/gfx/scrollbar_size.cc
+ui/gfx/scrollbar_size.h
+ui/gfx/skbitmap_operations.cc
+ui/gfx/skbitmap_operations.h
+ui/gfx/win_util.cc
+ui/gfx/win_util.h
+base/win/scoped_hdc.h
+base/shared_memory.h
+base/shared_memory_win.cc
+base/auto_reset.h
+base/native_library.h
+base/native_library_win.cc
+third_party/libjpeg_turbo/
+third_party/libjpeg_turbo/libjpeg.gyp modify
+base/win/scoped_hglobal.h
+ui/base/events.h
+ui/base/message_box_flags.h
+ui/base/message_box_win.h
+ui/base/message_box_win.cc
+ui/base/theme_provider.h
+ui/base/theme_provider.cc
+ui/base/ui_base_types.h
+ui/base/view_prop.h
+ui/base/view_prop.cc
+third_party/wtl/
 from chromium/src@69b878ded4d5ef2e464b0fb6d5c78fe4c55a0059
 
 
