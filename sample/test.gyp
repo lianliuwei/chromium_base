@@ -51,7 +51,7 @@
         '../base/base.gyp:*',
       ],
     },
-	{
+	  {
       'target_name': 'callback',
       'type': 'executable',
       'sources': [
@@ -61,7 +61,7 @@
         '../base/base.gyp:*',
       ],
     },
-	{
+	  {
       'target_name': 'time',
       'type': 'executable',
       'sources': [
@@ -101,7 +101,7 @@
         '../base/base.gyp:*',
       ],
     },
-	{
+  	{
       'target_name': 'testing',
       'type': 'executable',
       'sources': [
@@ -113,12 +113,12 @@
         '../testing/gtest.gyp:gtest',
       ],
     },
-	{
+	  {
       'target_name': 'mocking',
       'type': 'executable',
       'sources': [
-	    'mocking/FooInterface.h',
-		'mocking/FooMock.h',
+	      'mocking/FooInterface.h',
+		    'mocking/FooMock.h',
         'mocking/FooMain.cc',
         'mocking/Foo_test.cc',
       ],
@@ -126,15 +126,15 @@
         '../testing/gmock.gyp:gmock',
       ],
     },
-	{
+	  {
       'target_name': 'resource_en',
       'type': 'loadable_module',
       'sources': [
 	    'resource/resource_en.rc',
       ],
-	  'msvs_settings': {
-		'VCLinkerTool': {
-		  'BaseAddress': '0x3CF00000',
+	    'msvs_settings': {
+		    'VCLinkerTool': {
+		      'BaseAddress': '0x3CF00000',
           'OutputFile': '$(OutDir)\\locales\\$(ProjectName).dll',
           'LinkIncremental': '1',  # 1 == No
           'LinkTimeCodeGeneration': '0',
@@ -146,15 +146,15 @@
         'GENERATED_RESOURCES_DLL_EXPORTS',
       ],
     },
-	{
-      'target_name': 'resource_zh-CH',
+	  {
+      'target_name': 'resource_zh-CN',
       'type': 'loadable_module',
       'sources': [
-	    'resource/resource_zh-CH.rc',
+	      'resource/resource_zh-CN.rc',
       ],
-	  'msvs_settings': {
-		'VCLinkerTool': {
-		  'BaseAddress': '0x3CF00000',
+	    'msvs_settings': {
+		    'VCLinkerTool': {
+		      'BaseAddress': '0x3CF00000',
           'OutputFile': '$(OutDir)\\locales\\$(ProjectName).dll',
           'LinkIncremental': '1',  # 1 == No
           'LinkTimeCodeGeneration': '0',
@@ -166,16 +166,31 @@
         'GENERATED_RESOURCES_DLL_EXPORTS',
       ],
     },
-	{
+	  {
       'target_name': 'data_pack',
       'type': 'executable',
       'sources': [
         'data_pack/main.cc',
-		'data_pack/resource.h',
-		'data_pack/data.pak',
+		    'data_pack/resource.h',
+		    'data_pack/data.pak',
       ],
       'dependencies': [
         '../ui/ui.gyp:ui',
+      ],
+    },
+    {
+      'target_name': 'resource_bundle',
+      'type': 'executable',
+      'sources': [
+        'resource_bundle/main.cc',
+		    'resource_bundle/resource.h',
+		    'resource_bundle/resources.pak',
+        'resource_bundle/Locales/en-US.pak',
+        'resource_bundle/Locales/zh-CN.pak',
+      ],
+      'dependencies': [
+        '../ui/ui.gyp:ui',
+        '../third_party/libpng/libpng.gyp:libpng',
       ],
     },
   ],

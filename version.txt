@@ -249,6 +249,8 @@ base/win/resource_util.cc
 ui/base/strings/app_locale_settings.grd modify
 base/location.h
 base/location.cc
+ui/gfx/codec/png_codec.h
+ui/gfx/codec/png_codec.cc
 from chromium/src@69b878ded4d5ef2e464b0fb6d5c78fe4c55a0059
 
 

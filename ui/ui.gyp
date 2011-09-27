@@ -49,6 +49,8 @@
         'base/resource/resource_bundle.cc',
         'base/resource/resource_bundle_win.cc',
         'base/strings/app_locale_settings.grd',
+        'gfx/codec/png_codec.h',
+        'gfx/codec/png_codec.cc',
       ],
 
       'include_dirs': [
@@ -61,9 +63,9 @@
       
       'dependencies': [
         '../base/base.gyp:base',
-		'../skia/skia.gyp:skia',
-		'../third_party/zlib/zlib.gyp:zlib',
-		'../third_party/libpng/libpng.gyp:libpng',
+		    '../skia/skia.gyp:skia',
+		    '../third_party/zlib/zlib.gyp:zlib',
+		    '../third_party/libpng/libpng.gyp:libpng',
       ],
 
       'direct_dependent_settings': {
