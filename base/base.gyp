@@ -185,6 +185,13 @@
         'win/resource_util.cc',
         'location.h',
         'location.cc',
+        'memory/scoped_vector.h',
+        'i18n/case_conversion.h',
+        'i18n/case_conversion.cc',
+        'system_monitor/system_monitor.h',
+        'system_monitor/system_monitor.cc',
+        'system_monitor/system_monitor_win.cc',
+        'observer_list_threadsafe.h',
       ],
       'include_dirs': [
           '..',

@@ -385,6 +385,13 @@ ui/base/ui_base_types.h
 ui/base/view_prop.h
 ui/base/view_prop.cc
 third_party/wtl/
+base/memory/scoped_vector.h
+base/i18n/case_conversion.h
+base/i18n/case_conversion.cc modify
+base/system_monitor/system_monitor.h
+base/system_monitor/system_monitor.cc
+base/system_monitor/system_monitor_win.cc
+base/observer_list_threadsafe.h
 from chromium/src@69b878ded4d5ef2e464b0fb6d5c78fe4c55a0059
 
 

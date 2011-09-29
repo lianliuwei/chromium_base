@@ -130,7 +130,7 @@ class DataObjectImpl : public DownloadFileObserver,
 class UI_EXPORT OSExchangeDataProviderWin : public OSExchangeData::Provider {
  public:
   // Returns true if source has plain text that is a valid url.
-  static bool HasPlainTextURL(IDataObject* source);
+  // static bool HasPlainTextURL(IDataObject* source);
 
   // Returns true if source has plain text that is a valid URL and sets url to
   // that url.
@@ -167,7 +167,7 @@ class UI_EXPORT OSExchangeDataProviderWin : public OSExchangeData::Provider {
                                std::string* file_contents) const;
   // virtual bool GetHtml(string16* html, GURL* base_url) const;
   virtual bool HasString() const;
-  virtual bool HasURL() const;
+  // virtual bool HasURL() const;
   virtual bool HasFile() const;
   virtual bool HasFileContents() const;
   virtual bool HasHtml() const;

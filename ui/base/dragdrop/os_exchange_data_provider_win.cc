@@ -441,10 +441,10 @@ bool OSExchangeDataProviderWin::HasString() const {
   return ClipboardUtil::HasPlainText(source_object_);
 }
 
-bool OSExchangeDataProviderWin::HasURL() const {
-  return (ClipboardUtil::HasUrl(source_object_) ||
-          HasPlainTextURL(source_object_));
-}
+// bool OSExchangeDataProviderWin::HasURL() const {
+//   return (ClipboardUtil::HasUrl(source_object_) ||
+//           HasPlainTextURL(source_object_));
+// }
 
 bool OSExchangeDataProviderWin::HasFile() const {
   return ClipboardUtil::HasFilenames(source_object_);
