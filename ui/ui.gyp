@@ -1,4 +1,8 @@
 {
+  'includes': [
+    'ui_resources.gypi',
+  ],
+
   'targets': [
     {
       'target_name': 'ui',
@@ -193,6 +197,8 @@
 		    '../third_party/zlib/zlib.gyp:zlib',
 		    '../third_party/libpng/libpng.gyp:libpng',
         '../third_party/libjpeg_turbo/libjpeg.gyp:libjpeg',
+        'base/strings/ui_strings.gyp:ui_strings',
+        'gfx_resources',
       ],
 
       'direct_dependent_settings': {
@@ -200,7 +206,23 @@
           '..',
         ],
       },
-
+    },
+    {
+      'target_name': 'gfx_resources',
+      'type': 'none',
+      'variables': {
+        'grit_out_dir': '<(SHARED_INTERMEDIATE_DIR)/ui/gfx',
+      },
+      'actions': [
+        {
+          'action_name': 'gfx_resources',
+          'variables': {
+            'grit_grd_file': 'gfx/gfx_resources.grd',
+          },
+          'includes': [ '../build/grit_action.gypi' ],
+        },
+      ],
+      'includes': [ '../build/grit_target.gypi' ],
     },
   ],
 }

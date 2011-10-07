@@ -546,7 +546,7 @@ ui/gfx/resources/compositor.fx
 ui/gfx/gfx_resources.grd modify
 ui/resources/ui_resources.grd modify
 ui/resources/ui_resources_large.grd modify
-ui/resources/ui_resources_standard.grd modify
+ui/resources/ui_resources_standard.grd
 ui/base/strings/ui_strings.grd modify
 ui/gfx/compositor/compositor.gyp modify
 views/views.gyp modify
@@ -817,6 +817,10 @@ ui/resources/window_right_side.png
 ui/resources/window_top_center.png
 ui/resources/window_top_left_corner.png
 ui/resources/window_top_right_corner.png
+build/grit_action.gypi modify
+build/grit_target.gypi
+ui/base/strings/ui_strings.gyp
+ui/ui_resources.gypi
 from chromium/src@69b878ded4d5ef2e464b0fb6d5c78fe4c55a0059
 
 

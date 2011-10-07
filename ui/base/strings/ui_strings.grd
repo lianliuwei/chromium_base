@@ -10,7 +10,7 @@ need to be translated for each locale.-->
     <output filename="grit/ui_strings.h" type="rc_header">
       <emit emit_type='prepend'></emit>
     </output>
-    <output filename="grit/ui_strings_en-US.pak" type="data_package" lang="en" />
+    <output filename="ui_strings_en-US.pak" type="data_package" lang="en" />
   </outputs>
   <translations>
   </translations>

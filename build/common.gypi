@@ -66,6 +66,8 @@
     'toolkit_uses_gtk%': '<(toolkit_uses_gtk)',
     'use_x11%': '<(use_x11)',
     'armv7%': '<(armv7)',
+
+    'grit_defines': ['-D', 'toolkit_views'],
   },
 
   'target_defaults': {

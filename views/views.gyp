@@ -44,11 +44,11 @@
         '../skia/skia.gyp:skia',
         #'../third_party/icu/icu.gyp:icui18n',
         #'../third_party/icu/icu.gyp:icuuc',
-        #'../ui/base/strings/ui_strings.gyp:ui_strings',
+        '../ui/base/strings/ui_strings.gyp:ui_strings',
         '../ui/gfx/compositor/compositor.gyp:compositor',
         '../ui/ui.gyp:ui',
-        #'../ui/ui.gyp:ui_resources',
-        #'../ui/ui.gyp:ui_resources_standard',
+        '../ui/ui.gyp:ui_resources',
+        '../ui/ui.gyp:ui_resources_standard',
       ],
       'defines': [
         'VIEWS_IMPLEMENTATION',
@@ -558,9 +558,9 @@
         #'../third_party/icu/icu.gyp:icui18n',
         #'../third_party/icu/icu.gyp:icuuc',
         '../ui/ui.gyp:ui',
-        #'../ui/ui.gyp:gfx_resources',
-        #'../ui/ui.gyp:ui_resources',
-        #'../ui/ui.gyp:ui_resources_standard',
+        '../ui/ui.gyp:gfx_resources',
+        '../ui/ui.gyp:ui_resources',
+        '../ui/ui.gyp:ui_resources_standard',
         'views',
       ],
       'include_dirs': [
@@ -609,9 +609,9 @@
         #'examples/widget_example.h',
         #'test/test_views_delegate.cc',
         #'test/test_views_delegate.h',
-        '../grit/gfx_resources.rc',
-        '../grit/ui_resources.rc',
-        '../grit/ui_resources_standard.rc',
+        '<(SHARED_INTERMEDIATE_DIR)/ui/gfx/gfx_resources.rc',
+        '<(SHARED_INTERMEDIATE_DIR)/ui/ui_resources/ui_resources.rc',
+        '<(SHARED_INTERMEDIATE_DIR)/ui/ui_resources_standard/ui_resources_standard.rc',
       ],
       'conditions': [
         ['OS=="win"', {
@@ -622,7 +622,7 @@
             ]
           },
           'include_dirs': [
-            '../../third_party/wtl/include',
+            '<(DEPTH)/third_party/wtl/include',
           ],
         }],
       ],
