@@ -88,8 +88,8 @@ void ExamplesMain::Init() {
 //   TextfieldExample textfield_example(this);
 //   AddExample(&textfield_example);
 
-  ButtonExample button_example(this);
-  AddExample(&button_example);
+  ButtonExample* button_example = new ButtonExample(this);
+  AddExample(button_example);
 
 //   BubbleExample bubble_example(this);
 //   AddExample(&bubble_example);
