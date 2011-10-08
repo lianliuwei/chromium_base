@@ -204,7 +204,11 @@
           'winmm.lib',
           'shlwapi.lib',
         ],
-
+        'DelayLoadDLLs': [
+          'dbghelp.dll',
+          'dwmapi.dll',
+          'uxtheme.dll',
+        ],
         'AdditionalLibraryDirectories': [
         ],
         'GenerateDebugInformation': 'true',
