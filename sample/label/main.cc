@@ -9,6 +9,8 @@
 #include "views/layout/fill_layout.h"
 #include "views/widget/widget.h"
 #include "views/widget/widget_delegate.h"
+#include "views/controls/label.h"
+#include "ui/base/keycodes/keyboard_codes.h"
 
 class ExampleView : public views::WidgetDelegate {
 public:
@@ -37,37 +39,54 @@ class MessageView : public views::View {
 public:
     MessageView();
     virtual ~MessageView() {};
-    virtual void OnPaint(gfx::Canvas* canvas);
     virtual gfx::Size GetPreferredSize();
     virtual bool OnMousePressed(const views::MouseEvent& event);
+    virtual void OnMouseMoved(const views::MouseEvent& event);
+    virtual bool OnKeyPressed(const views::KeyEvent& event);
+
 private:
     int count_;
+    views::Label* label_;
 };
 
 MessageView::MessageView() 
     : count_(0) {
+    set_focusable(true);
+    label_ = new views::Label();
+    label_->SetColor(SkColorSetRGB(255, 255, 255));
+    label_->SetLayoutManager(new views::FillLayout());
+    AddChildView(label_);
+    label_->set_border(views::Border::CreateEmptyBorder(10, 10, 10, 10));
     set_background(
         views::Background::CreateSolidBackground(SkColorSetRGB(0, 0, 0)));
     set_border(views::Border::CreateSolidBorder(10, SkColorSetRGB(125, 125, 125)));
 }
 
-void MessageView::OnPaint(gfx::Canvas* canvas) {
-    View::OnPaint(canvas);
-    gfx::Rect rect = bounds();
-    string16 str;
-    base::StringAppendF(&str, L"blackView count: %d", count_);
-    canvas->DrawStringInt(str,
-                          ResourceBundle::GetSharedInstance().GetFont(
-                            ResourceBundle::BaseFont),
-                          SkColorSetRGB(255, 255, 255),
-                          rect.x(), rect.y(), rect.width(), rect.height(),
-                          gfx::Canvas::TEXT_ALIGN_CENTER);
-}
-
 bool MessageView::OnMousePressed(const views::MouseEvent& event){
     count_++;
-    SchedulePaint();
+    string16 str;
+    base::StringAppendF(&str, L"blackView count: %d", count_);
+    label_->SetText(str);
+    // trigger the label mouse over background change
+    label_->OnMouseMoved(event);
+
     return true;
+}
+
+void MessageView::OnMouseMoved(const views::MouseEvent& event){
+    label_->OnMouseMoved(event);
+}
+
+bool MessageView::OnKeyPressed(const views::KeyEvent& event){
+    switch (event.key_code())
+    {
+    case ui::VKEY_B:
+        label_->SetMouseOverBackground(
+            views::Background::CreateVerticalGradientBackground(
+                SkColorSetRGB(255,255,0), SkColorSetRGB(120, 120, 0)));
+    	return true;
+    }
+    return false;
 }
 
 gfx::Size MessageView::GetPreferredSize() {
@@ -77,11 +96,14 @@ ExampleView::ExampleView() : contents_(NULL) {}
 
 void ExampleView::Init() {
     DCHECK(contents_ == NULL) << "Run called more than once.";
-    contents_ = new MessageView();
-//     views::FillLayout* layout = new views::FillLayout();
-//     contents_->SetLayoutManager(layout);
+    MessageView* view;
+    contents_ = view = new MessageView();
+    views::FillLayout* layout = new views::FillLayout();
+    contents_->SetLayoutManager(layout);
     views::Widget* window =
         views::Widget::CreateWindowWithBounds(this, gfx::Rect(0, 0, 850, 300));
+    // init focus the MessageView so you can use keyboard to input
+    view->RequestFocus();
     window->Show();
 }
 

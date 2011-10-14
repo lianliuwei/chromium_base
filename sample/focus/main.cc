@@ -7,8 +7,42 @@
 #include "ui/gfx/canvas_skia.h"
 #include "views/focus/accelerator_handler.h"
 #include "views/layout/fill_layout.h"
+#include "views/layout/box_layout.h"
 #include "views/widget/widget.h"
 #include "views/widget/widget_delegate.h"
+#include "views/controls/label.h"
+#include "ui/base/keycodes/keyboard_codes.h"
+
+
+
+class focusView : public views::View {
+public:
+    focusView();
+    virtual ~focusView() {};
+    virtual void OnPaint(gfx::Canvas* canvas);
+    virtual bool OnMousePressed(const views::MouseEvent& event);
+    virtual gfx::Size GetPreferredSize();
+};
+
+focusView::focusView() {
+    set_focusable(true);
+}
+
+void focusView::OnPaint(gfx::Canvas* canvas){
+    SkColor color = HasFocus() ? SkColorSetRGB(255, 0, 0) 
+        : SkColorSetRGB(0, 255, 0);
+    canvas->FillRectInt(color, 2, 2, width() - 4 , height() - 4);
+    View::OnPaint(canvas);
+}
+
+gfx::Size focusView::GetPreferredSize(){
+    return gfx::Size(100, 100);
+}
+
+bool focusView::OnMousePressed(const views::MouseEvent& event) {
+    RequestFocus();
+    return true;
+}
 
 class ExampleView : public views::WidgetDelegate {
 public:
@@ -33,55 +67,32 @@ private:
     DISALLOW_COPY_AND_ASSIGN(ExampleView);
 };
 
-class MessageView : public views::View {
-public:
-    MessageView();
-    virtual ~MessageView() {};
-    virtual void OnPaint(gfx::Canvas* canvas);
-    virtual gfx::Size GetPreferredSize();
-    virtual bool OnMousePressed(const views::MouseEvent& event);
-private:
-    int count_;
-};
-
-MessageView::MessageView() 
-    : count_(0) {
-    set_background(
-        views::Background::CreateSolidBackground(SkColorSetRGB(0, 0, 0)));
-    set_border(views::Border::CreateSolidBorder(10, SkColorSetRGB(125, 125, 125)));
-}
-
-void MessageView::OnPaint(gfx::Canvas* canvas) {
-    View::OnPaint(canvas);
-    gfx::Rect rect = bounds();
-    string16 str;
-    base::StringAppendF(&str, L"blackView count: %d", count_);
-    canvas->DrawStringInt(str,
-                          ResourceBundle::GetSharedInstance().GetFont(
-                            ResourceBundle::BaseFont),
-                          SkColorSetRGB(255, 255, 255),
-                          rect.x(), rect.y(), rect.width(), rect.height(),
-                          gfx::Canvas::TEXT_ALIGN_CENTER);
-}
-
-bool MessageView::OnMousePressed(const views::MouseEvent& event){
-    count_++;
-    SchedulePaint();
-    return true;
-}
-
-gfx::Size MessageView::GetPreferredSize() {
-    return gfx::Size(200, 200);
-}
 ExampleView::ExampleView() : contents_(NULL) {}
 
 void ExampleView::Init() {
     DCHECK(contents_ == NULL) << "Run called more than once.";
-    contents_ = new MessageView();
-//     views::FillLayout* layout = new views::FillLayout();
-//     contents_->SetLayoutManager(layout);
+    focusView* view;
+    contents_ = new views::View();
+    contents_->set_background(
+        views::Background::CreateSolidBackground(25, 25, 25));
+    for (int i = 0; i < 5; i++)
+    {
+        views::View* hcontent =new views::View();
+        contents_->AddChildView(hcontent);
+        for (int i = 0; i < 5; i++)
+        {
+            view = new focusView();
+            hcontent->AddChildView(view);
+        }
+        hcontent->SetLayoutManager(new views::BoxLayout(
+            views::BoxLayout::kHorizontal, 10, 10, 10));
+    }
+
+    contents_->SetLayoutManager(new views::BoxLayout(
+        views::BoxLayout::kVertical, 10, 10, 10));
     views::Widget* window =
         views::Widget::CreateWindowWithBounds(this, gfx::Rect(0, 0, 850, 300));
+
     window->Show();
 }
 
