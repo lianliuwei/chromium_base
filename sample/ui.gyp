@@ -71,6 +71,28 @@
         '../third_party/libpng/libpng.gyp:libpng',
       ],
     },
-
+    # to work around the VS 2008 in XP no build app_locale_settings bug
+    {
+      'target_name': 'app_locale_settings',
+      'type': 'none',
+      'variables': {
+        'grit_base_out_dir': '<(SHARED_INTERMEDIATE_DIR)/ui',
+      },
+      'actions': [
+        {
+          'action_name': 'app_locale_settings',
+          'variables': {
+            'grit_grd_file': '<(DEPTH)/ui/base/strings/app_locale_settings.grd',
+            'grit_out_dir': '<(grit_base_out_dir)/app_locale_settings',
+          },
+          'includes': [ '../build/grit_action.gypi' ],
+        },
+      ],
+      'direct_dependent_settings': {
+        'include_dirs': [
+          '<(grit_base_out_dir)/app_locale_settings',
+        ],
+      },
+    },
   ],
 }
