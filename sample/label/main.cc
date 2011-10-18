@@ -7,11 +7,126 @@
 #include "ui/gfx/canvas_skia.h"
 #include "views/focus/accelerator_handler.h"
 #include "views/layout/fill_layout.h"
+#include "views/layout/box_layout.h"
 #include "views/widget/widget.h"
 #include "views/widget/widget_delegate.h"
 #include "views/controls/label.h"
 #include "ui/base/keycodes/keyboard_codes.h"
 
+//FillLayout without border
+class FillLayout : public views::LayoutManager {
+public:
+    FillLayout();
+    virtual ~FillLayout();
+
+    // Overridden from LayoutManager:
+    virtual void Layout(views::View* host);
+    virtual gfx::Size GetPreferredSize(views::View* host);
+
+private:
+    DISALLOW_COPY_AND_ASSIGN(FillLayout);
+};
+
+FillLayout::FillLayout() {
+}
+
+FillLayout::~FillLayout() {
+}
+
+void FillLayout::Layout(views::View* host) {
+    if (!host->has_children())
+        return;
+
+    views::View* frame_view = host->child_at(0);
+    gfx::Rect child_area(host->GetLocalBounds());
+    child_area.Inset(host->GetInsets());
+    frame_view->SetBoundsRect(child_area);
+}
+
+gfx::Size FillLayout::GetPreferredSize(views::View* host) {
+    DCHECK_EQ(1, host->child_count());
+    gfx::Size size = host->child_at(0)->GetPreferredSize();
+    gfx::Insets inset = host->GetInsets();
+    size.Enlarge(inset.width(), inset.height());
+    return size;
+}
+
+class LabelView : public views::View {
+public:
+    LabelView();
+    virtual ~LabelView() {};
+
+    static LabelView* CreateLabelViewWithMouseOverBackground();
+    static LabelView* CreateRightAlignLabelView();
+    static LabelView* CreateLabelViewWithMutliLine();
+    static LabelView* CreateLabelViewWithPaintAsFocus();
+    virtual void OnMouseMoved(const views::MouseEvent& event);
+private:
+    views::Label* label_;
+};
+
+// static 
+LabelView* LabelView::CreateLabelViewWithMouseOverBackground() {
+    LabelView* labelView = new LabelView();
+    labelView->label_->SetColor(SkColorSetRGB(255, 0, 0));
+    labelView->label_->set_border(views::Border::CreateEmptyBorder(10, 10, 10, 10));
+    labelView->set_background(
+        views::Background::CreateSolidBackground(SkColorSetRGB(0, 0, 0)));
+    labelView->label_->SetMouseOverBackground(
+        views::Background::CreateVerticalGradientBackground(
+        SkColorSetRGB(255,255,0), SkColorSetRGB(120, 120, 0)));
+    labelView->label_->SetText(L"Mouse Over Background change. ");
+    return labelView;
+}
+
+// static 
+LabelView* LabelView::CreateRightAlignLabelView() {
+    LabelView* labelView = new LabelView();
+    labelView->label_->set_focusable(true);
+    labelView->label_->SetColor(SkColorSetRGB(0, 255, 0));
+    labelView->label_->set_border(views::Border::CreateEmptyBorder(10, 10, 10, 10));
+    labelView->set_background(
+        views::Background::CreateSolidBackground(SkColorSetRGB(0, 0, 40)));
+    labelView->label_->SetHorizontalAlignment(views::Label::ALIGN_RIGHT);
+    labelView->label_->SetTooltipText(L"the Align attribute is seet Right.");// no effect
+    labelView->label_->SetText(L"String Right Align.");
+    return labelView;
+}
+
+// static 
+LabelView* LabelView::CreateLabelViewWithMutliLine() {
+    LabelView* labelView = new LabelView();
+    labelView->label_->SetColor(SkColorSetRGB(0, 0, 255));
+    labelView->label_->set_border(views::Border::CreateEmptyBorder(10, 10, 10, 10));
+    labelView->set_background(
+        views::Background::CreateSolidBackground(SkColorSetRGB(0, 40, 0)));
+    labelView->label_->SetMultiLine(true);
+    labelView->label_->SetText(L"MultiLine label line 1\nline 2\nline 3\nline4");
+    return labelView;
+}
+
+// static 
+LabelView* LabelView::CreateLabelViewWithPaintAsFocus() {
+    LabelView* labelView = new LabelView();
+    labelView->label_->SetColor(SkColorSetRGB(0, 255, 255));
+    labelView->label_->set_border(views::Border::CreateEmptyBorder(10, 10, 10, 10));
+    labelView->set_background(
+        views::Background::CreateSolidBackground(SkColorSetRGB(40, 0, 0)));
+    labelView->label_->set_paint_as_focused(true);
+    labelView->label_->SetText(L"LabelView Paint As Focus.");
+    return labelView;
+}
+LabelView::LabelView() {
+    set_focusable(true);
+    label_ = new views::Label();
+    AddChildView(label_);
+    SetLayoutManager(new FillLayout());
+    set_border(views::Border::CreateEmptyBorder(2,2,2,2));
+}
+
+void LabelView::OnMouseMoved(const views::MouseEvent& event) {
+    label_->OnMouseMoved(event);
+}
 class ExampleView : public views::WidgetDelegate {
 public:
     ExampleView();
@@ -35,75 +150,25 @@ private:
     DISALLOW_COPY_AND_ASSIGN(ExampleView);
 };
 
-class MessageView : public views::View {
-public:
-    MessageView();
-    virtual ~MessageView() {};
-    virtual gfx::Size GetPreferredSize();
-    virtual bool OnMousePressed(const views::MouseEvent& event);
-    virtual void OnMouseMoved(const views::MouseEvent& event);
-    virtual bool OnKeyPressed(const views::KeyEvent& event);
-
-private:
-    int count_;
-    views::Label* label_;
-};
-
-MessageView::MessageView() 
-    : count_(0) {
-    set_focusable(true);
-    label_ = new views::Label();
-    label_->SetColor(SkColorSetRGB(255, 255, 255));
-    label_->SetLayoutManager(new views::FillLayout());
-    AddChildView(label_);
-    label_->set_border(views::Border::CreateEmptyBorder(10, 10, 10, 10));
-    set_background(
-        views::Background::CreateSolidBackground(SkColorSetRGB(0, 0, 0)));
-    set_border(views::Border::CreateSolidBorder(10, SkColorSetRGB(125, 125, 125)));
-}
-
-bool MessageView::OnMousePressed(const views::MouseEvent& event){
-    count_++;
-    string16 str;
-    base::StringAppendF(&str, L"blackView count: %d", count_);
-    label_->SetText(str);
-    // trigger the label mouse over background change
-    label_->OnMouseMoved(event);
-
-    return true;
-}
-
-void MessageView::OnMouseMoved(const views::MouseEvent& event){
-    label_->OnMouseMoved(event);
-}
-
-bool MessageView::OnKeyPressed(const views::KeyEvent& event){
-    switch (event.key_code())
-    {
-    case ui::VKEY_B:
-        label_->SetMouseOverBackground(
-            views::Background::CreateVerticalGradientBackground(
-                SkColorSetRGB(255,255,0), SkColorSetRGB(120, 120, 0)));
-    	return true;
-    }
-    return false;
-}
-
-gfx::Size MessageView::GetPreferredSize() {
-    return gfx::Size(200, 200);
-}
 ExampleView::ExampleView() : contents_(NULL) {}
 
 void ExampleView::Init() {
     DCHECK(contents_ == NULL) << "Run called more than once.";
-    MessageView* view;
-    contents_ = view = new MessageView();
-    views::FillLayout* layout = new views::FillLayout();
-    contents_->SetLayoutManager(layout);
+    contents_ = new views::View();
+    contents_->AddChildView(LabelView::CreateLabelViewWithMouseOverBackground());
+    contents_->AddChildView(LabelView::CreateRightAlignLabelView());
+    contents_->AddChildView(LabelView::CreateLabelViewWithMutliLine());
+    contents_->AddChildView(LabelView::CreateLabelViewWithPaintAsFocus());
+    contents_->SetLayoutManager(new views::BoxLayout(
+        views::BoxLayout::kVertical, 10, 10, 10));
+    contents_->set_background(
+        views::Background::CreateSolidBackground(SkColorSetRGB(25, 25, 25)));
+    contents_->set_border(
+        views::Border::CreateSolidBorder(10, SkColorSetRGB(125, 125, 125)));
     views::Widget* window =
         views::Widget::CreateWindowWithBounds(this, gfx::Rect(0, 0, 850, 300));
-    // init focus the MessageView so you can use keyboard to input
-    view->RequestFocus();
+
+    
     window->Show();
 }
 
