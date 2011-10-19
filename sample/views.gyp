@@ -141,5 +141,41 @@
         }],
       ],
     },
+
+    {
+     'target_name': 'animation',
+      'type': 'executable',
+      'dependencies': [
+        '../base/base.gyp:base',
+        '../skia/skia.gyp:skia',
+        '../ui/ui.gyp:ui',
+        '../ui/ui.gyp:gfx_resources',
+        '../ui/ui.gyp:ui_resources',
+        '../ui/ui.gyp:ui_resources_standard',
+        '../views/views.gyp:views',
+      ],
+      'include_dirs': [
+        '..',
+      ],
+      'sources': [
+        'animation/main.cc',
+        '<(SHARED_INTERMEDIATE_DIR)/ui/gfx/gfx_resources.rc',
+        '<(SHARED_INTERMEDIATE_DIR)/ui/ui_resources/ui_resources.rc',
+        '<(SHARED_INTERMEDIATE_DIR)/ui/ui_resources_standard/ui_resources_standard.rc',
+      ],
+      'conditions': [
+        ['OS=="win"', {
+          'link_settings': {
+            'libraries': [
+              '-limm32.lib',
+              '-loleacc.lib',
+            ]
+          },
+          'include_dirs': [
+            '<(DEPTH)/third_party/wtl/include',
+          ],
+        }],
+      ],
+    },
   ],
 }
