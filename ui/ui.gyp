@@ -71,7 +71,6 @@
         'base/animation/multi_animation.h',
         'base/animation/slide_animation.cc',
         'base/animation/slide_animation.h',
-        'base/animation/test_animation_delegate.h',
         'base/animation/throb_animation.cc',
         'base/animation/throb_animation.h',
         'base/animation/tween.cc',

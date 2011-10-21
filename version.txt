@@ -267,7 +267,6 @@ ui/base/animation/multi_animation.cc
 ui/base/animation/multi_animation.h
 ui/base/animation/slide_animation.cc
 ui/base/animation/slide_animation.h
-ui/base/animation/test_animation_delegate.h
 ui/base/animation/throb_animation.cc
 ui/base/animation/throb_animation.h
 ui/base/animation/tween.cc
@@ -538,7 +537,6 @@ views/view_win.cc
 views/widget/widget.cc
 views/widget/widget_delegate.cc
 views/focus/widget_focus_manager.cc
-views/widget/widget_unittest.cc
 views/widget/window_manager.cc
 views/window/window_shape.cc
 ui/gfx/resources/blur.fx
@@ -674,7 +672,6 @@ views/controls/native/native_view_host_wrapper.h
 views/widget/native_widget.h
 views/widget/native_widget_delegate.h
 views/widget/native_widget_private.h
-views/widget/native_widget_test_utils.h
 views/widget/native_widget_view.h
 views/widget/native_widget_views.h
 views/widget/native_widget_win.h
