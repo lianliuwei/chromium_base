@@ -61,6 +61,7 @@ public:
     static LabelView* CreateLabelViewWithMutliLine();
     static LabelView* CreateLabelViewWithPaintAsFocus();
     virtual void OnMouseMoved(const views::MouseEvent& event);
+
 private:
     views::Label* label_;
 };
@@ -88,7 +89,6 @@ LabelView* LabelView::CreateRightAlignLabelView() {
     labelView->set_background(
         views::Background::CreateSolidBackground(SkColorSetRGB(0, 0, 40)));
     labelView->label_->SetHorizontalAlignment(views::Label::ALIGN_RIGHT);
-    labelView->label_->SetTooltipText(L"the Align attribute is seet Right.");// no effect
     labelView->label_->SetText(L"String Right Align.");
     return labelView;
 }
