@@ -90,5 +90,21 @@
       ],
     },
 
+    {
+      'includes': [ 'views_exe.gypi' ],
+      'target_name': 'EmbeddingInWin32',
+      'sources': [
+        'EmbeddingInWin32/BullsEye.Cur',
+        'EmbeddingInWin32/Cursor.cc',
+        'EmbeddingInWin32/Cursor.h',
+        'EmbeddingInWin32/Cursor.Rc',
+      ],
+      'msvs_settings': {
+        'VCLinkerTool': {
+          #   2 == /SUBSYSTEM:WINDOWS
+          'SubSystem': '2',
+        },
+      },
+    },
  ],
 }
