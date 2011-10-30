@@ -192,6 +192,10 @@
         'system_monitor/system_monitor.cc',
         'system_monitor/system_monitor_win.cc',
         'observer_list_threadsafe.h',
+        'message_loop_embed.h',
+        'message_loop_embed.cc',
+        'message_pump_embed_win.h',
+        'message_pump_embed_win.cc',
       ],
       'include_dirs': [
           '..',

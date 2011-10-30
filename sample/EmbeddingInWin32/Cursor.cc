@@ -28,12 +28,13 @@
 
 #include "cursor.h"
 
+#include "view.h"
+
 #include "base/at_exit.h"
 #include "base/command_line.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/base/ui_base_paths.h"
-#include "views/widget/widget.h"
-#include "views/widget/widget_delegate.h"
+#include "base/message_loop_embed.h"
 
 HINSTANCE hInst = NULL;
 HCURSOR hSaveCursor = NULL;                 /* handle to current cursor      */
@@ -48,81 +49,6 @@ RECT Rect;                                  /* selection rectangle           */
 MPOINT ptCursor;                            /* x and y coordinates of cursor */
 INT repeat = 1;                             /* repeat count of keystroke     */
 
-class ExampleView : public views::WidgetDelegate {
-public:
-    ExampleView();
-    virtual ~ExampleView() {};
-
-    // Creates all the examples and shows the window.
-    void Init(gfx::NativeWindow parent);
-
-private:
-    // views::WidgetDelegate implementation:
-    virtual bool CanResize() const OVERRIDE;
-    virtual bool CanMaximize() const OVERRIDE;
-    virtual std::wstring GetWindowTitle() const OVERRIDE;
-    virtual views::View* GetContentsView() OVERRIDE;
-    virtual void WindowClosing() OVERRIDE;
-    virtual views::Widget* GetWidget() OVERRIDE;
-    virtual const views::Widget* GetWidget() const OVERRIDE;
-    virtual views::NonClientFrameView* CreateNonClientFrameView() OVERRIDE;
-    views::View* contents_;
-
-    DISALLOW_COPY_AND_ASSIGN(ExampleView);
-};
-
-ExampleView::ExampleView() : contents_(NULL) {}
-
-void ExampleView::Init(gfx::NativeWindow parent) {
-    using namespace views;
-    DCHECK(contents_ == NULL) << "Run called more than once.";
-    contents_ = new View();
-    contents_->set_background(
-        Background::CreateSolidBackground(125, 25, 25));
-    contents_->SetSize(gfx::Size(200, 200));
-    Widget* widget = new Widget;
-    Widget::InitParams params;
-    params.delegate = this;
-    params.parent = parent;
-    params.child = true;
-    params.top_level = false;
-    params.type = Widget::InitParams::TYPE_CONTROL; // only this type can be add as child View
-    widget->Init(params);
-    widget->SetContentsView(contents_); // must after Init because it use root_view
-    widget->SetSize(gfx::Size(200, 200));
-    widget->Show();
-}
-
-bool ExampleView::CanResize() const {
-    return false;
-}
-
-bool ExampleView::CanMaximize() const {
-    return true;
-}
-
-std::wstring ExampleView::GetWindowTitle() const {
-    return L"";
-}
-
-views::View* ExampleView::GetContentsView() {
-    return contents_;
-}
-
-void ExampleView::WindowClosing() {
-}
-
-views::Widget* ExampleView::GetWidget() {
-    return contents_->GetWidget();
-}
-
-const views::Widget* ExampleView::GetWidget() const {
-    return contents_->GetWidget();
-}
-
-views::NonClientFrameView* ExampleView::CreateNonClientFrameView(){
-    return NULL;
-}
 
 ExampleView* gView  = NULL;
 /****************************************************************************
@@ -132,11 +58,8 @@ ExampleView* gView  = NULL;
     PURPOSE: calls initialization function, processes message loop
 
 ****************************************************************************/
-int WINAPI WinMain (
-       __in HINSTANCE hInstance,
-       __in_opt HINSTANCE hPrevInstance,
-       __in_opt LPSTR lpCmdLine,
-       __in int nCmdShow )
+int WINAPI WinMain (__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance,
+       __in_opt LPSTR lpCmdLine, __in int nCmdShow )
 {
     MSG msg;                                 /* message                      */
     BOOL bRet = FALSE;                     /* TRUE if getmessage failed    */
@@ -154,12 +77,13 @@ int WINAPI WinMain (
     {
         return FALSE;
     }
+   MessageLoopForEmbed messageLoopEmbed;
+   MessageLoopForEmbed::current()->Start();  
 
     if (!InitInstance(hInstance, nCmdShow))
     {
         return FALSE;
     }
-    
     
     while ((bRet = GetMessage(&msg, NULL, 0, 0)) !=0)
     {
@@ -181,15 +105,7 @@ int WINAPI WinMain (
     return (int) msg.wParam;
 }
 
-/****************************************************************************
-
-    FUNCTION: InitApplication(HANDLE)
-
-    PURPOSE: Initializes window data and registers window class
-
-****************************************************************************/
-BOOL InitApplication (
-    HINSTANCE hInstance)
+BOOL InitApplication (HINSTANCE hInstance)
 {
     WNDCLASS wc = {0};
 
@@ -204,16 +120,7 @@ BOOL InitApplication (
     return (RegisterClass(&wc));
 }
 
-/****************************************************************************
-
-    FUNCTION:  InitInstance(HANDLE, int)
-
-    PURPOSE:  Saves instance handle and creates main window
-
-****************************************************************************/
-BOOL InitInstance(
-    HINSTANCE hInstance,
-    INT nCmdShow)
+BOOL InitInstance(HINSTANCE hInstance, INT nCmdShow)
 {
     BOOL bSuccess = FALSE;
     HWND hWnd = NULL;
@@ -224,7 +131,7 @@ BOOL InitInstance(
 
     hWnd = CreateWindowW (
         TEXT ("CursorWClass"),
-        TEXT ("Cursor Sample Application"),
+        TEXT ("Embedding google Views Sample Application"),
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, 0,
         CW_USEDEFAULT, 0,
@@ -240,45 +147,7 @@ BOOL InitInstance(
     return bSuccess;
 }
 
-/****************************************************************************
-
-    FUNCTION: MainWndProc(HWND, unsigned, WPARAM, LPARAM)
-
-    PURPOSE:  Processes messages
-
-    MESSAGES:
-
-        WM_COMMAND     - application menu (About dialog box)
-        WM_CHAR        - ASCII key value received
-        WM_LBUTTONDOWN - left mouse button
-        WM_MOUSEMOVE   - mouse movement
-        WM_LBUTTONUP   - left button released
-        WM_KEYDOWN     - key pressed
-        WM_KEYUPS      - key released
-        WM_PAINT       - update window
-        WM_DESTROY     - destroy window
-
-    COMMENTS:
-
-        When the left mouse button is pressed, btrack is set to TRUE so that
-        the code for WM_MOUSEMOVE will keep track of the mouse and update
-        the box accordingly.  Once the button is released, btrack is set to
-        FALSE, and the current position is saved.  Holding the SHIFT key
-        while pressing the left button will extend the current box rather
-        then erasing it and starting a new one.
-
-        When an arrow key is pressed, the cursor is repositioned in the
-        direction of the arrow key.  A repeat count is kept so that the
-        longer the user holds down the arrow key, the faster it will move.
-        As soon as the key is released, the repeat count is set to 1 for
-        normal cursor movement.
-
-****************************************************************************/
-LRESULT CALLBACK MainWndProc(
-    HWND hWnd, 
-    UINT message, 
-    WPARAM wParam, 
-    LPARAM lParam)
+LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     POINT pt = {0};
     HDC hDC = NULL;
@@ -481,24 +350,7 @@ exit_func:
     }
 }
 
-
-/****************************************************************************
-
-    FUNCTION: About(HWND, unsigned, WPARAM, LPARAM)
-
-    PURPOSE:  Processes messages for "About" dialog box
-
-    MESSAGES:
-
-        WM_INITDIALOG - initialize dialog box
-        WM_COMMAND    - Input received
-
-****************************************************************************/
-INT_PTR CALLBACK About(
-    HWND hDlg, 
-    UINT message, 
-    WPARAM wParam,
-    LPARAM lParam)
+INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     BOOL bProcessedMsg = FALSE;
     

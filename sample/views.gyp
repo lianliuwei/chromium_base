@@ -92,12 +92,22 @@
 
     {
       'includes': [ 'views_exe.gypi' ],
+      'target_name': 'progressBar',
+      'sources': [
+        'progressBar/main.cc',
+      ],
+    },
+
+    {
+      'includes': [ 'views_exe.gypi' ],
       'target_name': 'EmbeddingInWin32',
       'sources': [
         'EmbeddingInWin32/BullsEye.Cur',
         'EmbeddingInWin32/Cursor.cc',
         'EmbeddingInWin32/Cursor.h',
         'EmbeddingInWin32/Cursor.Rc',
+        'EmbeddingInWin32/view.h',
+        'EmbeddingInWin32/view.cc',
       ],
       'msvs_settings': {
         'VCLinkerTool': {

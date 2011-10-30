@@ -180,7 +180,7 @@ class BASE_EXPORT MessagePumpForUI : public MessagePumpWin {
   virtual void DoRunLoop();
   void InitMessageWnd();
   void WaitForWork();
-  void HandleWorkMessage();
+  virtual void HandleWorkMessage();
   void HandleTimerMessage();
   bool ProcessNextWindowsMessage();
   bool ProcessMessageHelper(const MSG& msg);

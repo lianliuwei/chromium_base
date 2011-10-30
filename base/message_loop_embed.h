@@ -14,13 +14,9 @@
 // so we need no change the up user. same methods have different affect. user
 // must take care yourself.
 //
-// This class is typically used like so:
-//   MessageLoopForUI::current()->...call some method...
-//
 class BASE_EXPORT MessageLoopForEmbed : public MessageLoopForUI {
 public:
-    MessageLoopForEmbed() {
-    }
+    MessageLoopForEmbed();
     // must take care because loop type maybe MessageLoopForUI
     // Returns the MessageLoopForEmbed of the current thread.
     static MessageLoopForEmbed* current() {

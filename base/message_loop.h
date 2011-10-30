@@ -606,7 +606,7 @@ class BASE_EXPORT MessageLoopForUI : public MessageLoop {
   }
 
 #if defined(OS_WIN)
-  void DidProcessMessage(const MSG& message);
+  virtual void DidProcessMessage(const MSG& message);
 #endif  // defined(OS_WIN)
 
 #if defined(OS_ANDROID)
@@ -617,9 +617,9 @@ class BASE_EXPORT MessageLoopForUI : public MessageLoop {
 #elif !defined(OS_MACOSX)
   // Please see message_pump_win/message_pump_glib for definitions of these
   // methods.
-  void AddObserver(Observer* observer);
-  void RemoveObserver(Observer* observer);
-  void Run(Dispatcher* dispatcher);
+  virtual void AddObserver(Observer* observer);
+  virtual void RemoveObserver(Observer* observer);
+  virtual void Run(Dispatcher* dispatcher);
 
  protected:
   // TODO(rvargas): Make this platform independent.
