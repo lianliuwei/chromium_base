@@ -4,6 +4,8 @@
 
 #include "base/message_pump_embed_win.h"
 
+#include <math.h>
+
 #include "base/logging.h"
 #include "base/win/wrapped_window_proc.h"
 

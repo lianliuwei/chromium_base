@@ -8,22 +8,6 @@
 *       Microsoft samples programs.
 \******************************************************************************/
 
-/****************************************************************************
-
-    PROGRAM: Cursor.c
-
-    PURPOSE: Demonstrates how to manipulate a cursor and select a region
-
-    FUNCTIONS:
-
-        WinMain() - calls initialization function, processes message loop
-        InitApplication() - initializes window data and registers window
-        InitInstance() - saves instance handle and creates main window
-        MainWndProc() - processes messages
-        About() - processes messages for "About" dialog box
-        sieve() - time consuming function, generates primes
-
-****************************************************************************/
 #include <windows.h>
 
 #include "cursor.h"
@@ -32,6 +16,7 @@
 
 #include "base/at_exit.h"
 #include "base/command_line.h"
+#include "base/logging.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/base/ui_base_paths.h"
 #include "base/message_loop_embed.h"
@@ -63,9 +48,14 @@ int WINAPI WinMain (__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance,
 {
     MSG msg;                                 /* message                      */
     BOOL bRet = FALSE;                     /* TRUE if getmessage failed    */
-    
+
     OleInitialize(NULL);
     CommandLine::Init(0, NULL);
+    InitLogging(L"debug.log", 
+        logging::LOG_TO_BOTH_FILE_AND_SYSTEM_DEBUG_LOG, 
+        logging::LOCK_LOG_FILE,
+        logging::DELETE_OLD_LOG_FILE,
+        logging::DISABLE_DCHECK_FOR_NON_OFFICIAL_RELEASE_BUILDS);
     // The exit manager is in charge of calling the dtors of singleton objects.
     base::AtExitManager exit_manager;
     ui::RegisterPathProvider();
@@ -78,7 +68,7 @@ int WINAPI WinMain (__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance,
         return FALSE;
     }
    MessageLoopForEmbed messageLoopEmbed;
-   MessageLoopForEmbed::current()->Start();  
+   MessageLoopForEmbed::current()->Start();
 
     if (!InitInstance(hInstance, nCmdShow))
     {
@@ -98,7 +88,7 @@ int WINAPI WinMain (__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance,
             DispatchMessage (&msg);
         }
     }
-
+    MessageLoopForEmbed::current()->Quit();
     delete gView;
     OleUninitialize();
 

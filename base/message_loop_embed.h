@@ -17,6 +17,7 @@
 class BASE_EXPORT MessageLoopForEmbed : public MessageLoopForUI {
 public:
     MessageLoopForEmbed();
+    virtual ~MessageLoopForEmbed();
     // must take care because loop type maybe MessageLoopForUI
     // Returns the MessageLoopForEmbed of the current thread.
     static MessageLoopForEmbed* current() {
