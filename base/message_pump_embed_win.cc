@@ -121,6 +121,9 @@ void MessagePumpForEmbed::HandleWorkMessage() {
         InterlockedExchange(&have_work_, 0);
         return;
     }
+    // Since we discarded a kMsgHaveWork message, we must update the flag.
+    int old_have_work = InterlockedExchange(&have_work_, 0);
+    DCHECK(old_have_work);
 
     // Now give the delegate a chance to do some work.  He'll let us know if he
     // needs to do more work.
