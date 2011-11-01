@@ -20,6 +20,7 @@
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/base/ui_base_paths.h"
 #include "base/message_loop_embed.h"
+#include "views/focus/accelerator_handler_embed_win.h"
 
 HINSTANCE hInst = NULL;
 HCURSOR hSaveCursor = NULL;                 /* handle to current cursor      */
@@ -69,7 +70,7 @@ int WINAPI WinMain (__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance,
     }
    MessageLoopForEmbed messageLoopEmbed;
    MessageLoopForEmbed::current()->Start();
-
+   views::AcceleratorHandlerEmbedWin::Attach();
     if (!InitInstance(hInstance, nCmdShow))
     {
         return FALSE;
@@ -88,6 +89,7 @@ int WINAPI WinMain (__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance,
             DispatchMessage (&msg);
         }
     }
+    views::AcceleratorHandlerEmbedWin::Detach();
     MessageLoopForEmbed::current()->Quit();
     delete gView;
     OleUninitialize();
