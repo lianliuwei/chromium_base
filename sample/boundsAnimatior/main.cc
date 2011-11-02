@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
     ui::RegisterPathProvider();
     ui::ResourceBundle::InitSharedInstance("en-US");
 
-    MessageLoop main_message_loop(MessageLoop::TYPE_UI);
+    MessageLoopForUI main_message_loop;
 
     // views::TestViewsDelegate delegate;
 
