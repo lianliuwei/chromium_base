@@ -116,5 +116,13 @@
         },
       },
     },
+
+    {
+      'includes': [ 'views_exe.gypi' ],
+      'target_name': 'scrollBar',
+      'sources': [
+        'scrollBar/main.cc',
+      ],
+    },
  ],
 }

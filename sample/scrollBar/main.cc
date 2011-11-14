@@ -10,8 +10,8 @@
 #include "views/layout/box_layout.h"
 #include "views/widget/widget.h"
 #include "views/widget/widget_delegate.h"
-#include "views/controls/label.h"
 #include "ui/base/keycodes/keyboard_codes.h"
+#include "views/controls/scrollbar/native_scroll_bar.h"
 
 // in theory i include addition manifest in the gyp. but gyp have a bug no 
 // generate the right vcxproj. so i add it here.
@@ -30,69 +30,28 @@
                                               language='*'\"")
 #endif
 
-class tooltipView : public views::View {
+class ScrollBarView : public views::View {
 public:
-    tooltipView(int num);
-    virtual ~tooltipView() {};
+    ScrollBarView();
+    virtual ~ScrollBarView() {};
 
-    virtual bool OnMousePressed(const views::MouseEvent& event) OVERRIDE;
-    virtual gfx::Size GetPreferredSize() OVERRIDE;
-    virtual bool GetTooltipText(const gfx::Point& p, string16* tooltip) OVERRIDE;
-    virtual void OnFocus() OVERRIDE;
-
-    void SetTooltipText(const string16& tooltip_text);
-    void SetTooltipText();
+    virtual gfx::Size GetPreferredSize();
 private:
-    string16 tooltip_text_;
-    int num_;
-    int pressed_count_;
+    views::NativeScrollBar* scroll_bar_;
 };
 
-tooltipView::tooltipView(int num)
-    : num_(num)
-    , pressed_count_(0) {
-    set_focusable(true);
-    SetTooltipText();
-    set_background(
-        views::Background::CreateVerticalGradientBackground(
-            SkColorSetRGB(0,0,0), SkColorSetRGB(255, 255, 255)));
+ScrollBarView::ScrollBarView() {
+    views::ScrollBar* bar = scroll_bar_ = new views::NativeScrollBar(false);
+    AddChildView(scroll_bar_);
+    bar->Update(400, 100, 200);
+    SetLayoutManager(new views::FillLayout());
 }
 
-void tooltipView::SetTooltipText(const string16& tooltip_text) {
-    tooltip_text_ = tooltip_text;
+gfx::Size ScrollBarView::GetPreferredSize(){
+    return gfx::Size(25, 400);
 }
 
-void tooltipView::SetTooltipText() {
-    string16 s;
-    s = StringPrintf(L"tooltipView: %d\npressed: %d\n%ls\n", 
-        num_, pressed_count_, HasFocus() ? L"be Focused" : L"No Focus");
-    SetTooltipText(s);
-    TooltipTextChanged();
-}
 
-bool tooltipView::GetTooltipText(const gfx::Point& p, string16* tooltip) {
-    DCHECK(tooltip);
-    if (tooltip_text_.empty())
-        return false;
-    else  {
-        *tooltip = tooltip_text_;
-        return true;
-    }
-}
-gfx::Size tooltipView::GetPreferredSize() {
-    return gfx::Size(100, 100);
-}
-
-bool tooltipView::OnMousePressed(const views::MouseEvent& event) {
-    RequestFocus();
-    pressed_count_ ++;
-    SetTooltipText();
-    return true;
-}
-
-void tooltipView::OnFocus(){
-    SetTooltipText();
-}
 
 class ExampleView : public views::WidgetDelegate {
 public:
@@ -121,25 +80,17 @@ ExampleView::ExampleView() : contents_(NULL) {}
 
 void ExampleView::Init() {
     DCHECK(contents_ == NULL) << "Run called more than once.";
-    tooltipView* view;
+    ScrollBarView* view;
     contents_ = new views::View();
     contents_->set_background(
         views::Background::CreateSolidBackground(25, 25, 25));
     for (int i = 0; i < 5; i++)
     {
-        views::View* hcontent =new views::View();
-        contents_->AddChildView(hcontent);
-        for (int j = 0; j < 5; j++)
-        {
-            view = new tooltipView(i*5 + j);
-            hcontent->AddChildView(view);
-        }
-        hcontent->SetLayoutManager(new views::BoxLayout(
-            views::BoxLayout::kHorizontal, 10, 10, 10));
+        view = new ScrollBarView();
+        contents_->AddChildView(view);
     }
-
     contents_->SetLayoutManager(new views::BoxLayout(
-        views::BoxLayout::kVertical, 10, 10, 10));
+        views::BoxLayout::kHorizontal, 10, 10, 10));
     views::Widget* window =
         views::Widget::CreateWindowWithBounds(this, gfx::Rect(0, 0, 850, 300));
 
@@ -193,7 +144,7 @@ int main(int argc, char** argv) {
     ui::RegisterPathProvider();
     ui::ResourceBundle::InitSharedInstance("en-US");
 
-    MessageLoop main_message_loop(MessageLoop::TYPE_UI);
+    MessageLoopForUI main_message_loop;
 
     // views::TestViewsDelegate delegate;
 
