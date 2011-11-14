@@ -6,8 +6,6 @@
 #define CONTENT_PUBLIC_BROWSER_NOTIFICATION_OBSERVER_H_
 #pragma once
 
-#include "content/common/content_export.h"
-
 namespace content {
 
 class NotificationDetails;
@@ -15,7 +13,7 @@ class NotificationSource;
 
 // This is the base class for notification observers. When a matching
 // notification is posted to the notification service, Observe is called.
-class CONTENT_EXPORT NotificationObserver {
+class NotificationObserver {
  public:
   NotificationObserver() {}
   virtual ~NotificationObserver() {}

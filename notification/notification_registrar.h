@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "base/basictypes.h"
-#include "content/common/content_export.h"
 
 namespace content {
 
@@ -23,7 +22,7 @@ class NotificationSource;
 // class and use it to register your notifications instead of going through the
 // notification service directly. It will automatically unregister them for
 // you.
-class CONTENT_EXPORT NotificationRegistrar {
+class NotificationRegistrar {
  public:
   // This class must not be derived from (we don't have a virtual destructor so
   // it won't work). Instead, use it as a member in your class.

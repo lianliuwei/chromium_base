@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "content/public/browser/notification_registrar.h"
+#include "notification/notification_registrar.h"
 
 #include <algorithm>
 
 #include "base/logging.h"
 #include "base/threading/platform_thread.h"
-#include "content/browser/notification_service_impl.h"
+#include "notification/notification_service_impl.h"
 
 namespace {
 

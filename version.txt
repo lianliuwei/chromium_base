@@ -827,3 +827,14 @@ from gyp_test@01922df683529dc823f264187e8a1a95aaaed490
 
 DEPS modify by .DEPS.git
 from chromium/src@69b878ded4d5ef2e464b0fb6d5c78fe4c55a0059
+
+notification/notification_details.h by content/public/browser/notification_details.h modify
+notification/notification_observer.h by content/public/browser/notification_observer.h modify
+notification/notification_registrar.cc by content/public/browser/notification_registrar.cc modify
+notification/notification_registrar.h by content/public/browser/notification_registrar.h modify
+notification/notification_service.h by content/public/browser/notification_service.h modify
+notification/notification_source.h by content/public/browser/notification_source.h modify
+notification/notification_types.h by content/public/browser/notification_types.h modify
+notification/notification_service_impl.cc by content/browser/notification_impl.cc modify
+notification/notification_service_impl.h by content/browser/notification_impl.h modify
+from chromium/src@8f30827785366d9a605ea767fdb29352b1dab1ab

@@ -10,13 +10,12 @@
 #define CONTENT_PUBLIC_NOTIFICATION_SERVICE_H_
 #pragma once
 
-#include "content/common/content_export.h"
-#include "content/public/browser/notification_details.h"
-#include "content/public/browser/notification_source.h"
+#include "notification/notification_details.h"
+#include "notification/notification_source.h"
 
 namespace content {
 
-class CONTENT_EXPORT NotificationService {
+class NotificationService {
  public:
   // Returns the NotificationService object for the current thread, or NULL if
   // none.

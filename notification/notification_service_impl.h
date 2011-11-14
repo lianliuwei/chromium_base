@@ -9,15 +9,14 @@
 #include <map>
 
 #include "base/observer_list.h"
-#include "content/common/content_export.h"
-#include "content/public/browser/notification_service.h"
+#include "notification/notification_service.h"
 
 namespace content {
 class NotificationObserver;
 class NotificationRegistrar;
 }
 
-class CONTENT_EXPORT NotificationServiceImpl
+class NotificationServiceImpl
     : public content::NotificationService {
  public:
   static NotificationServiceImpl* current();

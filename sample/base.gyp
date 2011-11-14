@@ -125,5 +125,17 @@
         '../testing/gmock.gyp:gmock',
       ],
     },
+    
+    {
+      'target_name': 'notification',
+      'type': 'executable',
+      'sources': [
+        'notification/main.cc',
+      ],
+      'dependencies': [
+        '../notification/notification.gyp:*',
+        '../base/base.gyp:*',
+      ],
+    },
   ],
 }

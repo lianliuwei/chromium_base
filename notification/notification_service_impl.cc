@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "content/browser/notification_service_impl.h"
+#include "notification/notification_service_impl.h"
 
 #include "base/lazy_instance.h"
 #include "base/threading/thread_local.h"
-#include "content/public/browser/notification_observer.h"
-#include "content/public/browser/notification_types.h"
+#include "notification/notification_observer.h"
+#include "notification/notification_types.h"
 
 static base::LazyInstance<base::ThreadLocalPointer<NotificationServiceImpl> >
     lazy_tls_ptr(base::LINKER_INITIALIZED);
