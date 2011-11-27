@@ -124,5 +124,17 @@
         'scrollBar/main.cc',
       ],
     },
+
+    {
+      'includes': [ 'views_exe.gypi' ],
+      'target_name': 'polygonEdit',
+      'sources': [
+        'polygonEdit/main.cc',
+        'polygonEdit/edit_view.h',
+        'polygonEdit/edit_view.cc',
+        'polygonEdit/polygon.h',
+        'polygonEdit/polygon.cc',
+      ],
+    },
  ],
 }
