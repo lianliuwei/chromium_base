@@ -5,7 +5,6 @@
 #include "views/bubble/bubble_view.h"
 
 #include "ui/base/animation/slide_animation.h"
-#include "views/bubble/bubble_border.h"
 #include "views/controls/label.h"
 #include "views/layout/box_layout.h"
 #include "views/layout/layout_constants.h"

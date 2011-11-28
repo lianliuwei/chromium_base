@@ -1719,8 +1719,8 @@ LRESULT NativeWidgetWin::OnNCHitTest(const CPoint& point) {
   // default window procedure first chance to handle hit testing.
   if (GetWidget()->ShouldUseNativeFrame()) {
     LRESULT result;
-    if (DwmDefWindowProc(GetNativeView(), WM_NCHITTEST, 0,
-                         MAKELPARAM(point.x, point.y), &result)) {
+    if (result = DefWindowProc(GetNativeView(), WM_NCHITTEST, 0,
+                       MAKELPARAM(point.x, point.y))) {
       return result;
     }
   }

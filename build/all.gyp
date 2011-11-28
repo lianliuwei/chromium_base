@@ -13,6 +13,7 @@
 		'../testing/gmock.gyp:*',
         '../views/views.gyp:*',
         '../notification/notification.gyp:*',
+        '../Osc/Osc.gyp:*',
 	  ],
     },
   ],

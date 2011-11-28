@@ -1,3 +1,7 @@
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
 #include <iostream>
 
 #include "base/logging.h"
@@ -7,6 +11,7 @@
 //to release
 int main(int argc, char** argv)
 {
+    int* a =  (int*)malloc(100);
     using namespace logging;
 
     CommandLine::Init(argc, argv);
@@ -37,6 +42,7 @@ int main(int argc, char** argv)
     //close to release global obj
     CloseLogFile();
     CommandLine::Reset();
-    
+
+    _CrtDumpMemoryLeaks();
     return 0;
 }
