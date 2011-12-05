@@ -75,6 +75,9 @@ private:
 
     // 
     gfx::Path path_;
+
+    // the path with the last move point in the end
+    gfx::Path init_path_;
 };
 
 #endif // POLYGONEDIT_POLYGON_H_
