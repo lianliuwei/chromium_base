@@ -194,8 +194,13 @@ int main(int argc, char** argv) {
 
   ui::RegisterPathProvider();
   ui::ResourceBundle::InitSharedInstance("en-US");
-
-  MessageLoop main_message_loop(MessageLoop::TYPE_UI);
+  
+  // I add the messageloop type for embedded int the native windows messageloop
+  // I change some messageLoopForUI method to virtual so you cannot create a
+  // MessageLoop and downcast to MessageLoopForUI. it will cause the virtual method
+  // without init error.
+  // MessageLoopForUi main_message_loop() is wrong so wierd
+  MessageLoopForUI main_message_loop;
 
  // views::TestViewsDelegate delegate;
 
