@@ -30,27 +30,69 @@
                                               language='*'\"")
 #endif
 
-class ScrollBarView : public views::View {
+class ScrollBarView : public views::View
+                    , public views::ScrollBarController {
 public:
     ScrollBarView();
     virtual ~ScrollBarView() {};
 
-    virtual gfx::Size GetPreferredSize();
+    // overridden from the views::ScrollBarController
+    virtual int GetScrollIncrement( views::ScrollBar* source, bool is_page, bool is_positive ) 
+    {
+        if (!is_page)
+            return 1;
+        else {
+            int width = this->GetLocalBounds().width();
+            int height = this->GetLocalBounds().height();
+            if (v_scroll_bar_ == source)
+                return height / 10;
+            else if (h_scroll_bar_ == source)
+                return width / 10;
+            else
+                NOTREACHED();
+        }
+    }
+
+    virtual void ScrollToPosition( views::ScrollBar* source, int position ) 
+    {
+    }
+
+    // overridden from views::View
+    virtual void OnBoundsChanged(const gfx::Rect& previous_bounds) {
+        int width = this->GetLocalBounds().width();
+        int height = this->GetLocalBounds().height();
+        v_scroll_bar_->Update(height / 10, height, 0);
+        h_scroll_bar_->Update(width / 10, width, 0);
+    }
+
+    virtual void Layout() {
+        static const int scroll_bar_size = 15;
+        int width = this->GetLocalBounds().width();
+        int height = this->GetLocalBounds().height();
+        if (width < scroll_bar_size || height < scroll_bar_size) {
+            v_scroll_bar_->SetVisible(false);
+            h_scroll_bar_->SetVisible(false);
+            return;
+        }
+        v_scroll_bar_->SetVisible(true);
+        h_scroll_bar_->SetVisible(true);
+        v_scroll_bar_->SetBounds(width - scroll_bar_size, 0, scroll_bar_size, height - scroll_bar_size);
+        h_scroll_bar_->SetBounds(0, height - scroll_bar_size, width - scroll_bar_size, scroll_bar_size);
+    }
+
 private:
-    views::NativeScrollBar* scroll_bar_;
+    views::ScrollBar* v_scroll_bar_;
+    views::ScrollBar* h_scroll_bar_;
 };
 
 ScrollBarView::ScrollBarView() {
-    views::ScrollBar* bar = scroll_bar_ = new views::NativeScrollBar(false);
-    AddChildView(scroll_bar_);
-    bar->Update(400, 100, 200);
-    SetLayoutManager(new views::FillLayout());
+    v_scroll_bar_ = new views::NativeScrollBar(false);
+    h_scroll_bar_ = new views::NativeScrollBar(true);
+    v_scroll_bar_->set_controller(this);
+    h_scroll_bar_->set_controller(this);
+    AddChildView(v_scroll_bar_);
+    AddChildView(h_scroll_bar_);
 }
-
-gfx::Size ScrollBarView::GetPreferredSize(){
-    return gfx::Size(25, 400);
-}
-
 
 
 class ExampleView : public views::WidgetDelegate {
@@ -81,16 +123,9 @@ ExampleView::ExampleView() : contents_(NULL) {}
 void ExampleView::Init() {
     DCHECK(contents_ == NULL) << "Run called more than once.";
     ScrollBarView* view;
-    contents_ = new views::View();
-    contents_->set_background(
-        views::Background::CreateSolidBackground(25, 25, 25));
-    for (int i = 0; i < 5; i++)
-    {
-        view = new ScrollBarView();
-        contents_->AddChildView(view);
-    }
-    contents_->SetLayoutManager(new views::BoxLayout(
-        views::BoxLayout::kHorizontal, 10, 10, 10));
+
+    contents_ = view = new ScrollBarView();
+   
     views::Widget* window =
         views::Widget::CreateWindowWithBounds(this, gfx::Rect(0, 0, 850, 300));
 
