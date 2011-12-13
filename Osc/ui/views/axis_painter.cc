@@ -11,7 +11,7 @@ AxisPainter::AxisPainter( SkColor line, int line_width,
     , line_width_(line_width)
     , grid_(grid)
     , v_grid_(v_grid)
-    , v_grid_div_(v_grid_div_)
+    , v_grid_div_(v_grid_div)
     , h_grid_(h_grid)
     , h_grid_div_(h_grid_div) {
     CHECK(v_grid_ > 0 && v_grid_div_ > 0 

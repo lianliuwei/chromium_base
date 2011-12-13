@@ -8,8 +8,11 @@ void AxisBackground::Paint( gfx::Canvas* canvas, views::View* view ) const {
     // Fill the background. Note that we don't constrain to the bounds as
     // canvas is already clipped for us.
     canvas->AsCanvasSkia()->drawColor(get_color());
-    // paint the axis
-    axis_painter_->Paint(view->width(), view->height(), canvas);
+    // paint the axis on the view but no the border area that paint by the border
+    // itself.
+    gfx::Rect rect = view->GetContentsBounds();
+    views::Painter::PaintPainterAt(rect.x(), rect.y(), rect.width(), rect.height(),
+        canvas, axis_painter_.get());
 }
 
 bool AxisBackground::NormalSize( gfx::Size& size ) {

@@ -29,6 +29,8 @@ public:
 private:
     // the painter of axis
     scoped_ptr<AxisPainter> axis_painter_;
+    
+    DISALLOW_COPY_AND_ASSIGN(AxisBackground);
 };
 
 #endif //OSC_UI_VIEWS_AXIS_BACKGROUND_H_

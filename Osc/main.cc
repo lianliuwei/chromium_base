@@ -1,8 +1,15 @@
 #include "base/at_exit.h"
 #include "base/command_line.h"
 #include "base/process_util.h"
+#include "base/message_loop.h"
+#include "ui/base/resource/resource_bundle.h"
+#include "ui/base/ui_base_paths.h"
+#include "views/focus/accelerator_handler.h"
 #include "views/widget/widget.h"
 #include "views/widget/widget_delegate.h"
+#include "Osc/ui/views/yt_view.h"
+#include "Osc/ui/views/yt_view_container.h"
+#include "views/background.h"
 
 class ExampleView : public views::WidgetDelegate {
 public:
@@ -31,28 +38,11 @@ ExampleView::ExampleView() : contents_(NULL) {}
 
 void ExampleView::Init() {
     DCHECK(contents_ == NULL) << "Run called more than once.";
-    AnimationView* view;
-    contents_ = new views::View();
+    YTView* yt = new YTView();
+    yt->SetGrid(6, 4);
+    contents_ = new YTViewContainer(yt);
     contents_->set_background(
-        views::Background::CreateSolidBackground(25, 25, 25));
-
-    view = new AnimationView(ui::Tween::LINEAR);
-    contents_->AddChildView(view);
-    view = new AnimationView(ui::Tween::EASE_OUT);
-    contents_->AddChildView(view);
-    view = new AnimationView(ui::Tween::EASE_IN);
-    contents_->AddChildView(view);
-    view = new AnimationView(ui::Tween::EASE_IN_OUT);
-    contents_->AddChildView(view);
-    view = new AnimationView(ui::Tween::FAST_IN_OUT);
-    contents_->AddChildView(view);
-    //     view = new AnimationView(ui::Tween::EASE_OUT_SNAP); // will break because ASSERT
-    //     contents_->AddChildView(view);
-    view = new AnimationView(ui::Tween::ZERO);
-    contents_->AddChildView(view);
-
-    contents_->SetLayoutManager(new views::BoxLayout(
-        views::BoxLayout::kHorizontal, 10, 10, 10));
+        views::Background::CreateSolidBackground(SkColorSetRGB(40, 0, 0)));
     views::Widget* window =
         views::Widget::CreateWindowWithBounds(this, gfx::Rect(0, 0, 850, 400));
 
