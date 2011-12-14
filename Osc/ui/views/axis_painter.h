@@ -26,9 +26,14 @@ public:
 private:
     // paint the dash 2*grid-1 grid lines
     // the w h must be normal
+    // the vertical is the Axis direction 
+    // draw the grid intersect the Axis
     void PaintGrid( int w, int h, gfx::Canvas* canvas, bool vertical );
     
     // paint the 2 Axis lines in the middle
+    // the w h must be normal
+    // the vertical is the Axis direction
+    // draw the line the on the Axis
     void PaintAxis( int w, int h, gfx::Canvas* canvas, bool vertical );
 
 private:
