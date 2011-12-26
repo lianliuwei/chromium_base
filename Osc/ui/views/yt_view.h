@@ -9,7 +9,7 @@
 class YTView : public views::View
 {
 public:
-    explicit YTView();
+    YTView();
     virtual ~YTView();
     
     // see commit in axis_painter.h

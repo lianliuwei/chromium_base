@@ -11,11 +11,11 @@
 class AxisBackground : public views::Background
 {
 public:
-    explicit AxisBackground(SkColor background,
-                            SkColor line, int line_width, 
-                            SkColor grid, 
-                            int v_grid, int v_grid_div, 
-                            int h_grid, int h_grid_div);
+    AxisBackground(SkColor background,
+                   SkColor line, int line_width, 
+                   SkColor grid, 
+                   int v_grid, int v_grid_div, 
+                   int h_grid, int h_grid_div);
     virtual ~AxisBackground() {}
 
     // overrides from views::background
