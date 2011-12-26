@@ -12,6 +12,7 @@
 #include "views/widget/widget_delegate.h"
 #include "ui/base/keycodes/keyboard_codes.h"
 #include "views/controls/scrollbar/native_scroll_bar.h"
+#include "views/controls/label.h"
 
 // in theory i include addition manifest in the gyp. but gyp have a bug no 
 // generate the right vcxproj. so i add it here.
@@ -55,6 +56,12 @@ public:
 
     virtual void ScrollToPosition( views::ScrollBar* source, int position ) 
     {
+        if (source == v_scroll_bar_)
+            v_ = position;
+        else if (source == h_scroll_bar_)
+            h_ = position;
+        string16 str;
+        label_->SetText(StringPrintf(L"vertical position: %d\nhorizon position: %d", v_, h_));
     }
 
     // overridden from views::View
@@ -78,20 +85,28 @@ public:
         h_scroll_bar_->SetVisible(true);
         v_scroll_bar_->SetBounds(width - scroll_bar_size, 0, scroll_bar_size, height - scroll_bar_size);
         h_scroll_bar_->SetBounds(0, height - scroll_bar_size, width - scroll_bar_size, scroll_bar_size);
+        label_->SetBounds(0, 0, width - scroll_bar_size, height - scroll_bar_size);
     }
 
 private:
     views::ScrollBar* v_scroll_bar_;
     views::ScrollBar* h_scroll_bar_;
+    views::Label* label_;
+    int v_;
+    int h_;
 };
 
-ScrollBarView::ScrollBarView() {
+ScrollBarView::ScrollBarView() : v_(0), h_(0) {
     v_scroll_bar_ = new views::NativeScrollBar(false);
     h_scroll_bar_ = new views::NativeScrollBar(true);
+    label_ = new views::Label();
+    label_->SetColor(SkColorSetRGB(255, 0, 0));
+    label_->SetMultiLine(true);
     v_scroll_bar_->set_controller(this);
     h_scroll_bar_->set_controller(this);
     AddChildView(v_scroll_bar_);
     AddChildView(h_scroll_bar_);
+    AddChildView(label_);
 }
 
 
