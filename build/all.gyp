@@ -14,6 +14,7 @@
         '../views/views.gyp:*',
         '../notification/notification.gyp:*',
         '../Osc/Osc.gyp:*',
+        '../Osc/sample/sample.gyp:*',
 	  ],
     },
   ],

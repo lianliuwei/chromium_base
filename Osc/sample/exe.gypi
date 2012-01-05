@@ -35,8 +35,8 @@
       },
       'msvs_settings': {
         'VCLinkerTool': {
-          #   2 == /SUBSYSTEM:WINDOWS
-          'SubSystem': '2',
+          #   2 == /SUBSYSTEM:CONSOLE
+          'SubSystem': '1',
         },
       }, 
     }],
