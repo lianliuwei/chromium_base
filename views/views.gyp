@@ -273,6 +273,8 @@
         'focus/accelerator_handler_touch.cc',
         #'focus/accelerator_handler_wayland.cc',
         'focus/accelerator_handler_win.cc',
+        'focus/accelerator_handler_embed_win.h',
+        'focus/accelerator_handler_embed_win.cc',
         'focus/external_focus_tracker.cc',
         'focus/external_focus_tracker.h',
         'focus/focus_manager.cc',
