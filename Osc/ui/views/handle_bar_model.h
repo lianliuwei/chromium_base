@@ -19,6 +19,9 @@ public:
   // return the value of a particular ID.
   virtual string16 GetText(int ID) = 0;
 
+  // return the Value of a particular ID. to support the runtime change color.
+  virtual SkColor GetColor(int ID) = 0;
+
   // return the Icon that can be displayed in the handleBar. HandleBar have
   // mode of how to displayed the Text and Icon, may be Text only, Icon only,
   // Text and Icon.
@@ -35,10 +38,6 @@ public:
 
   // return if the handle could be see
   virtual bool IsVisible(int ID) = 0;
-
-  // return if the handle if the Activated. the HandleBar may show the Activate
-  // over other's, and the default one to move by keyboard.
-  virtual int IsActivated(int ID) = 0;
 
   // set the observer for the model. The HandleBarModel should NOT take ownership
   // of the observer.

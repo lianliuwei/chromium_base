@@ -9,14 +9,14 @@ using namespace views;
 
 HandleBar::HandleBar(HandleBarModel* model, 
                      bool is_horiz, 
-                     gfx::Font font, SkColor color, 
+                     gfx::Font font,
                      int start, int end)
-  : model_(model)
+  : model_(NULL)
+  , observer_(NULL)
   , is_horiz_(is_horiz)
-  , font_(font)
-  , color_(color) {
+  , font_(font) {
   SetMoveRange(start, end);
-  UpdateFromModel();
+  SetModel(model);
 
 }
 
@@ -50,19 +50,21 @@ void HandleBar::SetModel(HandleBarModel* model) {
 
 void HandleBar::ActiveHandle(int ID) {
   Handle* handle = GetHandle(ID);
-  // move the handle to 0 so it's draw first, look like it's on top.
-  ReorderChildView(handle, 0);
+  // move the handle to the end so it's draw first, look like it's on top.
+  ReorderChildView(handle, -1);
   // draw the handle to show the on top effect.
   handle->SchedulePaint();
   // notify the observer the ID handle is active.
-  observer_->OnHandleActive(true, ID);
+  observer_->OnHandleActive(ID);
 }
 
 void HandleBar::MoveHandle(int ID, int dest) {
   Handle* handle = GetHandle(ID);
   DCHECK(handle) << "can not find the handle from ID: " << ID;
   if (observer_) {
-    observer_->OnHandleMove(ID, CalculateOffset(dest, handle->width()));
+    int offset = CalculateOffset(dest, IsHorizontal() ? handle->width() :
+                                 handle->height());
+    observer_->OnHandleMove(ID, offset);
   }
 
 }
@@ -80,6 +82,7 @@ void HandleBar::UpdateFromModel() {
     for (int i = 0; i < model_->Count(); i++) {
       Handle* handle = new Handle(this);
       SetHandle(handle, model_->GetID(i));
+      SetHandlePos(handle, model_->GetID(i));
       AddChildView(handle);
       handles_.push_back(handle);
     }
@@ -90,7 +93,6 @@ void HandleBar::UpdateHandle(int ID) {
   Handle* handle = GetHandle(ID);
   SetHandle(handle, ID);
   SetHandlePos(handle, ID);
-  UpdateHandlePos(ID);
 }
 
 void HandleBar::UpdateHandlePos(int ID) {
@@ -113,11 +115,10 @@ void HandleBar::SetHandle(Handle* handle, int ID) {
   handle->SetVisible(model_->IsVisible(ID));
   handle->SetEnabled(model_->IsEnable(ID));
   handle->SetFont(font_);
-  handle->SetEnabledColor(color_);
-  handle->SetDisabledColor(color_);
-  handle->SetHighlightColor(color_);
-  handle->SetHoverColor(color_);
-  handle->SetTextHaloColor(color_);
+  SkColor color = model_->GetColor(ID);
+  handle->SetEnabledColor(color);
+  handle->SetDisabledColor(color);
+  handle->SetHoverColor(color);
   handle->ClearMaxTextSize(); // so can be small
   handle->SetText(model_->GetText(ID));
   handle->SetIcon(model_->GetIcon(ID));
@@ -129,13 +130,70 @@ void HandleBar::SetHandle(Handle* handle, int ID) {
 }
 
 void HandleBar::SetHandlePos(Handle* handle, int ID) {
-  int width = IsHorizontal() ? handle->width() : handle->height();
-  int dest = CalculateDest(model_->GetOffset(ID), width);
+  int w = IsHorizontal() ? handle->width() : handle->height();
+  int dest = CalculateDest(model_->GetOffset(ID), w);
   IsHorizontal() ? handle->SetX(dest) : handle->SetY(dest);
+  // out of range no show
+  // must no interrupt the Drag Handle, can move outside but after that can no
+  // click the handle again
+  int offset = model_->GetOffset(ID);
+  bool enable = handle->IsEnabled();
+  if (offset < start_ || offset > end_) {
+      handle->SetVisible(false);
+  } else {
+    //restore the model enable state
+    handle->SetVisible(model_->IsEnable(ID));
+  }
 }
 
 void HandleBar::SetMoveRange(int start, int end) {
   CHECK(start < end);
   start_ = start;
   end_ = end;
+}
+
+void HandleBar::Layout() {
+  for (std::vector<Handle*>::iterator it = handles_.begin();
+       it != handles_.end(); it++) {
+    (*it)->SetSize(IsHorizontal() ?
+                   gfx::Size((*it)->GetPreferredSize().width(), height())
+                   : gfx::Size(width(), (*it)->GetPreferredSize().height()));
+    SetHandlePos(*it, (*it)->tag());
+  }
+}
+
+gfx::Size HandleBar::GetPreferredSize() {
+  if (IsHorizontal()) {
+    int height = 0;
+    for (std::vector<Handle*>::iterator it = handles_.begin();
+         it != handles_.end(); it++)
+      height = std::max(height, (*it)->GetPreferredSize().height());
+    return gfx::Size(0, height);
+  } else {
+    int width = 0;
+    for (std::vector<Handle*>::iterator it = handles_.begin();
+         it != handles_.end(); it++)
+      width = std::max(width, (*it)->GetPreferredSize().width());
+    return gfx::Size(width, 0);
+  }
+}
+
+gfx::Size HandleBar::GetMinimumSize() {
+  int height = 0;
+  int width = 0;
+  for (std::vector<Handle*>::iterator it = handles_.begin();
+       it != handles_.end(); it++) {
+    height = std::max(height, (*it)->GetMinimumSize().height());
+    width = std::max(width, (*it)->GetMinimumSize().width());
+  }
+  return gfx::Size(width, height);
+}
+
+Handle* HandleBar::GetHandle(int ID) const {
+  for (std::vector<Handle*>::const_iterator it = handles_.begin();
+       it != handles_.end(); it++)
+    if ((*it)->tag() == ID)
+      return *it;
+  DCHECK(FALSE);
+  return NULL;
 }

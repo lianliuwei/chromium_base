@@ -15,8 +15,9 @@ class HandleBarObserver;
 class HandleBar : public views::View
                 , public HandleBarModelObserver {
 public:
-  HandleBar(HandleBarModel* model, bool is_horiz, gfx::Font font,
-            SkColor color, int start, int end);
+  HandleBar(HandleBarModel* model, bool is_horiz, 
+            gfx::Font font,
+            int start, int end);
   // the views delete handle auto
   virtual ~HandleBar() {};
 
@@ -50,17 +51,14 @@ public:
 
   // set the move range of the Handle if Handle outside of the Range show
   // indicate. 
+  // after call this must call layout to replace the handle according to the
+  // new start and end.
   void SetMoveRange(int start, int end);
 
   void SetFont(const gfx::Font& font);
   // Return the font used by this button.
   gfx::Font font() const {
     return font_;
-  }
-
-  void SetColor(SkColor color);
-  SkColor color() const {
-    return color_;
   }
 
 protected:
@@ -76,7 +74,18 @@ protected:
   virtual Handle* GetHandle(int ID) const;
 
   // ui:views methods
-  virtual void OnPaint(gfx::Canvas* canvas) OVERRIDE;
+  // if the HandleBar is vertical, all Handle has the same width, the perferred
+  // height, and place by the offset.
+  // must set the MoveRange 
+  virtual void Layout() OVERRIDE;
+
+  // if vertical, the size width is the most wide of handles PerferredSize.
+  // the height is no meaning
+  virtual gfx::Size GetPreferredSize() OVERRIDE;
+
+  // if vertical, the size width is the most wide of handles of handle Minimumsize.
+  // the height is the most high of handle Minimumsize.
+  virtual gfx::Size GetMinimumSize()OVERRIDE;
 
   // from the handle dest arg to the offset set to model
   virtual int CalculateOffset(int dest, int width) const;
@@ -101,8 +110,6 @@ private:
   HandleBarModel* model_;
 
   gfx::Font font_;
-
-  SkColor color_;
 
   // the start_ and end_ is set by the SetMoveRange. the start_ is less than the
   // end_ the start_ is the point of the offset zero. start_ is using to calculate

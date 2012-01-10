@@ -23,6 +23,7 @@
         'ui/views/handle.cc',
         'ui/views/handle_bar.h',
         'ui/views/handle_bar.cc',
+        'ui/views/handle_bar_observer.h',
         'ui/views/handle_bar_model.h',
         'ui/views/handle_bar_model_observer.h',
       ],

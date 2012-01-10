@@ -10,6 +10,7 @@ Handle::Handle(HandleBar* bar)
   , mouse_offset_(-1)
   , bar_(bar) {
   DCHECK(bar_) << "the Handle need HandleBar object.";
+  set_border(NULL); // no need border
 }
 
 bool Handle::OnMousePressed(const views::MouseEvent& event) {
