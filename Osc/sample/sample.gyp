@@ -5,7 +5,9 @@
       'includes': [ 'exe.gypi' ],
       'target_name': 'AxisBackground',
       'sources': [
-        'AxisBackground/main.cc',
+        'AxisBackground/axis.cc',
+        'main.cc',
+        'example_vew.h',
       ],
        'dependencies': [
 		'../Osc.gyp:osc_views',	
@@ -16,7 +18,9 @@
       'includes': [ 'exe.gypi' ],
       'target_name': 'handleBar',
       'sources': [
-        'handleBar/main.cc',
+        'handleBar/handleBar.cc',
+        'main.cc',
+        'example_vew.h',
       ],
        'dependencies': [
 		'../Osc.gyp:osc_views',	
