@@ -5,6 +5,7 @@
 #include "Osc/ui/views/handle_bar_observer.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "grit/ui_resources.h"
+#include "views/controls/separator.h"
 
 enum handleID {
   text = 0,
@@ -14,15 +15,29 @@ enum handleID {
 };
 
 class HandleBarTestModel : public HandleBarModel
-                         , public HandleBarObserver {
+                         , public HandleBarObserver
+                         , public views::View {
 
 public:
   HandleBarTestModel()
     : observer_(NULL)
     , has_active_(false)
-    , active_id_(-1) {
+    , active_id_(-1)
+    , offset_(100) {
     for (int i = 0; i < ID_COUNT; i++) {
-      offsets_.push_back(i);
+      offsets_.push_back(i*10);
+      // add separator to index the show the offsets
+      indexs_.push_back(new views::Separator());
+      this->AddChildView(indexs_[i]);
+    }
+  }
+
+  virtual void Layout() {
+      if (observer_) {
+          observer_->SetBoundsRect(bounds());
+      }
+    for (int i = 0; i < ID_COUNT; i++) {
+      indexs_[i]->SetBounds(x(), offsets_[i] + GetHandleBarOffset(), width(), 1);
     }
   }
 
@@ -101,7 +116,8 @@ public:
 
   virtual void SetObserver(HandleBarModelObserver* observer) {
     CHECK(observer != NULL);
-    observer_ = observer;
+    observer_ = static_cast<HandleBar*>(observer);
+    this->AddChildView(observer_);
   }
 
 
@@ -111,6 +127,8 @@ public:
     if (ID == limit)
       offset = offset / 20 * 20; // only can move in 20th
     offsets_[ID] = offset;
+    // set the assis separator
+    indexs_[ID]->SetBounds(x(), offsets_[ID]+ GetHandleBarOffset(), width(), 1);
     // notify
     observer_->OnHandleMoved(ID);
   }
@@ -123,41 +141,46 @@ public:
     "Handle " << ID << " be actived";
   }
 
+  int GetHandleBarOffset() { return offset_;}
 
 private:
-  HandleBarModelObserver* observer_;
+  HandleBar* observer_;
   int active_id_;
   int has_active_;
   std::vector<int> offsets_;
+  std::vector<views::Separator*> indexs_;
+  int offset_;
 };
 
 class Window : public ExampleView {
 public:
-    Window() {}
+    Window() : model_(new HandleBarTestModel) {}
     ~Window() {}
 
     virtual void Init();
 
 private:
-    HandleBarTestModel model_;
+    // is also a views so the sys auto delete it.
+    HandleBarTestModel* model_;
 };
 
 void Window::Init() {
   DCHECK(contents_ == NULL) << "Run called more than once.";
   ResourceBundle& rb = ResourceBundle::GetSharedInstance();
-  HandleBar* handle = new HandleBar(&model_, false,
+  HandleBar* handle = new HandleBar(model_, false,
                                     rb.GetFont(ResourceBundle::MediumFont),
-                                    0, 300);
+                                    model_->GetHandleBarOffset(),
+                                    model_->GetHandleBarOffset() + 300);
   // for horizon handlebar
   //contents_ = new HandleBar(&model_, true,
   //                          rb.GetFont(ResourceBundle::MediumFont),
   //                          0, 300);
-  handle->SetObserver(&model_);
-  contents_ = handle;
+  handle->SetObserver(model_);
+  contents_ = model_;
   contents_->set_background(
       views::Background::CreateSolidBackground(SkColorSetRGB(0, 0, 40)));
   views::Widget* window =
-    views::Widget::CreateWindowWithBounds(this, gfx::Rect(0, 0, 850, 400));
+    views::Widget::CreateWindowWithBounds(this, gfx::Rect(0, 0, 450, 400));
 
   window->Show();
 }

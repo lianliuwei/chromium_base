@@ -137,6 +137,9 @@ void HandleBar::SetHandlePos(Handle* handle, int ID) {
   // must no interrupt the Drag Handle, can move outside but after that can no
   // click the handle again
   int offset = model_->GetOffset(ID);
+  // using the real index pos, the CalculateDest() is the handle control offset 
+  // no the index pos, model_->GetOffset(ID) is the logic offset no the real pos
+  offset += start_;
   bool enable = handle->IsEnabled();
   if (offset < start_ || offset > end_) {
       handle->SetVisible(false);
