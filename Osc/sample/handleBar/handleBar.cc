@@ -152,31 +152,21 @@ private:
   int offset_;
 };
 
-class Window : public ExampleView {
-public:
-    Window() : model_(new HandleBarTestModel) {}
-    ~Window() {}
-
-    virtual void Init();
-
-private:
-    // is also a views so the sys auto delete it.
-    HandleBarTestModel* model_;
-};
-
-void Window::Init() {
+void ExampleView::Init() {
   DCHECK(contents_ == NULL) << "Run called more than once.";
+  // is also a views so the sys auto delete it.
+  HandleBarTestModel* model = new HandleBarTestModel; 
   ResourceBundle& rb = ResourceBundle::GetSharedInstance();
-  HandleBar* handle = new HandleBar(model_, false,
+  HandleBar* handle = new HandleBar(model, false,
                                     rb.GetFont(ResourceBundle::MediumFont),
-                                    model_->GetHandleBarOffset(),
-                                    model_->GetHandleBarOffset() + 300);
+                                    model->GetHandleBarOffset(),
+                                    model->GetHandleBarOffset() + 300);
   // for horizon handlebar
   //contents_ = new HandleBar(&model_, true,
   //                          rb.GetFont(ResourceBundle::MediumFont),
   //                          0, 300);
-  handle->SetObserver(model_);
-  contents_ = model_;
+  handle->SetObserver(model);
+  contents_ = model;
   contents_->set_background(
       views::Background::CreateSolidBackground(SkColorSetRGB(0, 0, 40)));
   views::Widget* window =
@@ -185,8 +175,6 @@ void Window::Init() {
   window->Show();
 }
 
-void ExampleView::Init() {}
-
 ExampleView* ExampleView::CreateInstance() {
-  return new Window();
+  return new ExampleView();
 }
