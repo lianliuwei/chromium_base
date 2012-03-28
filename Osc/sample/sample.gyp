@@ -7,7 +7,7 @@
       'sources': [
         'AxisBackground/axis.cc',
         'main.cc',
-        'example_vew.h',
+        'example_view.h',
       ],
        'dependencies': [
 		'../Osc.gyp:osc_views',	
@@ -20,7 +20,7 @@
       'sources': [
         'handleBar/handleBar.cc',
         'main.cc',
-        'example_vew.h',
+        'example_view.h',
       ],
        'dependencies': [
 		'../Osc.gyp:osc_views',	
