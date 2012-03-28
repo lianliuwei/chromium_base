@@ -53,6 +53,7 @@ public:
   // indicate. 
   // after call this must call layout to replace the handle according to the
   // new start and end.
+  // TODO using start and length, for more excat.
   void SetMoveRange(int start, int end);
 
   void SetFont(const gfx::Font& font);
@@ -60,6 +61,14 @@ public:
   gfx::Font font() const {
     return font_;
   }
+
+  // if vertical, the size width is the most wide of handles PerferredSize.
+  // the height is no meaning
+  virtual gfx::Size GetPreferredSize() OVERRIDE;
+
+  // if vertical, the size width is the most wide of handles of handle Minimumsize.
+  // the height is the most high of handle Minimumsize.
+  virtual gfx::Size GetMinimumSize()OVERRIDE;
 
 protected:
   // reset the HandleBar and using the model to create Handles.
@@ -78,14 +87,6 @@ protected:
   // height, and place by the offset.
   // must set the MoveRange 
   virtual void Layout() OVERRIDE;
-
-  // if vertical, the size width is the most wide of handles PerferredSize.
-  // the height is no meaning
-  virtual gfx::Size GetPreferredSize() OVERRIDE;
-
-  // if vertical, the size width is the most wide of handles of handle Minimumsize.
-  // the height is the most high of handle Minimumsize.
-  virtual gfx::Size GetMinimumSize()OVERRIDE;
 
   // from the handle dest arg to the offset set to model
   virtual int CalculateOffset(int dest, int width) const;
