@@ -29,12 +29,47 @@ static const int kGapSize = 4;
 void YTViewContainer::Layout() {
     gfx::Size mini = yt_view_->GetMinimumSize();
     gfx::Size real = size();
+
     int hzbar_height = Horiz_offset_bar_->GetPreferredSize().height();
     int wvbar_width = wave_bar_->GetPreferredSize().width();
     int tgbar_width = trigger_bar_->GetPreferredSize().width();
-    // 
-    mini.Enlarge(2*kGapSize + wvbar_width + tgbar_width,
-        kGapSize + hzbar_height);
+
+    int hz_mini_half_width = Horiz_offset_bar_->GetMinimumSize().width()/2;
+    int wvbar_mini_half_height = wave_bar_->GetMinimumSize().height()/2;
+    int trigger_mini_half_height = trigger_bar_->GetMinimumSize().height()/2;
+    int max_half_height = 0;
+    if (show_wave_bar_ && show_trigger_bar_)
+        max_half_height = std::max(wvbar_mini_half_height, trigger_mini_half_height);
+    else if (show_wave_bar_)
+        max_half_height = wvbar_mini_half_height;
+    else if (show_trigger_bar_)
+        max_half_height = trigger_mini_half_height;
+    else
+        max_half_height = 0;
+
+    int left_need = 0;
+    if (show_wave_bar_ && show_horiz_offset_bar_)
+        left_need = std::max(wvbar_width + kGapSize, hz_mini_half_width);
+    else if (show_wave_bar_)
+        left_need = wvbar_width + kGapSize;
+    else if (show_horiz_offset_bar_)
+        left_need = hz_mini_half_width;
+    else
+        left_need = 0;
+    int top_need =  show_horiz_offset_bar_ ?
+        std::max(hzbar_height + kGapSize, max_half_height) : max_half_height;
+    int right_need = 0;
+    if (show_trigger_bar_ && show_horiz_offset_bar_)
+        right_need = std::max(tgbar_width + kGapSize, hz_mini_half_width);
+    else if (show_trigger_bar_)
+        right_need = tgbar_width + kGapSize;
+    else if (show_horiz_offset_bar_)
+        right_need = hz_mini_half_width;
+    else
+        right_need = 0;
+    int bottom_need = max_half_height;
+
+    mini.Enlarge(left_need + right_need, top_need + bottom_need);
     // no show the YTView if the real is to small
     if(mini.width() > real.width() || mini.height() > real.height()) {
         yt_view_->SetVisible(false);
@@ -42,41 +77,6 @@ void YTViewContainer::Layout() {
         Horiz_offset_bar_->SetVisible(false);
         trigger_bar_->SetVisible(false);
     }else {
-        int hz_mini_half_width = Horiz_offset_bar_->GetMinimumSize().width()/2;
-        int wvbar_mini_half_height = wave_bar_->GetMinimumSize().height()/2;
-        int trigger_mini_half_height = trigger_bar_->GetMinimumSize().height()/2;
-        int max_half_height = 0;
-        if (show_wave_bar_ && show_trigger_bar_)
-            max_half_height = std::max(wvbar_mini_half_height, trigger_mini_half_height);
-        else if (show_wave_bar_)
-            max_half_height = wvbar_mini_half_height;
-        else if (show_trigger_bar_)
-            max_half_height = trigger_mini_half_height;
-        else
-            max_half_height = 0;
-        
-        int left_need = 0;
-        if (show_wave_bar_ && show_horiz_offset_bar_)
-            left_need = std::max(wvbar_width + kGapSize, hz_mini_half_width);
-        else if (show_wave_bar_)
-            left_need = wvbar_width + kGapSize;
-        else if (show_horiz_offset_bar_)
-            left_need = hz_mini_half_width;
-        else
-            left_need = 0;
-        int top_need =  show_horiz_offset_bar_ ?
-            std::max(hzbar_height + kGapSize, max_half_height) : max_half_height;
-        int right_need = 0;
-        if (show_trigger_bar_ && show_horiz_offset_bar_)
-            right_need = std::max(tgbar_width + kGapSize, hz_mini_half_width);
-        else if (show_trigger_bar_)
-            right_need = tgbar_width + kGapSize;
-        else if (show_horiz_offset_bar_)
-            right_need = hz_mini_half_width;
-        else
-            right_need = 0;
-        int bottom_need = max_half_height;
-
         gfx::Rect ytview_rect = GetLocalBounds();
         ytview_rect.Inset(left_need, top_need, right_need, bottom_need);
         gfx::Size ytview_size = ytview_rect.size();
