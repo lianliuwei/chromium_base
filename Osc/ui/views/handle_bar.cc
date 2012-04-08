@@ -151,8 +151,20 @@ void HandleBar::SetHandlePos(Handle* handle, int ID) {
 
 void HandleBar::SetMoveRange(int start, int end) {
   CHECK(start < end);
-  start_ = start;
-  end_ = end;
+  bool need_redraw = false;
+  if (start_ != start) {
+      start_ = start;
+      need_redraw = true;
+  }
+  if (end_ != end) {
+      end_ = end;
+      need_redraw = true;
+  }
+  if (need_redraw) {
+      // need repost the handles
+      InvalidateLayout();
+  }
+  
 }
 
 void HandleBar::Layout() {
