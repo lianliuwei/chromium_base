@@ -1,6 +1,6 @@
 {
   'targets' : [
-  
+
     {
       'includes': [ 'exe.gypi' ],
       'target_name': 'AxisBackground',
@@ -10,8 +10,8 @@
         'example_view.h',
       ],
        'dependencies': [
-		'../Osc.gyp:osc_views',	
-	  ],
+		    '../Osc.gyp:osc_views',
+	    ],
     },
     
     {
@@ -23,9 +23,22 @@
         'example_view.h',
       ],
        'dependencies': [
-		'../Osc.gyp:osc_views',	
-	  ],
+		    '../Osc.gyp:osc_views',	
+	    ],
     },
     
- ],
+    {
+      'includes': [ 'exe.gypi' ],
+      'target_name': 'BarLayout',
+      'sources': [
+        'BarLayout/bar_layout.cc',
+        'main.cc',
+        'example_view.h',
+      ],
+       'dependencies': [
+		    '../Osc.gyp:osc_views',	
+	    ],
+    },
+    
+  ],
 }
