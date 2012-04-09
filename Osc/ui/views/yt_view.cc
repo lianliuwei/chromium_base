@@ -66,3 +66,8 @@ void YTView::SetGrid( int v_grid, int h_grid ) {
     }
 }
 
+int YTView::GetBorderWidth()
+{
+    return kFrameWidth;
+}
+

@@ -24,7 +24,7 @@ static const ResourceBundle::FontStyle kBarFont = ResourceBundle::MediumFont;
 static const int kGapSize = 4;
 }
 
-//TODO the container must control the YTView and it's assistant view visible
+// TODO the container must control the YTView and it's assistant view visible
 // because the use may only want to show some of them.
 void YTViewContainer::Layout() {
     gfx::Size mini = yt_view_->GetMinimumSize();

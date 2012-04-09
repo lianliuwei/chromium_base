@@ -10,7 +10,9 @@
 class HandleBarDelegate : public HandleBarModel
                         , public HandleBarObserver
 {
+public:
     HandleBarDelegate() {}
+
 protected:
     virtual ~HandleBarDelegate() {}
 
@@ -35,6 +37,7 @@ public:
     // middle. set grid to 0 to keep the old value
     void SetGrid(int v_grid, int h_grid);
 
+    // TODO rename to thickness
     // now assert the border width are all the same, it user for the container
     // to layout the assist handlebar.
     int GetBorderWidth();

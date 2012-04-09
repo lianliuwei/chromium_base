@@ -109,7 +109,7 @@ bool AxisPainter::NormalSize( gfx::Size& size ) {
     // cx(y) < every div 2 pixel the size is to small
     int hdiv = h_grid_*2*h_grid_div_;
     int vdiv =v_grid_*2*v_grid_div_;
-    if (size.width() < 2*hdiv - 1 || size.height() < 2*vdiv -1) 
+    if (size.width() < 2*hdiv - 1 || size.height() < 2*vdiv - 1) 
         return false;
     size.set_width((size.width()+1)/hdiv*hdiv - 1);
     size.set_height((size.height()+1)/vdiv*vdiv - 1);
