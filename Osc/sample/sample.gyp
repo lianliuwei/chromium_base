@@ -39,6 +39,19 @@
 		    '../Osc.gyp:osc_views',	
 	    ],
     },
+	
+    {
+      'includes': [ 'exe.gypi' ],
+      'target_name': 'WaveView',
+      'sources': [
+        'wave_view/wave_view.cc',
+        'main.cc',
+        'example_view.h',
+      ],
+       'dependencies': [
+		    '../Osc.gyp:osc_views',	
+	    ],
+    },
     
   ],
 }

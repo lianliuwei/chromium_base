@@ -26,6 +26,8 @@
         'ui/views/handle_bar_observer.h',
         'ui/views/handle_bar_model.h',
         'ui/views/handle_bar_model_observer.h',
+		'ui/views/line_data_wave_view.h',
+		'ui/views/line_data_wave_view.cc',
       ],
     }, 
  ],
