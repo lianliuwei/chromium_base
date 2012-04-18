@@ -116,13 +116,13 @@ void LineDataWaveView::PaintWave( gfx::Canvas* canvas )
     real_begin, real_end, view_begin, view_end))
     return; // no data need to show
   int vector_size = static_cast<int>(line_data_.buffer->size());
-  ui::Transform index_to_real_x;
+  ui::Transform vector_to_real_x;
   // convert to float manual, or the divide is using int lost precision
-  index_to_real_x.SetScaleX(static_cast<float>(real_length) / (vector_size - 1));
-  index_to_real_x.SetTranslateX(real_begin);
+  vector_to_real_x.SetScaleX(static_cast<float>(real_length) / (vector_size - 1));
+  vector_to_real_x.SetTranslateX(real_begin);
   // get How many point to show
-  int vector_start = TransformReverseX(index_to_real_x, plot_begin);
-  int vector_end = TransformReverseX(index_to_real_x, plot_end);
+  int vector_start = TransformReverseX(vector_to_real_x, plot_begin);
+  int vector_end = TransformReverseX(vector_to_real_x, plot_end);
   // add two point separate add begin and end for show the wave like cut when
   // the wave range is cut off by the view.
   if (vector_start != 0 )
@@ -130,10 +130,10 @@ void LineDataWaveView::PaintWave( gfx::Canvas* canvas )
   if (vector_end != vector_size -1)
     vector_end += 1;
   // show line, show dot
-  bool plot_line = show_sytle_ != kDot;
+  bool draw_line = show_sytle_ != kDot;
   bool auto_show_dot = vector_size == 1 ? true : 
     real_length / (vector_size - 1) >= kAutoShowDotThreshold;
-  bool plot_dot = show_sytle_ == kDot || show_sytle_ == kLineAndDot ||
+  bool draw_dot = show_sytle_ == kDot || show_sytle_ == kLineAndDot ||
     (show_sytle_ == KLineAndAutoDot) && auto_show_dot;
   // prepare the paint
   SkPaint dot_paint;
@@ -145,7 +145,7 @@ void LineDataWaveView::PaintWave( gfx::Canvas* canvas )
   SkCanvas* sk_canvas = canvas->AsCanvasSkia();
   DataBuffer* buffer = line_data_.buffer;
   // draw the first dot;
-  if (plot_dot) {
+  if (draw_dot) {
     double logic_y = (*buffer)[vector_start];
     sk_canvas->drawPoint(SkIntToScalar(vector_start),
       TransformY(logic_to_real_transform_, logic_y), dot_paint);
@@ -155,17 +155,17 @@ void LineDataWaveView::PaintWave( gfx::Canvas* canvas )
     // pixel by pixel
     int begin_y = TransformY(logic_to_real_transform_, (*buffer)[vector_start]);
     for (int i = plot_begin; i < plot_end; i += 1) {
-      int begin_index = TransformReverseX(index_to_real_x, i);
-      int end_index = TransformReverseX(index_to_real_x, i + 1);
+      int begin_index = TransformReverseX(vector_to_real_x, i);
+      int end_index = TransformReverseX(vector_to_real_x, i + 1);
       SampleElement sample = SampleRangeData(*buffer, logic_to_real_transform_, 
         begin_index, end_index);
-      if (plot_line) {
+      if (draw_line) {
         sk_canvas->drawLine(SkIntToScalar(i -1), SkIntToScalar(begin_y), 
         SkIntToScalar(i), SkIntToScalar(sample.begin), line_paint);
         sk_canvas->drawLine(SkIntToScalar(i), SkIntToScalar(sample.max), 
           SkIntToScalar(i), SkIntToScalar(sample.min), line_paint);
       }
-      if (plot_dot) {
+      if (draw_dot) {
         sk_canvas->drawPoint(SkIntToScalar(i), SkIntToScalar(sample.begin), dot_paint);
         sk_canvas->drawPoint(SkIntToScalar(i), SkIntToScalar(sample.end), dot_paint);
         sk_canvas->drawPoint(SkIntToScalar(i), SkIntToScalar(sample.max), dot_paint);
@@ -177,14 +177,14 @@ void LineDataWaveView::PaintWave( gfx::Canvas* canvas )
     // TODO test if drawPoints can save plot time
     // draw a line segment and the back dot
     for (int i = vector_start; i < vector_end; i++) {
-      int begin_x = TransformX(index_to_real_x, i);
+      int begin_x = TransformX(vector_to_real_x, i);
       int begin_y = TransformY(logic_to_real_transform_, (*buffer)[i]);
-      int end_x = TransformX(index_to_real_x, i+1);
+      int end_x = TransformX(vector_to_real_x, i+1);
       int end_y = TransformY(logic_to_real_transform_, (*buffer)[i+1]);
-      if (plot_line)
+      if (draw_line)
         sk_canvas->drawLine(SkIntToScalar(begin_x), SkIntToScalar(begin_y),
         SkIntToScalar(end_x), SkIntToScalar(end_y), line_paint);
-      if (plot_dot)
+      if (draw_dot)
         sk_canvas->drawPoint(SkIntToScalar(end_x), SkIntToScalar(end_y),
         dot_paint);
     }
@@ -192,6 +192,7 @@ void LineDataWaveView::PaintWave( gfx::Canvas* canvas )
 }
 
 void LineDataWaveView::OnPaint( gfx::Canvas* canvas ) {
+  views::View::OnPaint(canvas); // draw the background border first.
   PaintWave(canvas);
 }
 
