@@ -47,6 +47,8 @@
         'wave_view/wave_view.cc',
         'main.cc',
         'example_view.h',
+        'fill_box_layout.h',
+        'fill_box_layout.cc',
       ],
        'dependencies': [
 		    '../Osc.gyp:osc_views',	
