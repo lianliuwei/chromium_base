@@ -142,26 +142,21 @@ void LineDataWaveView::PaintWave( gfx::Canvas* canvas )
   SkPaint line_paint;
   line_paint.setStrokeWidth(kLineWidth);
   line_paint.setColor(wave_color_);
+  line_paint.setAntiAlias(true);
   SkCanvas* sk_canvas = canvas->AsCanvasSkia();
   DataBuffer* buffer = line_data_.buffer;
-  // draw the first dot;
-  if (draw_dot) {
-    double logic_y = (*buffer)[vector_start];
-    sk_canvas->drawPoint(SkIntToScalar(vector_start),
-      TransformY(logic_to_real_transform_, logic_y), dot_paint);
-  }
   // need sample
   if (2 * real_length < vector_size) {
     // pixel by pixel
     int begin_y = TransformY(logic_to_real_transform_, (*buffer)[vector_start]);
-    for (int i = plot_begin; i < plot_end; i += 1) {
+    for (int i = plot_begin; i < plot_end; i ++) {
       int begin_index = TransformReverseX(vector_to_real_x, i);
       int end_index = TransformReverseX(vector_to_real_x, i + 1);
       SampleElement sample = SampleRangeData(*buffer, logic_to_real_transform_, 
         begin_index, end_index);
       if (draw_line) {
-        sk_canvas->drawLine(SkIntToScalar(i -1), SkIntToScalar(begin_y), 
-        SkIntToScalar(i), SkIntToScalar(sample.begin), line_paint);
+        sk_canvas->drawLine(SkIntToScalar(i), SkIntToScalar(begin_y), 
+        SkIntToScalar(i + 1), SkIntToScalar(sample.begin), line_paint);
         sk_canvas->drawLine(SkIntToScalar(i), SkIntToScalar(sample.max), 
           SkIntToScalar(i), SkIntToScalar(sample.min), line_paint);
       }
@@ -185,9 +180,15 @@ void LineDataWaveView::PaintWave( gfx::Canvas* canvas )
         sk_canvas->drawLine(SkIntToScalar(begin_x), SkIntToScalar(begin_y),
         SkIntToScalar(end_x), SkIntToScalar(end_y), line_paint);
       if (draw_dot)
-        sk_canvas->drawPoint(SkIntToScalar(end_x), SkIntToScalar(end_y),
+        sk_canvas->drawPoint(SkIntToScalar(begin_x), SkIntToScalar(begin_y),
         dot_paint);
     }
+  }
+  // draw the last dot;
+  if (draw_dot) {
+    double logic_y = (*buffer)[vector_end];
+    sk_canvas->drawPoint(TransformX(vector_to_real_x, vector_end),
+      TransformY(logic_to_real_transform_, logic_y), dot_paint);
   }
 }
 
