@@ -73,13 +73,15 @@ WaveViewShowView::WaveViewShowView()
     (wave_view_data[2])->reserve(2400);
     for (int j = 0; j < 2400; j++)
       (wave_view_data[2])->push_back(sin(j*4*2*M_PI/2400));
+    (*(wave_view_data[2]))[1200] = 1.0;
+    (*(wave_view_data[2]))[1202] = -1.0;
     line_data.buffer = wave_view_data[2];
     wave_views_[2]->set_line_data(line_data);
     ui::Transform transform;
     transform.SetTranslate(0, 400/3/2);
     transform.SetScaleY(400/3/3);
     wave_views_[2]->set_logic_to_real_transform(transform);
-    wave_views_[2]->set_show_style(LineDataWaveView::kLineAndDot);
+    wave_views_[2]->set_show_style(LineDataWaveView::KLineAndAutoDot);
   }
   
 }

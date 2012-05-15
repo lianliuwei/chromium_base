@@ -89,7 +89,7 @@ namespace {
     if (real_max < real_min) { // the logic coord may be up side down
       int temp = real_max;
       real_max = real_min;
-      real_min = real_max;
+      real_min = temp;
     }
     SampleElement sample = {
         real_max,
