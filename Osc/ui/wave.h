@@ -27,8 +27,8 @@ public:
   SimpleDigitWave* AsSimpleDigitWave();
 
   // create view
-  virtual WaveView* CreateView(WaveContainer* container);
-
+  virtual WaveView* CreateView(WaveViewFactory* factory);
+  
   // Wave can by own by the WaveView, for animation, for Drag&Drop 
   void NeedDelete();
   bool OwnByWaveView();
@@ -36,6 +36,11 @@ public:
   // TODO figure out if necessary for Drag&Drop
   clone();
 
+  // measure line support
+  bool SupportXMeasure();
+  bool SupportYMeasure();
+  // for X measure
+  double GetValue(double offset);
 protected:
 
 private:

@@ -5,7 +5,7 @@ class WaveContainerObserver {
 
 // TODO using ui/base/list_model.h instead.
 // Wave container is a vertical list
-class WaveContainer {
+class WaveContainer : public ListModel<Wave> {
 public:
   // Iterator Wave.
   typedef vector<Wave>::iterator WaveIterator;
@@ -46,9 +46,19 @@ public:
   //ToggleSample();
   //bool IsShowSample();
 
+  // menu
+  MenuModel& GetMenuModel();
+  MenuModel& GetToolBarModel();
 
+  // measure line
+  AddMeasureLine(Wave* wave, MeasureLine* measure);
+  RemoveMeasureLine();
+  vector<MeasureLine*> GetMeasureLineForWave(Wave* wave);
+  MoveMeasureLine(Wave* wave);
 protected:
 
 private:
   vector<Wave> wave_vector_;
+
+  MeasureLineContainer measure_lines_;
 };
