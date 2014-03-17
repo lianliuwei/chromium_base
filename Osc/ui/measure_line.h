@@ -12,6 +12,17 @@ private:
 
 };
 
+class MeasureLineObserver {
+ public:
+  virtual PosChanged() = 0;  
+  virtual WaveChanged() = 0;
+  virtual WillDelete() = 0;
+ protected:
+  
+ private:
+  
+};
+
 class MeasureLine {
 public:
   // RTTI

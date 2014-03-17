@@ -1,4 +1,6 @@
-class Wave {
+// wave need add user data, so view can be special, but view no need to using
+// subclass of wave.
+class Wave : public SupportUserData {
 public:
   name();
   color();
@@ -41,6 +43,7 @@ public:
   bool SupportYMeasure();
   // for X measure
   double GetValue(double offset);
+
 protected:
 
 private:

@@ -33,6 +33,7 @@ class WaveContainerViews  {
   WaveContainer* container_;
 };
 
+// Views Init.
 void Init (WaveContainer* container,  CWnd* wnd ){
   WaveContainerViews* container_view = new WaveContainerViews(container, wnd);
 }
@@ -41,5 +42,33 @@ void Init (WaveContainer* container,  CWnd* wnd ){
 {
     views* add_views = NULL;
     WaveContainer* container = NULL;
-    container->AddMeasureLine(new MeasureSingleLine(add_views));
+    SingleLine* line = new SingleLine();
+    container->AddMeasureLine(line, add_views);
+    
+    // get the data
+    double data = add_views->GetData(line->pos());
+    // create task for async measure.
+    // show all measure result.
+    ChannelManager->UpdateMeasureTable();
+}
+
+// idea for chrome WebContents.
+// need WaveUserData same as WebContentsUserData
+class CANalyzerWaveHelper : public WaveUserData<CANalyzerWaveHelper> {
+ public:
+   
+ protected:
+  
+ private:
+  
+};
+
+// extern the Wave object.
+{ 
+  Wave* wave = NULL;
+  // SupportsUserData
+  CANalyzerWaveHelper* wave_helper = CANalyzerWaveHelper::FromWave(wave);
+  DCHECK(wave_helper) << "need CANAalyzerWave.";
+  DisplayType display = wave_helper->display();
+  string display = wave_helper->message();
 }
