@@ -10,4 +10,5 @@ class YTWaveContainerView : public views::View
 public:
 protected:
 private:
+  views::View::Views wave_views_;
 };

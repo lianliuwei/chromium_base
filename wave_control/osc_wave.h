@@ -10,81 +10,68 @@
 class OscWaveDelegate {
 };
 
-class WaveRange {
-  double start;
-  double end;
-};
-
-// impl details.
-// TODO move to impl, no in interface head file.
-class OscRange : public base::RefCounted<OscRange> {
-  WaveRange range();
-  int div();
-  WaveRange offset_range();
-  double offset();
-};
-
-class Trigger : public base::RefCounted<Trigger> {
-public:
-  SkColor color();
-
-  WaveRange offset_range();
-  double offset();
-  bool show();
-  // Relate to Y or no.
-  bool IsRelate();
-};
-
-
-// used ptr to find if two option is the some.
+// used ptr to find if two option is the same.
 // TODO whether compare() can replace trigger and Osc Range.
 class OscWave : public Wave {
 public:
+  // implement Wave
+  virtual Type type_id() const { return kOsc; }
   virtual OscWave* AsOscWave() OVERRIDE { return this; }
+  virtual void Accept(WaveVisitor* visitor) OVERRIDE;
 
-  AnaWaveData& Data();
+  virtual AnaWaveData& Data() = 0;
 
   // map to osc hardware operate.
-  void MoveToX(double pos);
-  void MoveToY(double pos);
-  void MoveTrigger(double pos);
-  void ZoomInX();
-  void ZoomOutX();
-  void ZoomInY();
-  void ZoomOutY();
+  virtual void MoveToX(double pos) = 0;
+  virtual void MoveToY(double pos) = 0;
+  virtual void MoveTrigger(double pos) = 0;
+  virtual void ZoomInX() = 0;
+  virtual void ZoomOutX() = 0;
+  virtual void ZoomInY() = 0;
+  virtual void ZoomOutY() = 0;
 
   // hardware property.
 
-  bool IsSameTrigger(OscWave* osc_wave);
-  WaveRange trigger_offset_range();
-  double trigger_offset();
-  bool trigger_show();
-  bool trigger_is_relate();
+  virtual bool IsSameTrigger(OscWave* osc_wave) = 0;
+  virtual WaveRange trigger_offset_range() = 0;
+  virtual double trigger_offset() = 0;
+  virtual bool trigger_show() = 0;
+  virtual bool trigger_is_relate() = 0;
+  virtual OscWave* trigger_wave() = 0;
 
-  bool IsSameVertical(OscWave* osc_wave);
-  WaveRange vertical_range();
-  WaveRange vertical_offset_range();
-  double vertical_offset();
+  virtual bool IsSameVertical(OscWave* osc_wave) = 0;
+  virtual int vertical_div() = 0;
+  virtual int vertical_window_size() = 0; // how many div show in window
+  virtual WaveRange vertical_range() = 0;
+  virtual WaveRange vertical_offset_range() = 0;
+  virtual double vertical_offset() = 0;
 
-  bool IsSameHorizonal(OscWave* osc_wave);
-  OscRange* horizonal_property();
-  OscRange horizonal_range();
-  WaveRange horizonal_offset_range();
-  double horizon_offset();
+  virtual bool IsSameHorizontal(OscWave* osc_wave) = 0;
+  virtual int horizontal_div() = 0;
+  virtual int horizontal_window_size() = 0; // how many div show in window
+  virtual WaveRange horizontal_range() = 0;
+  virtual WaveRange horizontal_offset_range() = 0;
+  virtual double horizontal_offset() = 0;
   
   // using this to optimize the wave draw.
   enum UpdateType {
-    kTrigger,
-    kAll,
+    kTrigger = 1 << 0,
+    kTriggerOffset = 1 << 1,
+    kVertical =  1 << 2;
+    kVerticalOffset = 1 << 3,
+    kHorizontal = 1 << 4;
+    kHorizontalOffset = 1 << 5;
+    kData = 1 << 6;
   };
+
   void DataUpdate();
   void PropertyChanged();
 
   // command
+  virtual void DoCommand(int command_id) = 0;
   // for do FFT.
-  void DoRangeCommand(int command_id, Range range);
+  virtual void DoRangeCommand(int command_id, WaveRange range) = 0;
 
-  void DoCommand(int command_id);
 
 
 private:

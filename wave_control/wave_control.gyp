@@ -35,6 +35,19 @@
         'measure_line/single_line.h',
         'measure_line/measure_line_container.h',
         
+        'wave_group/wave_group.h',
+        'wave_group/trigger_part.h',
+        'wave_group/horizontal_part.h',
+        'wave_group/vertical_part.h',
+        'wave_group/wave_group_observer.h',
+        
+        'views/wave_control_view_factory.h',
+        'views/wave_control_view_factory.cc',
+        'views/wave_control_view.h',
+        'views/wave_control_view.cc',
+        'views/yt_wave_container_view.h',
+        'views/ana_wave_view.h',
+        
         'list_model.h',
         'list_model_observer.h',
         'supports_user_data.h',

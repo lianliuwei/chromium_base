@@ -12,10 +12,10 @@ public:
   // first create or notify add create all call these method
   WaveControlView* Create(WaveControl* wave_control);
 
-  void Create(WaveContainer* wave_container, 
-              WaveControlView* wave_control_view);
+  views::View* Create(WaveContainer* wave_container, 
+                      WaveControlView* wave_control_view);
 
-  void Create(Wave* wave, YTWaveContainerView* wave_container_view);
+  views::View* Create(Wave* wave, YTWaveContainerView* wave_container_view);
 
 
 private:

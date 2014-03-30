@@ -6,40 +6,38 @@ WaveControlView* WaveControlViewFactory::Create(WaveControl* wave_control) {
   return CreateImpl(wave_control);
 }
 
-void WaveControlViewFactory::Create(WaveContainer* wave_container, 
-                                    WaveControlView* wave_control_view) {
+views::View* WaveControlViewFactory::Create(WaveContainer* wave_container, 
+                                            WaveControlView* wave_control_view) {
   DCHECK(wave_container);
   switch (wave_container->type_id()) {
   case kYT:
-    CreateImpl(wave_container->AsYTWaveContainer(), wave_control_view);
-    break;
+    return CreateImpl(wave_container->AsYTWaveContainer(), wave_control_view);
 
   default:
     NOTREACHED() << "no support WaveContainer";
+    return NULL;
   }
 }
 
-void WaveControlViewFactory::Create(Wave* wave, 
-                                  YTWaveContainerView* wave_container_view) {
+views::View* WaveControlViewFactory::Create(Wave* wave, 
+                                            YTWaveContainerView* wave_container_view) {
   DCHECK(wave);                                      
   switch (wave->type_id()) {
   case kOsc:
-    CreateImpl(wave->AsOscWave(), wave_container_view);
-    break;
+    return CreateImpl(wave->AsOscWave(), wave_container_view);
   case kSimpleAna:
-    CreateImpl(wave->AsSimpleAnaWave(), wave_container_view);
-    break;
+    return CreateImpl(wave->AsSimpleAnaWave(), wave_container_view);
 
   default:
-    NOTREACHED() << "no support Wave"£»
+    NOTREACHED() << "no support Wave";
+    return NULL;
   }
 }
 
 WaveControlView* WaveControlViewFactory::CreateImpl(WaveControl* wave_control) {
   WaveControlView* wave_control_view = new WaveControlView(wave_control);
-  for (size_t i = 0; i < wave_control->item_count(); ++i) {
-    Create(wave_control->GetItemAt(i), wave_control_view);
-  }
+  // call this to add 
+  wave_control_view->ListItemsAdded(0, wave_control->item_count());
   return wave_control_view;
 }
 

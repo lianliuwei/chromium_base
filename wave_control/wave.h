@@ -19,21 +19,19 @@ public:
     kSimpleDigit,
   };
 
-  Type type_id() const;
+  virtual Type type_id() const = 0;
 
   // RTTI
-  virtual OscWave* AsOscWave();
-  virtual SimpleAnaWave* AsSimpleAnaWave();
-  virtual SimpleDigitWave* AsSimpleDigitWave();
+  virtual OscWave* AsOscWave() { return NULL; }
+  virtual SimpleAnaWave* AsSimpleAnaWave() { return NULL; }
+  virtual SimpleDigitWave* AsSimpleDigitWave() { return NULL; }
 
   virtual void Accept(WaveVisitor* visitor) = 0;
 
-  string16 name();
-  SkColor color();
-  SkBitmap icon();
+  virtual string16 name() = 0;
+  virtual SkColor color() = 0;
+  virtual SkBitmap icon() = 0;
 
-  Range Vercital();
-  Range Horizonal();
 
   // Wave can by own by the WaveView, for animation, for Drag&Drop 
   void NeedDelete();
