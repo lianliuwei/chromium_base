@@ -9,8 +9,7 @@
 // the data is own by the controller.
 // input data are logic value using the Logic to real transform Matrix 
 // to Transform
-class LineDataWaveView : public views::View
-{
+class LineDataWaveView : public views::View {
 public:
   typedef std::vector<double> DataBuffer;
   

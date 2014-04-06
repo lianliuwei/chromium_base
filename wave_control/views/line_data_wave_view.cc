@@ -6,103 +6,62 @@
 #include "ui/gfx/point.h"
 #include "ui/gfx/canvas_skia.h"
 
+#include "wave_control/views/transform_util.h"
+
 namespace {
+static const int kAutoShowDotThreshold = 10;
+static const int kDotWidth = 4;
+static const int kLineWidth = 1;
 
-  static const int kAutoShowDotThreshold = 10;
+// return true for have intersect, false for no
+bool RangeIntersect(int* intersect_left, int* intersect_right, 
+                    int range_1_left, int range_1_right, 
+                    int range_2_left, int range_2_right) {
+    CHECK(range_1_left <= range_1_right) << "the coord is defalut windows coord";
+    CHECK(range_2_left <= range_2_right) << "the coord is defalut windows coord";
+    if(range_1_right < range_2_left || range_2_right < range_1_left)
+      return false;
+    *intersect_left = std::max(range_1_left, range_2_left);
+    *intersect_right = std::min(range_1_right, range_2_right);
+    return true;
+}
 
-  static const int kDotWidth = 4;
+// the sample process get the max, min, start, end value of a step
+// value. those value are all real Y coordinate Value.
+struct SampleElement {
+  int max;
+  int min;
+  int begin;
+  int end;
+};
 
-  static const int kLineWidth = 1;
-
-  int SymmetricRound(double x) {
-    return static_cast<int>(
-      x > 0
-      ? std::floor(x + 0.5f)
-      : std::ceil(x - 0.5f));
+SampleElement SampleRangeData(const LineDataWaveView::DataBuffer& buffer, 
+    const ui::Transform transform, int begin_index, int end_index) {
+  LineDataWaveView::DataBuffer::const_iterator it = buffer.begin();
+  DCHECK(begin_index >=0 && begin_index < static_cast<int>(buffer.size()));
+  DCHECK(end_index >=0 && static_cast<int>(buffer.size()));
+  LineDataWaveView::DataBuffer::const_iterator begin = it + begin_index;
+  LineDataWaveView::DataBuffer::const_iterator end = it + end_index;
+  double max = *max_element(it + begin_index, it + end_index);
+  double min = *min_element(it + begin_index, it + end_index);
+  int real_max = TransformY(transform, max);
+  int real_min = TransformY(transform, min);
+  if (real_max < real_min) { // the logic coord may be up side down
+    int temp = real_max;
+    real_max = real_min;
+    real_min = temp;
   }
-
-  int TransformX(const ui::Transform transform, double x) {
-    gfx::Point point(x, 0);
-    transform.TransformPoint(point);
-   return point.x();
-  }
-
-  int TransformReverseX(const ui::Transform transform, int x) {
-    gfx::Point point(x, 0);
-    CHECK(transform.TransformPointReverse(point)) << "Invalid transform matrix";
-    return point.x();
-  }
-
-  int TransformX(const ui::Transform transform, int x) {
-    SkScalar p[4] = {
-      SkDoubleToScalar(x),
-      0,
-      0,
-      1};
-      transform.matrix().map(p);
-      return SymmetricRound(p[0]);
-  }
-
-  int TransformY(const ui::Transform transform, double y) {
-    SkScalar p[4] = {
-      0,
-      SkDoubleToScalar(y),
-      0,
-      1};
-      transform.matrix().map(p);
-      return SymmetricRound(p[1]);
-  }
-
-  // return true for have intersect, false for no
-  bool RangeIntersect(int* intersect_left, int* intersect_right, 
-    int range_1_left, int range_1_right, 
-    int range_2_left, int range_2_right) {
-      CHECK(range_1_left <= range_1_right) << "the coord is defalut windows coord";
-      CHECK(range_2_left <= range_2_right) << "the coord is defalut windows coord";
-      if(range_1_right < range_2_left || range_2_right < range_1_left)
-        return false;
-      *intersect_left = std::max(range_1_left, range_2_left);
-      *intersect_right = std::min(range_1_right, range_2_right);
-      return true;
-  }
-
-  // the sample process get the max, min, start, end value of a step
-  // value. those value are all real Y coordinate Value.
-  struct SampleElement {
-    int max;
-    int min;
-    int begin;
-    int end;
-  };
-
-  SampleElement SampleRangeData(const LineDataWaveView::DataBuffer& buffer, 
-      const ui::Transform transform, int begin_index, int end_index) {
-    LineDataWaveView::DataBuffer::const_iterator it = buffer.begin();
-    DCHECK(begin_index >=0 && begin_index < static_cast<int>(buffer.size()));
-    DCHECK(end_index >=0 && static_cast<int>(buffer.size()));
-    LineDataWaveView::DataBuffer::const_iterator begin = it + begin_index;
-    LineDataWaveView::DataBuffer::const_iterator end = it + end_index;
-    double max = *max_element(it + begin_index, it + end_index);
-    double min = *min_element(it + begin_index, it + end_index);
-    int real_max = TransformY(transform, max);
-    int real_min = TransformY(transform, min);
-    if (real_max < real_min) { // the logic coord may be up side down
-      int temp = real_max;
-      real_max = real_min;
-      real_min = temp;
-    }
-    SampleElement sample = {
-        real_max,
-        real_min,
-        TransformY(transform, *(begin)),
-        TransformY(transform, *(end))};
-    return sample;
-  }
+  SampleElement sample = {
+      real_max,
+      real_min,
+      TransformY(transform, *(begin)),
+      TransformY(transform, *(end))};
+  return sample;
+}
 
 }
 
-void LineDataWaveView::PaintWave( gfx::Canvas* canvas )
-{
+void LineDataWaveView::PaintWave(gfx::Canvas* canvas) {
   if (line_data_.buffer == NULL)
     return;
   int real_begin = TransformX(logic_to_real_transform_, line_data_.begin);
@@ -192,50 +151,50 @@ void LineDataWaveView::PaintWave( gfx::Canvas* canvas )
   }
 }
 
-void LineDataWaveView::OnPaint( gfx::Canvas* canvas ) {
+void LineDataWaveView::OnPaint(gfx::Canvas* canvas) {
   views::View::OnPaint(canvas); // draw the background border first.
   PaintWave(canvas);
 }
 
-bool LineDataWaveView::HitTest( const gfx::Point& l ) const {
+bool LineDataWaveView::HitTest(const gfx::Point& l) const {
   return false;
 }
 
-bool LineDataWaveView::OnMouseDragged( const views::MouseEvent& event ) {
+bool LineDataWaveView::OnMouseDragged(const views::MouseEvent& event) {
   return false;
 }
 
-void LineDataWaveView::set_wave_color( SkColor color ) {
+void LineDataWaveView::set_wave_color(SkColor color) {
   if (color != wave_color_) {
     wave_color_ = color;
     SchedulePaint();    
   }
 }
 
-void LineDataWaveView::set_dot_color( SkColor color ) {
+void LineDataWaveView::set_dot_color(SkColor color) {
   if (color != dot_color_) {
     dot_color_ = color;
     SchedulePaint();    
   }
 }
 
-void LineDataWaveView::set_show_style( ShowStyle style ) {
+void LineDataWaveView::set_show_style(ShowStyle style) {
   if (style != show_sytle_) {
     show_sytle_ = style;
     SchedulePaint();    
   }
 }
 
-void LineDataWaveView::set_line_data( const LineData line_data ) {
+void LineDataWaveView::set_line_data(const LineData line_data) {
   // data allow no the same, just repaint it.
   line_data_ = line_data;
   SchedulePaint();
 }
 
 void LineDataWaveView::set_logic_to_real_transform(
-  const ui::Transform& logic_to_real_transform ) {
-    if (logic_to_real_transform != logic_to_real_transform_) {
-      logic_to_real_transform_ = logic_to_real_transform;
-      SchedulePaint();
-    }
+    const ui::Transform& logic_to_real_transform) {
+  if (logic_to_real_transform != logic_to_real_transform_) {
+    logic_to_real_transform_ = logic_to_real_transform;
+    SchedulePaint();
+  }
 }
