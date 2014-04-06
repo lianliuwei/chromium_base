@@ -2,13 +2,27 @@
 
 #include "views/view.h"
 
-#include "wave_control/wave_container.h"
-#include "wave_control/list_model_observer.h"
+#include "wave_control/yt_wave_container.h"
+#include "wave_control/views/yt_wave_container_inner_view.h"
 
-class YTWaveContainerView : public views::View
-                          , public ui::ListModelObserver {
+
+// just layout the handle bar and view.
+class YTWaveContainerView : public views::View {
 public:
-protected:
+  YTWaveContainerView(YTWaveContainer* container, WaveControlView* wave_control_view);
+
+  void show_wave_bar(bool visible);
+  bool is_show_wave_bar();
+  void show_horiz_offset_bar();
+  bool is_show_horiz_offset_bar();
+  void show_trigger_bar();
+  bool is_show_trigger_bar();
+
 private:
-  views::View::Views wave_views_;
+  // Overridden from the views::View
+  virtual void Layout() OVERRIDE;
+
+  HandleBar* CreateHandleBar(HandleBarDelegate* delegate, bool is_horiz);
+
+  YTWaveContainerInnerView* inner_view_;
 };

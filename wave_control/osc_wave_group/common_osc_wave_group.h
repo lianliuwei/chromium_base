@@ -87,6 +87,9 @@ struct OscWaveRecord {
 class CommonOscWaveGroup : public OscWaveGroup
                          , public OscWaveObserver {
 public:
+  CommonOscWaveGroup();
+  virtual ~CommonOscWaveGroup();
+
   // implement OscWaveGroup
   virtual void AddOscWave(OscWave* osc_wave);
   virtual void RemoveOscWave(OscWave* osc_wave);

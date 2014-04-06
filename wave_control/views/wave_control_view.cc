@@ -32,7 +32,7 @@ void WaveControlView::ListItemsRemoved(size_t start, size_t count) {
     need_remove.push_back(this->child_at(start + i));
   }
   for (size_t i = 0; i < need_remove.size(); ++i) {
-    this->DoRemoveChildView(need_remove[i]);
+    this->RemoveChildView(need_remove[i]);
     delete need_remove[i];
   }
 }

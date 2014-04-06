@@ -3,6 +3,9 @@
 #include "wave_control/views/wave_control_view.h"
 #include "wave_control/views/yt_wave_container_view.h"
 
+class OscWaveView;
+class SimpleAnaWaveView;
+
 // use visitor need template for call the right CreateImpl(), and
 // NOTREACHED() for no match. this is complex. just use switch case
 class WaveControlViewFactory  {

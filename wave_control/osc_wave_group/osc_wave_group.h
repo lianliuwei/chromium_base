@@ -13,7 +13,7 @@
 // turn osc_wave to part.
 class OscWaveGroup {
 public:
-  OscWaveGroup();
+  OscWaveGroup() {}
 
   virtual void AddOscWave(OscWave* osc_wave) = 0;
   virtual void RemoveOscWave(OscWave* osc_wave) = 0;

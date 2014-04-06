@@ -52,6 +52,12 @@ void OscWaveGroup::NotifyTriggerMoved(int id) {
   FOR_EACH_OBSERVER(OscWaveGroupObserver, trigger_observer_, OnPartMoved(id));
 }
 
+OscWaveGroup::~OscWaveGroup() {
+  DCHECK(triggers_.size() == 0);
+  DCHECK(horizontals_.size() == 0);
+  DCHECK(verticals_.size() == 0);
+}
+
 
 
 

@@ -180,6 +180,21 @@ int CommonOscWaveGroup::VerticalIndex(VerticalPart* part) {
   return 0;
 }
 
+CommonOscWaveGroup::CommonOscWaveGroup()
+    : trigger_changed_(false)
+    , horizontal_changed_(false)
+    , vertical_changed_(false) {
+
+}
+
+CommonOscWaveGroup::~CommonOscWaveGroup() {
+  for (size_t i = 0; i < osc_waves_.size(); ++i) {
+    OscWaveRecord& record = osc_waves_[i];
+    record.wave->RemoveObserver(this);
+  }
+  osc_waves_.clear();
+}
+
 // RefTriggerPart
 
 SkColor RefTriggerPart::color() {
