@@ -39,8 +39,10 @@ public:
 
   // set the observer for the model. The HandleBarModel should NOT take ownership
   // of the observer.
-  virtual void SetObserver(HandleBarModelObserver* observer) = 0;
-
+  virtual void AddObserver(HandleBarModelObserver* observer) = 0;
+  virtual void RemoveObserver(HandleBarModelObserver* observer) = 0;
+  virtual bool HasObserver(HandleBarModelObserver* observer) = 0;
+  
 protected:
   virtual ~HandleBarModel() {};
 };

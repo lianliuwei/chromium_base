@@ -11,13 +11,17 @@ HandleBar::HandleBar(HandleBarModel* model,
                      bool is_horiz, 
                      gfx::Font font,
                      int start, int end)
-  : model_(NULL)
-  , observer_(NULL)
-  , is_horiz_(is_horiz)
-  , font_(font) {
+    : model_(NULL)
+    , observer_(NULL)
+    , is_horiz_(is_horiz)
+    , font_(font) {
   SetMoveRange(start, end);
   SetModel(model);
 
+}
+
+HandleBar::~HandleBar() {
+  SetModel(NULL);
 }
 
 void HandleBar::OnModelChanged() {
@@ -41,10 +45,10 @@ void HandleBar::SetModel(HandleBarModel* model) {
     return;
 
   if (model_)
-    model_->SetObserver(NULL);
+    model_->RemoveObserver(this);
   model_ = model;
   if (model_)
-    model_->SetObserver(this);
+    model_->AddObserver(this);
   UpdateFromModel();
 }
 
@@ -209,6 +213,6 @@ Handle* HandleBar::GetHandle(int ID) const {
        it != handles_.end(); it++)
     if ((*it)->tag() == ID)
       return *it;
-  DCHECK(FALSE);
+  NOTREACHED();
   return NULL;
 }

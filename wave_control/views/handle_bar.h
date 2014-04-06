@@ -17,7 +17,7 @@ public:
             gfx::Font font,
             int start, int end);
   // the views delete handle auto
-  virtual ~HandleBar() {};
+  virtual ~HandleBar();;
 
   bool IsHorizontal() const;
 
