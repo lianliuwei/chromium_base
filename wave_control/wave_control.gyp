@@ -60,10 +60,12 @@
         'views/wave_control_view.h',
         'views/wave_control_view.cc',
         'views/yt_wave_container_view.h',
+        'views/yt_wave_container_view.cc',
         'views/ana_wave_view.h',
         
         # views impl
         'views/yt_wave_container_inner_view.h',
+        'views/yt_wave_container_inner_view.cc',
         'views/axis_background.h',
         'views/axis_background.cc',
         'views/axis_painter.h',
@@ -77,7 +79,8 @@
         'views/handle_bar_model_observer.h',
         'views/line_data_wave_view.h',
         'views/line_data_wave_view.cc',
-       
+        'views/transform_util.h',
+        'views/transform_util.cc',
         #helper
         'list_model.h',
         'list_model_observer.h',
