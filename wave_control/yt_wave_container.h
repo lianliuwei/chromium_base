@@ -8,11 +8,10 @@ public:
   virtual YTWaveContainer* AsYTWaveContainer() { return this; }
 
   // show option
-  void ShowGrid();
-  void ToggleGrid();
-  bool IsShowGrid() const;
+  virtual void ShowGrid() = 0;
+  virtual void ToggleGrid() = 0;
+  virtual bool IsShowGrid() const = 0;
   
-  void SelectWave(Wave* wave);
-  Wave* GetSelectWave();
-
+  virtual void SelectWave(Wave* wave) = 0;
+  virtual Wave* GetSelectWave() = 0;
 };

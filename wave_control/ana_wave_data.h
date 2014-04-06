@@ -1,5 +1,7 @@
 #pragma once
 
+#include "wave_control/wave_range.h"
+
 struct PeakValue {
   double start;
   double end;

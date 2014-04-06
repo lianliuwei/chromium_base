@@ -2,13 +2,21 @@
 
 #include "wave_control/wave_range.h"
 
-// impl details.
-// TODO move to impl, no in interface head file.
 class HorizontalPart {
-  WaveRange range();
-  WaveRange offset_range();
-  double offset();
+public:
+  virtual SkColor color() = 0;
+  virtual bool show() = 0;
 
-  int div();
-  int window_div();
+  virtual WaveRange range() = 0;
+  virtual WaveRange offset_range() = 0;
+  virtual double offset() = 0;
+
+  // return false should no call div and window_size
+  // use range as window range
+  virtual bool has_div() = 0;
+  virtual int div() = 0;
+  virtual int window_size() = 0;
+
+protected:
+  virtual ~HorizontalPart() {}
 };

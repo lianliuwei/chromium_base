@@ -4,13 +4,15 @@
 
 class TriggerPart {
 public:
-  virtual ~TriggerPart();
+  virtual SkColor color() = 0;
+  virtual bool show() = 0;
 
-  SkColor color();
-
-  WaveRange offset_range();
-  double offset();
-  bool show();
+  virtual WaveRange offset_range() = 0;
+  virtual double offset() = 0;
+  virtual void set_offset(double offset) = 0;
   // Relate to Y or no.
-  bool IsRelate();
+  virtual bool IsRelate() = 0;
+
+protected:
+  virtual ~TriggerPart() {}
 };

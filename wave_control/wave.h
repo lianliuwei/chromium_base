@@ -1,7 +1,12 @@
 #pragma once
 
+#include "base/string16.h"
 #include "wave_control/supports_user_data.h"
+#include "third_party/skia/include/core/SkColor.h"
+#include "third_party/skia/include/core/SkBitmap.h"
 
+class WaveControl;
+class WaveContainer;
 class WaveVisitor;
 class OscWave;
 class SimpleAnaWave;
@@ -13,6 +18,7 @@ public:
   WaveControl* wave_control();
   WaveContainer* wave_container();
 
+  // RTTI
   enum Type {
     kOsc,
     kSimpleAna,
@@ -21,7 +27,6 @@ public:
 
   virtual Type type_id() const = 0;
 
-  // RTTI
   virtual OscWave* AsOscWave() { return NULL; }
   virtual SimpleAnaWave* AsSimpleAnaWave() { return NULL; }
   virtual SimpleDigitWave* AsSimpleDigitWave() { return NULL; }
@@ -32,8 +37,7 @@ public:
   virtual SkColor color() = 0;
   virtual SkBitmap icon() = 0;
 
-
-  // Wave can by own by the WaveView, for animation, for Drag&Drop 
-  void NeedDelete();
-  bool OwnByWaveView();
+private:
+  WaveControl* wave_control_;
+  WaveContainer* wave_container_;
 };

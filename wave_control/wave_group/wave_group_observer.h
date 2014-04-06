@@ -7,10 +7,10 @@ public:
   virtual void OnPartGroupChanged() = 0;
 
   // Invoked when a part has changed. need to read the text, icon, offset.
-  virtual void OnPartChanged(int ID) = 0;
+  virtual void OnPartChanged(int id) = 0;
 
   // Invoked When a part move position. only need to read the offset.
-  virtual void OnPartMoved(int ID) = 0;
+  virtual void OnPartMoved(int id) = 0;
 
 protected:
   virtual ~WaveGroupObserver() {}

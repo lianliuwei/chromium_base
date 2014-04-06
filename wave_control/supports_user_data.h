@@ -8,7 +8,7 @@
 #include <map>
 
 #include "base/base_export.h"
-#include "base/memory/linked_ptr.h"
+#include "wave_control/linked_ptr.h"
 #include "base/memory/ref_counted.h"
 #include "base/threading/thread_checker.h"
 

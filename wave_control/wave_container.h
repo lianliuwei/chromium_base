@@ -28,4 +28,7 @@ public:
   virtual XYWaveContainer* AsXYWaveContainer() { return NULL; }
 
   virtual void Accept(WaveContainerVisitor* visitor) = 0;
+
+private:
+  WaveControl* wave_control_;
 };
