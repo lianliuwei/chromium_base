@@ -36,8 +36,6 @@ views::View* WaveControlViewFactory::Create(Wave* wave,
 
 WaveControlView* WaveControlViewFactory::CreateImpl(WaveControl* wave_control) {
   WaveControlView* wave_control_view = new WaveControlView(wave_control);
-  // call this to add 
-  wave_control_view->ListItemsAdded(0, wave_control->item_count());
   return wave_control_view;
 }
 
@@ -45,8 +43,5 @@ YTWaveContainerView* WaveControlViewFactory::CreateImpl(YTWaveContainer* wave_co
                                                         WaveControlView* wave_control_view) {
   YTWaveContainerView*  yt_wave_container_view 
       = new YTWaveContainerView(wave_container, wave_control_view);
-  for (size_t i = 0; i < wave_container->item_count(); ++i) {
-    Create(wave_container->GetItemAt(i), yt_wave_container_view);
-  }
   return yt_wave_container_view;
 }

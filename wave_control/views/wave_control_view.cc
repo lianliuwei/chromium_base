@@ -11,6 +11,9 @@ WaveControlView::WaveControlView(WaveControl* wave_control)
     : wave_control_(wave_control) {
   wave_control->AddObserver(this);
   SetLayoutManager(new BoxLayout(BoxLayout::kVertical, 0, 0, 0));
+
+  // fetch WaveContainer
+  ListItemsAdded(0, wave_control->item_count());
 }
 
 WaveControlView::~WaveControlView() {

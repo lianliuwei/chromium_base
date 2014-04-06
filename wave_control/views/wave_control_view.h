@@ -15,7 +15,7 @@ public:
 
 private:
   friend class WaveControlViewFactory;
-  
+
   // implement ui::ListModelObserver
   virtual void ListItemsAdded(size_t start, size_t count);
   virtual void ListItemsRemoved(size_t start, size_t count);
