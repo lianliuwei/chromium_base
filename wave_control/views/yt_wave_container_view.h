@@ -4,7 +4,9 @@
 
 #include "wave_control/yt_wave_container.h"
 #include "wave_control/views/yt_wave_container_inner_view.h"
+#include "wave_control/views/handle_bar.h"
 
+class WaveControlView;
 
 // just layout the handle bar and view.
 class YTWaveContainerView : public views::View {
@@ -25,4 +27,14 @@ private:
   HandleBar* CreateHandleBar(HandleBarDelegate* delegate, bool is_horiz);
 
   YTWaveContainerInnerView* inner_view_;
+
+  // the handlebars are the container's children. but the YTView manager
+  // those.
+  HandleBar* wave_bar_;
+  HandleBar* horiz_offset_bar_;
+  HandleBar* trigger_bar_;
+
+  bool show_wave_bar_;
+  bool show_horiz_offset_bar_;
+  bool show_trigger_bar_;
 };

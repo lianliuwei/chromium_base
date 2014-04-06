@@ -1,20 +1,37 @@
 #pragma once
 
+#include "base/observer_list.h"
 #include "views/view.h"
 
 #include "wave_control/wave_container.h"
 #include "wave_control/list_model_observer.h"
+#include "wave_control/osc_wave_group/osc_wave_group.h"
 #include "wave_control/views/axis_background.h"
 #include "wave_control/views/handle_bar_model.h"
 #include "wave_control/views/handle_bar_observer.h"
+#include "wave_control/views/handle_bar_model_observer.h"
+
 
 class HandleBarDelegate : public HandleBarModel
                         , public HandleBarObserver {
 public:
   HandleBarDelegate() {}
 
+  virtual bool is_horiz() = 0;
+
+  // implement HandleBarModel
+  virtual void AddObserver(HandleBarModelObserver* observer);
+  virtual void RemoveObserver(HandleBarModelObserver* observer);
+  virtual bool HasObserver(HandleBarModelObserver* observer);
+
 protected:
   virtual ~HandleBarDelegate() {}
+
+  void NotifyModelChanged();
+  void NotifyHandleChanged(int id);
+  void NotifyHandleMoved(int id);
+
+  ObserverList<HandleBarModelObserver> observer_list_;
 
   DISALLOW_COPY_AND_ASSIGN(HandleBarDelegate);
 };
@@ -34,6 +51,11 @@ public:
   HandleBarDelegate* GetHorizOffsetBarDelegate();
   HandleBarDelegate* GetTriggerBarDelegate();
 
+  // osc coord transform
+  ui::Transform OscWaveTransform(OscWave* osc_wave);
+  static double ToOscOffset(double old_offset, double move_delta);
+
+  void SelectWave(Wave* wave);
 private:
   // implement ui::ListModelObserver
   virtual void ListItemsAdded(size_t start, size_t count);
