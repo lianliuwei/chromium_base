@@ -1,4 +1,4 @@
-#include "wave_control/wave_group/common_wave_group.h"
+#include "wave_control/osc_wave_group/common_osc_wave_group.h"
 
 namespace {
 
@@ -8,7 +8,7 @@ bool IsSet(int set, int test) {
 
 }
 
-void CommonWaveGroup::AddOscWave(OscWave* osc_wave) {
+void CommonOscWaveGroup::AddOscWave(OscWave* osc_wave) {
   DCHECK(osc_wave);
 
   bool create_trigger = true;
@@ -72,7 +72,7 @@ void CommonWaveGroup::AddOscWave(OscWave* osc_wave) {
   }
 }
 
-void CommonWaveGroup::RemoveOscWave(OscWave* osc_wave) {
+void CommonOscWaveGroup::RemoveOscWave(OscWave* osc_wave) {
   DCHECK(osc_wave);
   trigger_changed_ = false;
   horizontal_changed_ = false;
@@ -99,7 +99,7 @@ void CommonWaveGroup::RemoveOscWave(OscWave* osc_wave) {
   }
 }
 
-bool CommonWaveGroup::HasOscWave(OscWave* osc_wave) {
+bool CommonOscWaveGroup::HasOscWave(OscWave* osc_wave) {
   for (size_t i = 0; i < osc_waves_.size(); ++i) {
     OscWaveRecord& record = osc_waves_[i];
     if (record.wave == osc_wave) {
@@ -109,56 +109,14 @@ bool CommonWaveGroup::HasOscWave(OscWave* osc_wave) {
   return false;
 }
 
-void CommonWaveGroup::OnTriggerDelete(TriggerPart* tirgger) {
+void CommonOscWaveGroup::OnTriggerDelete(TriggerPart* trigger) {
   Triggers::iterator it = find(triggers_.begin(), triggers_.end(), trigger);
   DCHECK(it != triggers_.end());
   triggers_.erase(it);
   trigger_changed_ = true;
 }
 
-void CommonWaveGroup::AddSimpleAnaWave(SimpleAnaWave* ana_wave) {
-  DCHECK(ana_wave);
-
-  for (size_t i = 0; i < simple_ana_waves_.size(); ++i) {
-    SimpleAnaWaveRecord& record = simple_ana_waves_[i];
-    if (record.wave == ana_wave) {
-      NOTREACHED();
-    }
-  }
-  SimpleVerticalPart* vertical = new SimpleVerticalPart();
-  SimpleAnaWaveRecord record;
-  record.wave = ana_wave;
-  record.vertical = vertical;
-
-  simple_ana_waves_.push_back(record);
-  verticals_.push_back(vertical);
-  
-  NotifyHorizontalGroupChanged();
-}
-
-void CommonWaveGroup::RemoveSimpleAnaWave(SimpleAnaWave* ana_wave) {
-  DCHECK(ana_wave);
-
-  SimpleAnaWaveRecord record;
-  for (size_t i = 0; i < simple_ana_waves_.size(); ++i) {
-    record = simple_ana_waves_[i];
-    if (record.wave == ana_wave) {
-      simple_ana_waves_.erase(simple_ana_waves_.begin() + i);
-      break;
-    }
-    if (i == simple_ana_waves_.size() -1) {
-      NOTREACHED();
-    }
-  }
-  Verticals::iterator it = find(verticals_.begin(), verticals_.end(), record.vertical);
-  DCHECK(it != verticals_.end());
-  verticals_.erase(it);
-  delete record.vertical;
-
-  NotifyVerticalGroupChanged();
-}
-
-void CommonWaveGroup::OnOscWaveChanged(OscWave* osc_wave, int change_set) {
+void CommonOscWaveGroup::OnOscWaveChanged(OscWave* osc_wave, int change_set) {
   OscWaveRecord& record = GetOscWaveRecord(osc_wave);
 
   if (IsSet(change_set, OscWave::kTrigger)) {
@@ -181,7 +139,7 @@ void CommonWaveGroup::OnOscWaveChanged(OscWave* osc_wave, int change_set) {
   }
 }
 
-OscWaveRecord& CommonWaveGroup::GetOscWaveRecord(OscWave* osc_wave) {
+OscWaveRecord& CommonOscWaveGroup::GetOscWaveRecord(OscWave* osc_wave) {
   for (size_t i = 0; i < osc_waves_.size(); ++i) {
     OscWaveRecord& record = osc_waves_[i];
     if (record.wave == osc_wave) {
@@ -189,15 +147,37 @@ OscWaveRecord& CommonWaveGroup::GetOscWaveRecord(OscWave* osc_wave) {
     }
   }
   NOTREACHED();
+  return osc_waves_[0];
 }
 
-int CommonWaveGroup::TriggerIndex(TriggerPart* part) {
+int CommonOscWaveGroup::TriggerIndex(TriggerPart* part) {
   for (size_t i = 0; i < triggers_.size(); ++i) {
     if (triggers_[i] == part) {
       return i;
     }
   }
   NOTREACHED();
+  return 0;
+}
+
+int CommonOscWaveGroup::HorizontalIndex(HorizontalPart* part) {
+  for (size_t i = 0; i < horizontals_.size(); ++i) {
+    if (horizontals_[i] == part) {
+      return i;
+    }
+  }
+  NOTREACHED();
+  return 0;
+}
+
+int CommonOscWaveGroup::VerticalIndex(VerticalPart* part) {
+  for (size_t i = 0; i < verticals_.size(); ++i) {
+    if (verticals_[i] == part) {
+      return i;
+    }
+  }
+  NOTREACHED();
+  return 0;
 }
 
 // RefTriggerPart
@@ -226,7 +206,7 @@ bool RefTriggerPart::IsRelate() {
   return osc_wave_->trigger_is_relate();
 }
 
-RefTriggerPart::RefTriggerPart(OscWave* osc_wave, CommonWaveGroup* wave_group)
+RefTriggerPart::RefTriggerPart(OscWave* osc_wave, CommonOscWaveGroup* wave_group)
     : osc_wave_(osc_wave)
     , wave_group_(wave_group) {
   DCHECK(osc_wave);
@@ -266,7 +246,7 @@ int RefHorizontalPart::window_size() {
   return osc_wave_->horizontal_window_size();
 }
 
-RefHorizontalPart::RefHorizontalPart(OscWave* osc_wave, CommonWaveGroup* wave_group)
+RefHorizontalPart::RefHorizontalPart(OscWave* osc_wave, CommonOscWaveGroup* wave_group)
     : osc_wave_(osc_wave)
     , wave_group_(wave_group) {
   DCHECK(osc_wave);
@@ -306,7 +286,7 @@ int RefVerticalPart::window_size() {
   return osc_wave_->vertical_window_size();
 }
 
-RefVerticalPart::RefVerticalPart(OscWave* osc_wave, CommonWaveGroup* wave_group)
+RefVerticalPart::RefVerticalPart(OscWave* osc_wave, CommonOscWaveGroup* wave_group)
     : osc_wave_(osc_wave)
     , wave_group_(wave_group) {
   DCHECK(osc_wave);
@@ -315,39 +295,4 @@ RefVerticalPart::RefVerticalPart(OscWave* osc_wave, CommonWaveGroup* wave_group)
 
 RefVerticalPart::~RefVerticalPart() {
   wave_group_->OnVerticalDelete(this);
-}
-
-SkColor SimpleVerticalPart::color() {
-  return ana_wave_->color();
-}
-
-bool SimpleVerticalPart::show() {
-  return true;
-}
-
-WaveRange SimpleVerticalPart::range() {
-  return ana_wave_->vertical_range();
-}
-
-WaveRange SimpleVerticalPart::offset_range() {
-  return ana_wave_->vertical_range(); 
-}
-
-double SimpleVerticalPart::offset() {
-  return ana_wave_->vertical_offset();
-}
-
-
-bool SimpleVerticalPart::has_div() {
-  return false;
-}
-
-int SimpleVerticalPart::div() {
-  NOTREACHED();
-  return 0;
-}
-
-int SimpleVerticalPart::window_size() {
-  NOTREACHED();
-  return 0;
 }

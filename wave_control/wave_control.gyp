@@ -37,12 +37,12 @@
         'measure_line/single_line.h',
         'measure_line/measure_line_container.h',
         
-        'wave_group/wave_group.h',
-        'wave_group/wave_group.cc',
-        'wave_group/trigger_part.h',
-        'wave_group/horizontal_part.h',
-        'wave_group/vertical_part.h',
-        'wave_group/wave_group_observer.h',
+        'osc_wave_group/osc_wave_group.h',
+        'osc_wave_group/osc_wave_group.cc',
+        'osc_wave_group/trigger_part.h',
+        'osc_wave_group/horizontal_part.h',
+        'osc_wave_group/vertical_part.h',
+        'osc_wave_group/osc_wave_group_observer.h',
         
         'views/wave_control_view_factory.h',
         'views/wave_control_view_factory.cc',
@@ -51,10 +51,10 @@
         'views/yt_wave_container_view.h',
         'views/ana_wave_view.h',
  
-        'wave_group/test_osc_wave.h',
-        'wave_group/test_osc_wave.cc',
-        'wave_group/common_wave_group.h',
-        'wave_group/common_wave_group.cc',
+        'osc_wave_group/test_osc_wave.h',
+        'osc_wave_group/test_osc_wave.cc',
+        'osc_wave_group/common_osc_wave_group.h',
+        'osc_wave_group/common_osc_wave_group.cc',
         
         'list_model.h',
         'list_model_observer.h',

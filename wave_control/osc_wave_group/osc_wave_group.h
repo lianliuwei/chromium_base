@@ -4,23 +4,20 @@
 
 #include "wave_control/osc_wave.h"
 #include "wave_control/simple_ana_wave.h"
-#include "wave_control/wave_group/trigger_part.h"
-#include "wave_control/wave_group/horizontal_part.h"
-#include "wave_control/wave_group/vertical_part.h"
-#include "wave_control/wave_group/wave_group_observer.h"
+#include "wave_control/osc_wave_group/trigger_part.h"
+#include "wave_control/osc_wave_group/horizontal_part.h"
+#include "wave_control/osc_wave_group/vertical_part.h"
+#include "wave_control/osc_wave_group/osc_wave_group_observer.h"
 
 // helper for YTWaveContainerView
 // turn osc_wave to part.
-class WaveGroup {
+class OscWaveGroup {
 public:
-  WaveGroup();
+  OscWaveGroup();
 
   virtual void AddOscWave(OscWave* osc_wave) = 0;
   virtual void RemoveOscWave(OscWave* osc_wave) = 0;
   virtual bool HasOscWave(OscWave* osc_wave) = 0;
-
-  virtual void AddSimpleAnaWave(SimpleAnaWave* ana_wave) = 0;
-  virtual void RemoveSimpleAnaWave(SimpleAnaWave* ana_wave) = 0;
  
   // trigger
   typedef std::vector<TriggerPart*> Triggers;
@@ -29,9 +26,9 @@ public:
   Triggers::iterator trigger_end() { return triggers_.end(); }
   int trigger_count() const { return triggers_.size(); } 
   TriggerPart* trigger_at(int index) { return triggers_[index]; }
-  void AddTriggerObserver(WaveGroupObserver* observer);
-  void RemoveTriggerObserver(WaveGroupObserver* observer);
-  bool HasTriggerObserver(WaveGroupObserver* observer);
+  void AddTriggerObserver(OscWaveGroupObserver* observer);
+  void RemoveTriggerObserver(OscWaveGroupObserver* observer);
+  bool HasTriggerObserver(OscWaveGroupObserver* observer);
 
   // horizontal
   typedef std::vector<HorizontalPart*> Horizontals;
@@ -40,9 +37,9 @@ public:
   Horizontals::iterator horizonal_end() { return horizontals_.end(); }
   int horizontal_count() const { return horizontals_.size(); }
   HorizontalPart* horizontal_at(int index) { return horizontals_[index]; }
-  void AddHorizontalObserver(WaveGroupObserver* observer);
-  void RemoveHorizontalObserver(WaveGroupObserver* observer);
-  bool HasHorizontalObserver(WaveGroupObserver* observer);
+  void AddHorizontalObserver(OscWaveGroupObserver* observer);
+  void RemoveHorizontalObserver(OscWaveGroupObserver* observer);
+  bool HasHorizontalObserver(OscWaveGroupObserver* observer);
 
   // vertical
   typedef std::vector<VerticalPart*> Verticals;
@@ -51,12 +48,12 @@ public:
   Verticals::iterator vertical_end() { return verticals_.end(); }
   int vertical_count() const { return verticals_.size(); }
   VerticalPart* vertical_at(int index) { return verticals_[index]; }
-  void AddVerticalObserver(WaveGroupObserver* observer);
-  void RemoveVerticalObserver(WaveGroupObserver* observer);
-  bool HasVerticalObserver(WaveGroupObserver* observer);
+  void AddVerticalObserver(OscWaveGroupObserver* observer);
+  void RemoveVerticalObserver(OscWaveGroupObserver* observer);
+  bool HasVerticalObserver(OscWaveGroupObserver* observer);
 
 protected:
-  virtual ~WaveGroup();
+  virtual ~OscWaveGroup();
 
   void NotifyTriggerGroupChanged();
   void NotifyTriggerChanged(int id);
@@ -73,7 +70,7 @@ protected:
   Verticals verticals_;
 
 private:
-  ObserverList<WaveGroupObserver> trigger_observer_;
-  ObserverList<WaveGroupObserver> horizontal_observer_;
-  ObserverList<WaveGroupObserver> vertical_observer_;
+  ObserverList<OscWaveGroupObserver> trigger_observer_;
+  ObserverList<OscWaveGroupObserver> horizontal_observer_;
+  ObserverList<OscWaveGroupObserver> vertical_observer_;
 };

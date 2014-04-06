@@ -1,13 +1,13 @@
 #pragma once
 
-#include "wave_control/wave_group/wave_group.h"
+#include "wave_control/osc_wave_group/osc_wave_group.h"
 
-class CommonWaveGroup;
+class CommonOscWaveGroup;
 
 class RefTriggerPart : public base::RefCounted<RefTriggerPart>
                      , public TriggerPart {
 public:
-  RefTriggerPart(OscWave* osc_wave, CommonWaveGroup* wave_group);
+  RefTriggerPart(OscWave* osc_wave, CommonOscWaveGroup* wave_group);
 
   // implement TriggerPart
   virtual SkColor color();
@@ -19,18 +19,19 @@ public:
 
 
 private:
+  friend class base::RefCounted<RefTriggerPart>;
   ~RefTriggerPart();
 
   OscWave* osc_wave_;
 
   // notify delete
-  CommonWaveGroup* wave_group_;
+  CommonOscWaveGroup* wave_group_;
 };
 
 class RefHorizontalPart : public base::RefCounted<RefHorizontalPart>
                         , public HorizontalPart {
 public:
-  RefHorizontalPart(OscWave* osc_wave, CommonWaveGroup* wave_group);
+  RefHorizontalPart(OscWave* osc_wave, CommonOscWaveGroup* wave_group);
 
   // implement HorizontalPart
   virtual SkColor color();
@@ -42,18 +43,19 @@ public:
   virtual int window_size();
 
 private:
+  friend class base::RefCounted<RefHorizontalPart>;
   ~RefHorizontalPart();
 
   OscWave* osc_wave_;
 
   // notify delete
-  CommonWaveGroup* wave_group_;
+  CommonOscWaveGroup* wave_group_;
 };
 
 class RefVerticalPart : public base::RefCounted<RefVerticalPart>
                       , public VerticalPart {
 public:
-  RefVerticalPart(OscWave* osc_wave, CommonWaveGroup* wave_group);
+  RefVerticalPart(OscWave* osc_wave, CommonOscWaveGroup* wave_group);
 
   // implement VerticalPart
   virtual SkColor color();
@@ -65,30 +67,13 @@ public:
   virtual int window_size();
 
 private:
+  friend class base::RefCounted<RefVerticalPart>;
   ~RefVerticalPart();
 
   OscWave* osc_wave_;
 
   // notify delete
-  CommonWaveGroup* wave_group_;  
-};
-
-class SimpleVerticalPart : public VerticalPart {
-public:
-  SimpleVerticalPart(SimpleAnaWave* ana_wave);
-
-  // implement VerticalPart
-  virtual SkColor color();
-  virtual bool show();
-  virtual WaveRange range();
-  virtual WaveRange offset_range();
-  virtual double offset();
-  virtual bool has_div();
-  virtual int div();
-  virtual int window_size();
- 
-private:
-  SimpleAnaWave* ana_wave_;
+  CommonOscWaveGroup* wave_group_;  
 };
 
 struct OscWaveRecord {
@@ -98,22 +83,14 @@ struct OscWaveRecord {
   scoped_refptr<RefVerticalPart> vertical;
 };
 
-// SimpleAnaWave only have vertical part to select and move wave
-struct SimpleAnaWaveRecord {
-  SimpleAnaWave* wave;
-  SimpleVerticalPart* vertical;
-};
 
-class CommonWaveGroup : public WaveGroup
-                      , public OscWaveObserver {
+class CommonOscWaveGroup : public OscWaveGroup
+                         , public OscWaveObserver {
 public:
-  // implement WaveGroup
+  // implement OscWaveGroup
   virtual void AddOscWave(OscWave* osc_wave);
   virtual void RemoveOscWave(OscWave* osc_wave);
   virtual bool HasOscWave(OscWave* osc_wave);
-
-  virtual void AddSimpleAnaWave(SimpleAnaWave* ana_wave);
-  virtual void RemoveSimpleAnaWave(SimpleAnaWave* ana_wave);
 
 private:
   friend class RefTriggerPart;
@@ -123,7 +100,7 @@ private:
   // implement OscWaveObserver
   virtual void OnOscWaveChanged(OscWave* osc_wave, int change_set);
 
-  void OnTriggerDelete(TriggerPart* tirgger);
+  void OnTriggerDelete(TriggerPart* trigger);
   void OnHorizontalDelete(HorizontalPart* horizontal);
   void OnVerticalDelete(VerticalPart* vertical);
 
@@ -134,7 +111,6 @@ private:
   int VerticalIndex(VerticalPart* part);
 
   std::vector<OscWaveRecord> osc_waves_;
-  std::vector<SimpleAnaWaveRecord> simple_ana_waves_;
 
   bool trigger_changed_;
   bool horizontal_changed_;

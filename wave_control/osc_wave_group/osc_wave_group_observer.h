@@ -1,6 +1,6 @@
 #pragma once
 
-class WaveGroupObserver {
+class OscWaveGroupObserver {
 public:
   // Invoked when the model has been completely changed. need to read all part
   // information.
@@ -13,6 +13,6 @@ public:
   virtual void OnPartMoved(int id) = 0;
 
 protected:
-  virtual ~WaveGroupObserver() {}
+  virtual ~OscWaveGroupObserver() {}
 };
 
