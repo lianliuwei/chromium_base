@@ -10,7 +10,7 @@
 #include "base/memory/scoped_ptr.h"
 #include "base/memory/scoped_vector.h"
 #include "base/observer_list.h"
-#include "ui/base/models/list_model_observer.h"
+#include "wave_control/list_model_observer.h"
 
 namespace ui {
 
