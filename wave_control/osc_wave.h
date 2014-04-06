@@ -36,7 +36,6 @@ public:
   virtual double trigger_offset() = 0;
   virtual bool trigger_show() = 0;
   virtual bool trigger_is_relate() = 0;
-  // return NULL mean is no relate
   virtual OscWave* trigger_wave() = 0;
   virtual SkColor trigger_color() = 0;
 
