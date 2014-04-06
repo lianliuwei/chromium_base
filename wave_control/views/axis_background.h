@@ -8,8 +8,7 @@
 
 // fill the background with the color and using the axis_painter_ to
 // paint on it, and the provide the method to help the layout
-class AxisBackground : public views::Background
-{
+class AxisBackground : public views::Background {
 public:
     AxisBackground(SkColor background,
                    SkColor line, int line_width, 
