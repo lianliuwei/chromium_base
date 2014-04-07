@@ -14,6 +14,7 @@
 class OscWaveGroup {
 public:
   OscWaveGroup() {}
+  virtual ~OscWaveGroup();
 
   virtual void AddOscWave(OscWave* osc_wave) = 0;
   virtual void RemoveOscWave(OscWave* osc_wave) = 0;
@@ -53,8 +54,6 @@ public:
   bool HasVerticalObserver(OscWaveGroupObserver* observer);
 
 protected:
-  virtual ~OscWaveGroup();
-
   void NotifyTriggerGroupChanged();
   void NotifyTriggerChanged(int id);
   void NotifyTriggerMoved(int id);
