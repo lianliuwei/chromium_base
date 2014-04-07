@@ -3,6 +3,8 @@
 #include "ui/gfx/transform.h"
 #include "views/view.h"
 
+#include "wave_control/ana_wave_data.h"
+
 // LineDataWaveView plot the wave Form of the Line Data, it sample or cut the
 // wave manual to achieve high freq plot (this is key in Osc app) no matter the
 // data range is large or the data is many. 
@@ -11,14 +13,6 @@
 // to Transform
 class LineDataWaveView : public views::View {
 public:
-  typedef std::vector<double> DataBuffer;
-  
-  struct LineData {
-    double begin; // begin logic value of the buffer
-    double end;  // end logic value of the buffer
-    DataBuffer* buffer;
-  };
-
   enum ShowStyle {
     kLine,
     kDot, 
@@ -40,11 +34,11 @@ public:
   ShowStyle show_style() const;
 
   // set the data for show, the data is own by others.
-  void set_line_data(LineData line_data);
-  const LineData line_data() const;
+  void set_line_data(AnaWaveData* line_data);
+  AnaWaveData* line_data() const;
 
-  void set_logic_to_real_transform(const ui::Transform& logic_to_real_transform);
-  ui::Transform logic_to_real_transform();
+  void set_data_transform(const ui::Transform& data_transform);
+  ui::Transform data_transform();
 
 private:
   virtual void OnPaint(gfx::Canvas* canvas) OVERRIDE;
@@ -57,17 +51,19 @@ private:
 
   void PaintWave(gfx::Canvas* canvas);
 
+  bool PaintWaveParam(int* vector_start_out, int* vector_end_out,
+                      int* plot_begin_out, int* plot_end_out,
+                      ui::Transform* vector_to_real_x_out,
+                      bool* auto_show_dot_out,
+                      bool* need_sample_out);
 private:
   // data to plot on the View
-  LineData line_data_;
+  AnaWaveData* line_data_;
 
   SkColor wave_color_;
-
   SkColor dot_color_;
-
   ShowStyle show_sytle_;
 
-  // TODO rename to logic
-  ui::Transform logic_to_real_transform_;
+  ui::Transform data_transform_;
 };
 
