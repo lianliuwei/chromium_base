@@ -35,6 +35,12 @@ protected:
 
   DISALLOW_COPY_AND_ASSIGN(HandleBarDelegate);
 };
+namespace {
+class HorizOffsetBar;
+class TriggerBar;
+class WaveBar;
+class YTWaveVisitor;
+}
 
 // real YTWaveContainer show view, the YTWaveContainerView
 // just frame
@@ -42,6 +48,7 @@ class YTWaveContainerInnerView : public views::View
                                , public ui::ListModelObserver {
 public:
   YTWaveContainerInnerView(YTWaveContainer* container);
+  virtual ~YTWaveContainerInnerView();
 
   // get the HandleBarDelegate for move wave and select wave. the YTViewContainer 
   // use this delegate to create handlebar. and it control the Bar
@@ -55,7 +62,13 @@ public:
   ui::Transform OscWaveTransform(OscWave* osc_wave);
   static double ToOscOffset(double old_offset, double move_delta);
 
+  // SimpleAnaWave coord transform
+  ui::Transform SimpleAnaWaveTransform(SimpleAnaWave* ana_wave);
+  int GetYOffset(SimpleAnaWave* wave);
+  void MoveToY(SimpleAnaWave* wave, double offset);
+
   void SelectWave(Wave* wave);
+
 private:
   // implement ui::ListModelObserver
   virtual void ListItemsAdded(size_t start, size_t count);
@@ -65,5 +78,18 @@ private:
 
   AxisBackground* get_axis_background();
 
+  friend class YTWaveVisitor;
+
+  scoped_ptr<WaveBar> wave_bar_;
+  scoped_ptr<HorizOffsetBar> horiz_offset_bar_;
+  scoped_ptr<TriggerBar> trigger_bar_;
+
   scoped_ptr<OscWaveGroup> wave_group_;
+  
+  YTWaveContainer* container_;
+
+  // HACK for sync with wave LiistModel, the RemoveWave need Wave ptr.
+  std::vector<Wave*> wave_record_;
+
+  DISALLOW_COPY_AND_ASSIGN(YTWaveContainerInnerView);
 };
