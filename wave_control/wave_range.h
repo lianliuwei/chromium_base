@@ -2,7 +2,7 @@
 
 class WaveRange {
 public:
-  double start;
+  double begin;
   double end;
 
   // offset is in start end coord

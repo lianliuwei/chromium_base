@@ -558,7 +558,7 @@ double YTWaveContainerInnerView::ToOscOffset(double old_offset, double move_delt
 int YTWaveContainerInnerView::GetYOffset(SimpleAnaWave* wave) {
   WaveRange range = wave->vertical_range();
   Transform transform = SimpleAnaWaveTransform(wave);
-  return TransformY(transform, (range.start + range.end) / 2);
+  return TransformY(transform, (range.begin + range.end) / 2);
 }
 
 void YTWaveContainerInnerView::MoveToY(SimpleAnaWave* wave, double offset) {
