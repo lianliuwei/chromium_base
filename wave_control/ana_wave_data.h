@@ -3,7 +3,7 @@
 #include "wave_control/wave_range.h"
 
 struct PeakValue {
-  double start;
+  double begin;
   double end;
   double max;
   double min;
@@ -17,7 +17,8 @@ public:
 
   // offset is in logic coord.
   virtual double GetValue(double offset);
-  virtual PeakValue GetRangePeak(double start, double offset);
+  virtual PeakValue GetRangePeak(int start, int size);
   virtual double MaxY();
   virtual double MinY();
+
 };
