@@ -2,8 +2,8 @@
 
 #include "wave_control/views/wave_control_view.h"
 #include "wave_control/views/yt_wave_container_view.h"
+#include "wave_control/views/osc_wave_view.h"
 
-class OscWaveView;
 class SimpleAnaWaveView;
 
 // use visitor need template for call the right CreateImpl(), and

@@ -45,3 +45,9 @@ YTWaveContainerView* WaveControlViewFactory::CreateImpl(YTWaveContainer* wave_co
       = new YTWaveContainerView(wave_container, wave_control_view);
   return yt_wave_container_view;
 }
+
+OscWaveView* WaveControlViewFactory::CreateImpl(OscWave* wave, 
+                                                YTWaveContainerView* yt_wave_container_view) {
+  OscWaveView* osc_wave_view = new OscWaveView(wave);
+  return osc_wave_view;
+}
