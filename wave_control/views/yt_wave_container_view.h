@@ -12,6 +12,7 @@ class WaveControlView;
 class YTWaveContainerView : public views::View {
 public:
   YTWaveContainerView(YTWaveContainer* container, WaveControlView* wave_control_view);
+  virtual ~YTWaveContainerView();
 
   void show_wave_bar(bool visible);
   bool is_show_wave_bar();
@@ -24,9 +25,9 @@ private:
   // Overridden from the views::View
   virtual void Layout() OVERRIDE;
 
-  HandleBar* CreateHandleBar(HandleBarDelegate* delegate, bool is_horiz);
+  HandleBar* CreateHandleBar(HandleBarDelegate* delegate);
 
-  YTWaveContainerInnerView* inner_view_;
+  YTWaveContainerInnerView* yt_view_;
 
   // the handlebars are the container's children. but the YTView manager
   // those.
