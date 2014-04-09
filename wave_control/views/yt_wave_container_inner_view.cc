@@ -4,9 +4,11 @@
 #include "wave_control/yt_wave_container.h"
 #include "wave_control/views/transform_util.h"
 #include "wave_control/views/wave_control_view_factory.h"
+#include "wave_control/views/wave_control_views_constants.h"
 
 using namespace ui;
 using namespace std;
+using namespace views;
 
 namespace {
 class HorizOffsetBar : public HandleBarDelegate
@@ -450,11 +452,13 @@ public:
 
   void AddWave(Wave* wave);
   void RemoveWave(Wave* wave);
+  void SetAxis(Wave* wave);
 
 private:
   enum VisitorType {
     kAddWave,
     kRemoveWave,
+    kSetAxis,
   };
 
   // implement WaveVisitor
@@ -488,6 +492,10 @@ void YTWaveVisitor::VisitOscWave(OscWave* wave) {
     view_->wave_group_->AddOscWave(wave);
   } else if (type_ == kRemoveWave) {
     view_->wave_group_->RemoveOscWave(wave);
+  } else if (type_ == kSetAxis) {
+    int v_div = wave->vertical_div() / 2;
+    int h_div = wave->horizontal_div() / 2;
+    view_->SetGrid(v_div, h_div);
   } else {
     NOTREACHED();
   }
@@ -498,6 +506,8 @@ void YTWaveVisitor::VisitSimpleAnaWave(SimpleAnaWave* wave) {
     view_->wave_bar_->AddOtherWave(wave);
   } else if (type_ == kRemoveWave) {
     view_->wave_bar_->RemoveOtherWave(wave);
+  } else if (type_ == kSetAxis) {
+    // use last axis config.
   } else {
     NOTREACHED();
   }
@@ -539,6 +549,9 @@ YTWaveContainerInnerView::YTWaveContainerInnerView(YTWaveContainer* container)
   container->AddObserver(this);
   // fetch Wave
   ListItemsAdded(0, container->item_count());
+
+  set_border(Border::CreateSolidBorder(kBorderThickness, kBorderColor));
+  SetGrid(kDefaultVDiv, kDefaultHDiv);
 }
 
 YTWaveContainerInnerView::~YTWaveContainerInnerView() {
@@ -583,6 +596,9 @@ void YTWaveContainerInnerView::ListItemsAdded(size_t start, size_t count) {
     // notify add wave
     visitor.AddWave(wave);
   }
+  if (start == 0) {
+    UpdateAxis();
+  }
 }
 
 void YTWaveContainerInnerView::ListItemsRemoved(size_t start, size_t count) {
@@ -601,6 +617,9 @@ void YTWaveContainerInnerView::ListItemsRemoved(size_t start, size_t count) {
     visitor.RemoveWave(need_remove_wave[i]);  
     delete need_remove[i];
   }
+  if (start == 0) {
+    UpdateAxis();
+  }
 }
 
 void YTWaveContainerInnerView::ListItemMoved(size_t index, size_t target_index) {
@@ -608,11 +627,78 @@ void YTWaveContainerInnerView::ListItemMoved(size_t index, size_t target_index) 
   Wave* wave = wave_record_[index];
   wave_record_.erase(wave_record_.begin() + index);
   wave_record_.insert(wave_record_.begin() + target_index, wave);
+
+  if (target_index == 0 || index == 0) {
+    UpdateAxis();
+  }
 }
 
 void YTWaveContainerInnerView::ListItemsChanged(size_t start, size_t count) {
   ListItemsRemoved(start, count);
   ListItemsAdded(start, count);
+
+  if (start == 0) {
+    UpdateAxis();
+  }
 }
 
+ui::Transform YTWaveContainerInnerView::OscWaveTransform(OscWave* osc_wave) {
+  int id = container_->WaveAt(osc_wave);
+  OscWaveView* wave_view = static_cast<OscWaveView*>(child_at(id));
+  return wave_view->data_transform();
+}
+
+HandleBarDelegate* YTWaveContainerInnerView::GetWaveBarDelegate() {
+  return wave_bar_.get();
+}
+
+HandleBarDelegate* YTWaveContainerInnerView::GetHorizOffsetBarDelegate() {
+  return horiz_offset_bar_.get();
+}
+
+HandleBarDelegate* YTWaveContainerInnerView::GetTriggerBarDelegate() {
+  return trigger_bar_.get();
+}
+
+bool YTWaveContainerInnerView::NormalSize(gfx::Size& size) {
+  // keep space for the border
+  size.Enlarge(-GetInsets().width(), -GetInsets().height());
+  if (get_axis_background()->NormalSize(size)) {
+    size.Enlarge(GetInsets().width(), GetInsets().height());
+    return true;
+  }
+  return false;
+}
+
+int YTWaveContainerInnerView::BorderThickness() {
+  return kBorderThickness;
+}
+
+AxisBackground* YTWaveContainerInnerView::get_axis_background() {
+  Background* bg = background();
+  DCHECK(bg) << "no background exist";
+  return static_cast<AxisBackground*>(bg);
+}
+
+gfx::Size YTWaveContainerInnerView::GetMinimumSize() {
+  gfx::Size size = get_axis_background()->GetMinimumSize();
+  size.Enlarge(GetInsets().width(), GetInsets().height());
+  return size;
+}
+
+void YTWaveContainerInnerView::SetGrid(int v_grid, int h_grid) {
+  set_background(
+    new AxisBackground(kBackgroundColor, kAxisLineColor, 
+                       kLineWidth, 
+                       kAxisGridColor, 
+                       v_grid, kVGridDiv, 
+                       h_grid, kHGridDiv));
+  SchedulePaint();
+}
+
+void YTWaveContainerInnerView::UpdateAxis() {
+  Wave* wave = container_->GetSelectWave();
+  YTWaveVisitor visitor(this);
+  visitor.SetAxis(wave);
+}
 

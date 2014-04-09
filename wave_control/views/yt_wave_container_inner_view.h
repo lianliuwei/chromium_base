@@ -69,6 +69,15 @@ public:
 
   void SelectWave(Wave* wave);
 
+  // see commit in axis_painter.h
+  bool NormalSize(gfx::Size& size);
+
+  // now assert the border width are all the same, it user for the container
+  // to layout the assist handlebar.
+  int BorderThickness();
+
+  gfx::Size GetMinimumSize();
+
 private:
   // implement ui::ListModelObserver
   virtual void ListItemsAdded(size_t start, size_t count);
@@ -77,6 +86,8 @@ private:
   virtual void ListItemsChanged(size_t start, size_t count);
 
   AxisBackground* get_axis_background();
+  void SetGrid(int v_grid, int h_grid);
+  void UpdateAxis();
 
   friend class YTWaveVisitor;
 
@@ -92,4 +103,5 @@ private:
   std::vector<Wave*> wave_record_;
 
   DISALLOW_COPY_AND_ASSIGN(YTWaveContainerInnerView);
+
 };
