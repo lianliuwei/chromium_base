@@ -3,14 +3,16 @@
 #include "views/layout/box_layout.h"
 
 #include "wave_control/views/wave_control_view_factory.h"
+#include "wave_control/views/wave_control_views_constants.h"
 
 using namespace views;
 
 // just Vertical Layout the ContainerView
 WaveControlView::WaveControlView(WaveControl* wave_control)
     : wave_control_(wave_control) {
-  wave_control->AddObserver(this);
+  set_background(Background::CreateSolidBackground(kWaveControlBackgroundColor));
   SetLayoutManager(new BoxLayout(BoxLayout::kVertical, 0, 0, 0));
+  wave_control->AddObserver(this);
 
   // fetch WaveContainer
   ListItemsAdded(0, wave_control->item_count());

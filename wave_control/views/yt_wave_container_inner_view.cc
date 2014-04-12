@@ -688,7 +688,7 @@ gfx::Size YTWaveContainerInnerView::GetMinimumSize() {
 
 void YTWaveContainerInnerView::SetGrid(int v_grid, int h_grid) {
   set_background(
-    new AxisBackground(kBackgroundColor, kAxisLineColor, 
+    new AxisBackground(kWaveViewBackgroundColor, kAxisLineColor, 
                        kLineWidth, 
                        kAxisGridColor, 
                        v_grid, kVGridDiv, 
