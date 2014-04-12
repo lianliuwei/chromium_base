@@ -26,6 +26,7 @@ public:
     return model_;
   }
 
+  // TODO rename to SetDelegate
   void SetObserver(HandleBarObserver* observer) {
     observer_ = observer;
   }
