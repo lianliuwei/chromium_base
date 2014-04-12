@@ -26,17 +26,6 @@ bool RangeIntersect(int* intersect_left, int* intersect_right,
     return true;
 }
 
-// the sample process get the max, min, start, end value of a step
-// value. those value are all real Y coordinate Value.
-struct SampleElement {
-  int max;
-  int min;
-  int begin;
-  int end;
-};
-
-
-
 }
 
 bool LineDataWaveView::PaintWaveParam(int* vector_start_out, int* vector_end_out,
