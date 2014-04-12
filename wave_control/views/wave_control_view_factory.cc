@@ -10,7 +10,7 @@ views::View* WaveControlViewFactory::Create(WaveContainer* wave_container,
                                             WaveControlView* wave_control_view) {
   DCHECK(wave_container);
   switch (wave_container->type_id()) {
-  case kYT:
+  case WaveContainer::kYT:
     return CreateImpl(wave_container->AsYTWaveContainer(), wave_control_view);
 
   default:
@@ -23,10 +23,10 @@ views::View* WaveControlViewFactory::Create(Wave* wave,
                                             YTWaveContainerView* wave_container_view) {
   DCHECK(wave);                                      
   switch (wave->type_id()) {
-  case kOsc:
+  case Wave::kOsc:
     return CreateImpl(wave->AsOscWave(), wave_container_view);
-  case kSimpleAna:
-    return CreateImpl(wave->AsSimpleAnaWave(), wave_container_view);
+  case Wave::kSimpleAna:
+ //   return CreateImpl(wave->AsSimpleAnaWave(), wave_container_view);
 
   default:
     NOTREACHED() << "no support Wave";
