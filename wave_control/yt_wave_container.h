@@ -7,15 +7,17 @@ class YTWaveContainer : public WaveContainer {
 public:
   // implement WaveContainer
   virtual YTWaveContainer* AsYTWaveContainer() { return this; }
+  virtual void Accept(WaveContainerVisitor* visitor);
 
   // caller take ownership
-  virtual OscWaveGroup* CreateOscWaveGroup() = 0;
+  virtual OscWaveGroup* CreateOscWaveGroup();
 
   // show option
   virtual void ShowGrid() = 0;
   virtual void ToggleGrid() = 0;
   virtual bool IsShowGrid() const = 0;
   
-  virtual void SelectWave(Wave* wave) = 0;
-  virtual Wave* GetSelectWave() = 0;
+  virtual void SelectWave(Wave* wave);
+  virtual Wave* GetSelectWave();
 };
+
