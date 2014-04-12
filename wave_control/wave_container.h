@@ -29,6 +29,11 @@ public:
 
   virtual void Accept(WaveContainerVisitor* visitor) = 0;
 
+  int WaveAt(Wave* wave);
+  bool HasWave(Wave* wave);
+  bool AddWave(Wave* wave); // may layout the wave
+  bool RemoveWave(Wave* wave);
+
 private:
   WaveControl* wave_control_;
 };
