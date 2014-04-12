@@ -7,7 +7,6 @@ bool IsSet(int set, int test) {
 
 }
 
-
 void OscWaveView::OnOscWaveChanged(OscWave* osc_wave, int change_set) {
   int update_transform = OscWave::kVertical | OscWave::kVerticalOffset 
       | OscWave::kHorizontal | OscWave::kHorizontalOffset;
