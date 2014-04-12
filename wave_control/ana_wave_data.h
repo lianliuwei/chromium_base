@@ -11,14 +11,17 @@ struct PeakValue {
 
 class AnaWaveData {
 public:
-  virtual WaveRange data_range();
-  virtual double* data();
-  virtual int size();
+  AnaWaveData() {}
+  virtual WaveRange data_range() = 0;
+  virtual double* data() = 0;
+  virtual int size() = 0;
 
   // offset is in logic coord.
   virtual double GetValue(double offset);
-  virtual PeakValue GetRangePeak(int start, int size);
+  virtual PeakValue GetRangePeak(int start, int range_size);
   virtual double MaxY();
   virtual double MinY();
 
+protected:
+  virtual ~AnaWaveData() {}
 };
