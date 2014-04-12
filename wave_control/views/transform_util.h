@@ -9,4 +9,4 @@ int TransformReverseX(const ui::Transform transform, int x);
 
 int TransformY(const ui::Transform transform, double y);
 
-int TransformReverseY(const ui::Transform tranform, int y);
+int TransformReverseY(const ui::Transform transform, int y);

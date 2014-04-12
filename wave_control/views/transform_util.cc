@@ -1,5 +1,10 @@
 #include "wave_control/views/transform_util.h"
 
+#include <cmath>
+
+#include "base/logging.h"
+#include "ui/gfx/point.h"
+
 namespace {
 int SymmetricRound(double x) {
   return static_cast<int>(
@@ -42,7 +47,7 @@ int TransformY(const ui::Transform transform, double y) {
     return SymmetricRound(p[1]);
 }
 
-int TransformReverseY(const ui::Transform tranform, int y) {
+int TransformReverseY(const ui::Transform transform, int y) {
   gfx::Point point(0, y);
   bool ret = transform.TransformPointReverse(point);
   CHECK(ret) << "Invalid transform matrix";
