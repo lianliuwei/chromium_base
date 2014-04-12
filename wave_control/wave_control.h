@@ -6,28 +6,23 @@
 
 class WaveControlVisitor;
 
+// no sub class now
 class WaveControl : public ui::ListModel<WaveContainer> {
 public:
+  int WaveContainerAt(WaveContainer* container);
+  bool HasWaveContainer(WaveContainer* container);
+  void AddContainer(WaveContainer* container);
+  void RemoveContainer(WaveContainer* container);
 
   // auto layout wave
-  void AddWave(Wave* wave);
-  void RemoveWave(Wave* wave);
+  virtual void AddWave(Wave* wave) = 0;
+  virtual void RemoveWave(Wave* wave) = 0;
 
-  // Wave show Manage
-  enum YAxesShowType {
-    kAllYAxes,
-    kSeparateYAxes,
-    kAlternateYAxes,
-  };
+  virtual void Accept(WaveControlVisitor* visitor);
 
-  YAxesShowType YAxes();
-
-  void Accept(WaveControlVisitor* visitor);
-
-  void ShowInfo();
-  void ToggleInfo();
-  void IsShowInfo() const;
-
+  virtual void ShowInfo() = 0;
+  virtual void ToggleInfo() = 0;
+  virtual void IsShowInfo() const = 0;
 
 private:
 
