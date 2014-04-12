@@ -12,11 +12,14 @@ public:
   // implement TriggerPart
   virtual SkColor color();
   virtual bool show();
+  virtual string16 text();
+  virtual SkBitmap icon();
   virtual WaveRange offset_range();
   virtual double offset();
   virtual void set_offset(double offset);
   virtual bool IsRelate();
-
+  virtual OscWave* trigger_wave();
+  virtual OscWave* osc_wave() { return osc_wave_; }
 
 private:
   friend class base::RefCounted<RefTriggerPart>;
@@ -36,11 +39,14 @@ public:
   // implement HorizontalPart
   virtual SkColor color();
   virtual bool show();
+  virtual string16 text();
+  virtual SkBitmap icon();
   virtual WaveRange range();
   virtual WaveRange offset_range();
   virtual double offset();
   virtual int div();
   virtual int window_size();
+  virtual OscWave* osc_wave() { return osc_wave_; }
 
 private:
   friend class base::RefCounted<RefHorizontalPart>;
@@ -60,11 +66,14 @@ public:
   // implement VerticalPart
   virtual SkColor color();
   virtual bool show();
+  virtual string16 text();
+  virtual SkBitmap icon();
   virtual WaveRange range();
   virtual WaveRange offset_range();
   virtual double offset();
   virtual int div();
   virtual int window_size();
+  virtual OscWave* osc_wave() { return osc_wave_; }
 
 private:
   friend class base::RefCounted<RefVerticalPart>;

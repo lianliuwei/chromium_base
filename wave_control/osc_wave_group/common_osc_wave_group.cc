@@ -205,6 +205,19 @@ bool RefTriggerPart::show() {
   return osc_wave_->trigger_show();
 }
 
+string16 RefTriggerPart::text() {
+  return L"";
+}
+
+// TODO draw a trigger
+#include "ui/base/resource/resource_bundle.h"
+#include "grit/ui_resources.h"
+
+SkBitmap RefTriggerPart::icon() {
+  ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+  return *(rb.GetBitmapNamed(IDR_CLOSE_SA_H));
+}
+
 WaveRange RefTriggerPart::offset_range() {
   return osc_wave_->trigger_offset_range();
 }
@@ -219,6 +232,10 @@ void RefTriggerPart::set_offset(double offset) {
 
 bool RefTriggerPart::IsRelate() {
   return osc_wave_->trigger_is_relate();
+}
+
+OscWave* RefTriggerPart::trigger_wave() {
+  return osc_wave_->trigger_wave();
 }
 
 RefTriggerPart::RefTriggerPart(OscWave* osc_wave, CommonOscWaveGroup* wave_group)
@@ -239,6 +256,15 @@ SkColor RefHorizontalPart::color() {
 
 bool RefHorizontalPart::show() {
   return osc_wave_->horizontal_show();
+}
+
+string16 RefHorizontalPart::text() {
+  return L"";
+}
+
+SkBitmap RefHorizontalPart::icon() {
+  ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+  return *(rb.GetBitmapNamed(IDR_MENU_ARROW));
 }
 
 WaveRange RefHorizontalPart::range() {
@@ -281,6 +307,13 @@ bool RefVerticalPart::show() {
   return osc_wave_->vertical_show();
 }
 
+string16 RefVerticalPart::text() {
+  return osc_wave_->name();
+}
+
+SkBitmap RefVerticalPart::icon() {
+  return SkBitmap();
+}
 WaveRange RefVerticalPart::range() {
   return osc_wave_->vertical_range();
 }
@@ -311,3 +344,4 @@ RefVerticalPart::RefVerticalPart(OscWave* osc_wave, CommonOscWaveGroup* wave_gro
 RefVerticalPart::~RefVerticalPart() {
   wave_group_->OnVerticalDelete(this);
 }
+
