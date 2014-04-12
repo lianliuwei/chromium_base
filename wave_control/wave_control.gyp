@@ -13,8 +13,11 @@
       'sources': [
         # view model
         'wave_control.h',
+        'wave_control.cc',
         'wave_container.h',
+        'wave_container.cc',
         'yt_wave_container.h',
+        'yt_wave_container.cc',
         'yl_wave_container.h',
         'xy_wave_container.h',
         'wave.h',
@@ -31,9 +34,11 @@
         
         # wave data
         'ana_wave_data.h',
+        'ana_wave_data.cc',
         'wave_range.h',
         
         'wave_view.h',
+        
         # measure line model
         'measure_line/measure_line.h',
         'measure_line/dual_line.h',
@@ -49,8 +54,6 @@
         'osc_wave_group/osc_wave_group_observer.h',
         
         # osc wave group impl
-        'osc_wave_group/test_osc_wave.h',
-        'osc_wave_group/test_osc_wave.cc',
         'osc_wave_group/common_osc_wave_group.h',
         'osc_wave_group/common_osc_wave_group.cc',
         
@@ -62,6 +65,8 @@
         'views/yt_wave_container_view.h',
         'views/yt_wave_container_view.cc',
         'views/ana_wave_view.h',
+        'views/osc_wave_view.h',
+        'views/osc_wave_view.cc',
         
         # views impl
         'views/yt_wave_container_inner_view.h',
@@ -81,6 +86,8 @@
         'views/line_data_wave_view.cc',
         'views/transform_util.h',
         'views/transform_util.cc',
+        'views/wave_control_views_constants.h',
+        
         #helper
         'list_model.h',
         'list_model_observer.h',
